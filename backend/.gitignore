@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Entornos virtuales
+venv/
+.env
+
+# Configuración del entorno
+*.env
+.env.*
+
+# Archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Archivos de subida
+archivos/
