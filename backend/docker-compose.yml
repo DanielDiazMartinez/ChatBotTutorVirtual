@@ -6,26 +6,31 @@ services:
       context: .
     container_name: fastapi_app
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Exponer la aplicación en el puerto 8000
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/my_database
+      - PINECONE_API_KEY=tu_clave_pinecone
+      - PINECONE_ENVIRONMENT=us-west1-gcp
+      - PINECONE_INDEX=temarios-index
     depends_on:
       - db
     volumes:
-      - .:/app
+      - .:/app  # Montar el código del proyecto en el contenedor
 
   db:
-    image: postgres:15
+    image: postgres:15  # Usar la imagen oficial de PostgreSQL
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: my_database
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5432:5432"  # Exponer la base de datos en el puerto 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+
 volumes:
   postgres_data:
+    driver: local

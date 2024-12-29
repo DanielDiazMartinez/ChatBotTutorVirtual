@@ -1,26 +1,15 @@
 from fastapi import FastAPI
-from routes import groq_routes
+from routes.profesor_routes import router as profesor_router
+from routes.alumnos_routes import router as alumno_router
+from routes.user_routes import router as user_router
 
 app = FastAPI()
 
-# Incluir rutas
-app.include_router(groq_routes.router)
+# Registrar rutas por rol
+app.include_router(profesor_router, prefix="/profesor", tags=["Profesor"])
+app.include_router(alumno_router, prefix="/alumno", tags=["Alumno"])
+app.include_router(user_router, prefix="/usuario", tags=["Usuario"])
 
 @app.get("/")
-def read_root():
-    return {"message": "API funcionando correctamente"}
-from fastapi import FastAPI
-from routes import groq_routes
-
-app = FastAPI()
-
-# Incluir rutas
-app.include_router(groq_routes.router)
-
-@app.get("/")
-def read_root():
-    return {"message": "API funcionando correctamente"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
+def root():
+    return {"mensaje": "Bienvenido a la API de Gestión de Temarios y Consultas"}
