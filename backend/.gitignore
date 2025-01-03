@@ -27,3 +27,4 @@ docker-compose.override.yml
 
 # Archivos de subida
 archivos/
+script.py

@@ -7,4 +7,4 @@ def generar_embedding(texto: str):
     """
     Genera un embedding a partir de texto usando Sentence Transformers.
     """
-    return model.encode(texto)
+    return model.encode(texto).tolist()

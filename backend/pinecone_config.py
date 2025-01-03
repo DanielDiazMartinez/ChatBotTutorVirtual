@@ -1,15 +1,24 @@
 import pinecone
 import os
 
-def init_pinecone():
-    """
-    Inicializa la conexión con Pinecone y asegura que el índice está configurado.
-    """
-    api_key = os.getenv("PINECONE_API_KEY")
-    environment = os.getenv("PINECONE_ENVIRONMENT", "us-west1-gcp")
-    pinecone.init(api_key=api_key, environment=environment)
+import os
+from pinecone import Pinecone, ServerlessSpec
 
-    index_name = os.getenv("PINECONE_INDEX", "temarios-index")
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(index_name, dimension=384)  # Dimensión típica de embeddings
-    return pinecone.Index(index_name)
+def init_pinecone():
+    
+    api_key = os.environ.get("PINECONE_API_KEY")
+    environment = os.environ.get("PINECONE_ENVIRONMENT")  
+
+    
+    pc = Pinecone(api_key=api_key)
+
+    # Configura tu índice, si no existe
+    index_name = "bbddvector" # TODO: Meter esto en .env
+
+    if index_name not in pc.list_indexes().names():
+        print(f"[WARNING] El índice '{index_name}' no existe en Pinecone. Verifica la configuración o crea el índice manualmente.")
+        return None  
+
+       
+
+    return pc.Index(index_name)

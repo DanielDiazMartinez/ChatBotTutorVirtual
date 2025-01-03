@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from db_config import get_db
 from services.user_service import registrar_usuario
-
+from models import Usuario
 router = APIRouter()
 
 @router.post("/registrar-usuario/")
@@ -21,3 +21,11 @@ async def registrar_usuario_endpoint(
         "mensaje": "Usuario registrado correctamente",
         "usuario": usuario
     }
+
+@router.get("/usuarios", summary="Listar todos los usuarios")
+def listar_usuarios(db: Session = Depends(get_db)):
+    """
+    Devuelve una lista de todos los usuarios registrados en el sistema.
+    """
+    usuarios = db.query(Usuario).all()
+    return usuarios

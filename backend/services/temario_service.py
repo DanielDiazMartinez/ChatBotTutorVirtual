@@ -16,7 +16,7 @@ def registrar_temario(db: Session, titulo: str, descripcion: str, archivo: str, 
 
 def procesar_pdf_y_subir(ruta_pdf, metadatos):
     """
-    Procesa un PDF, genera embeddings y los sube a Pinecone.
+    Procesa un PDF, genera embeddings y los sube a Pinecone con los fragmentos de texto como metadatos.
     """
     index = init_pinecone()
 
@@ -27,12 +27,24 @@ def procesar_pdf_y_subir(ruta_pdf, metadatos):
     fragmentos = dividir_texto(texto, max_tokens=512)
     items = []
     for i, fragmento in enumerate(fragmentos):
+        # Evitar fragmentos vacíos
+        if not fragmento.strip():
+            continue
+
         embedding = generar_embedding(fragmento)
+
         items.append({
             "id": f"{metadatos['documento_id']}-{i}",
-            "values": embedding.tolist(),
-            "metadata": metadatos
+            "values": embedding,
+            "metadata": {
+                "titulo": metadatos["titulo"],
+                "documento_id": metadatos["documento_id"],
+                "contenido": fragmento
+            }
         })
     
     # Subir a Pinecone
     index.upsert(items)
+
+    return f"Se han subido {len(items)} fragmentos del documento '{metadatos['titulo']}' a Pinecone."
+

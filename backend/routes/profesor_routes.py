@@ -13,11 +13,16 @@ async def registrar_temario_endpoint(
     archivo: UploadFile = Form(...),
     db: Session = Depends(get_db)
 ):
+
+    print(f"Titulo: {titulo}")
+    print(f"Descripcion: {descripcion}")
+    print(f"Profesor ID: {profesor_id}")
+    print(f"Nombre del archivo: {archivo.filename}")
     """
     Endpoint para registrar un temario en la base de datos y procesar el PDF.
     """
     # Guardar el archivo localmente
-    ruta_archivo = f"archivos/{archivo.filename}"
+    ruta_archivo = f"uploads/{archivo.filename}"
     with open(ruta_archivo, "wb") as f:
         f.write(await archivo.read())
 
