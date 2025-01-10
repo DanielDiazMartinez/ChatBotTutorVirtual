@@ -1,0 +1,18 @@
+/* Estilo general para el contenedor principal */
+.main-container {
+    height: 100vh; /* Altura completa de la ventana */
+    display: flex; /* Flexbox para organizar el contenido */
+  }
+  
+  /* Estilo para la barra lateral utilizando mat-sidenav */
+  mat-sidenav {
+    width: 250px; /* Ancho de la barra lateral */
+    background-color: #68A8FC; /* Color de fondo principal de la barra lateral */
+    color: #000000; /* Color del texto */
+    display: flex; /* Flexbox para alinear elementos */
+    flex-direction: column; /* Elementos en columna */
+    padding: 20px; /* Espaciado interno */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* Sombra para profundidad */
+  }
+  
+  

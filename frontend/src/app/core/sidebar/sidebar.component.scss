@@ -1,0 +1,61 @@
+/* Estilo para la barra lateral */
+.sidebar {
+  width: 300px;
+  height: 100vh;
+  background-color: #68A8FC; /* Fondo principal de la barra lateral */
+  color: #000000; /* Texto en color negro */
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* Sombra para profundidad */
+  display: flex;
+  flex-direction: column; /* Elementos en columna */
+  align-items: center; /* Centrar horizontalmente los elementos */
+  justify-content: flex-start; /* Alinear elementos hacia la parte superior */
+  gap: 20px; /* Espacio entre elementos */
+}
+
+/* Botón genérico */
+.sidebar button {
+  padding: 10px 20px;
+  background-color: #68FCF2; /* Color principal del botón */
+  color: #000000; /* Texto en negro */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.3s ease; /* Efecto de hover */
+}
+
+/* Hover en los botones */
+.sidebar button:hover {
+  background-color: #68FCBF; /* Color al pasar el ratón */
+}
+
+/* Estilo para la lista de archivos */
+.sidebar ul {
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #BCECFC; /* Fondo para contener la lista */
+  border-radius: 5px;
+  max-height: 200px; /* Altura máxima para la lista */
+  overflow-y: auto; /* Habilitar scroll si la lista es larga */
+  padding: 10px;
+}
+
+/* Estilo para cada archivo de la lista */
+.sidebar .uploaded-file-item {
+  padding: 8px;
+  background-color: #FFFFFF; /* Fondo de cada archivo */
+  margin-bottom: 5px; /* Espaciado entre elementos */
+  border-radius: 3px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  text-align: center;
+}
+
+/* Hover para los elementos de la lista */
+.sidebar .uploaded-file-item:hover {
+  background-color: #68FCBF; /* Fondo al pasar el ratón */
+  cursor: pointer; /* Cambiar cursor */
+}

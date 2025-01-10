@@ -14,10 +14,7 @@ async def registrar_temario_endpoint(
     db: Session = Depends(get_db)
 ):
 
-    print(f"Titulo: {titulo}")
-    print(f"Descripcion: {descripcion}")
-    print(f"Profesor ID: {profesor_id}")
-    print(f"Nombre del archivo: {archivo.filename}")
+  
     """
     Endpoint para registrar un temario en la base de datos y procesar el PDF.
     """

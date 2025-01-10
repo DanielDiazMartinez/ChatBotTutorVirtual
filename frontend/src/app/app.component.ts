@@ -1,12 +1,16 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from './sidebar/sidebar.component';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { SidebarComponent } from './core/sidebar/sidebar.component';
+import { PDFViewerComponent } from './core/pdf-viewer/pdf-viewer.component';
+
+
+
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet,SidebarComponent],
+  standalone: true,
+  imports: [MatSidenavModule, SidebarComponent, PDFViewerComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss'],
+  
 })
-export class AppComponent {
-  title = 'frontend';
-}
+export class AppComponent {}

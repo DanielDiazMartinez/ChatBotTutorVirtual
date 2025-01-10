@@ -1,0 +1,15 @@
+<div class="sidebar">
+  <button (click)="fileInput.click()">Subir Archivo</button>
+  <input
+    #fileInput
+    type="file"
+    style="display: none;"
+    (change)="onFileSelected($event)"
+  />
+  <button (click)="toggleSidebar()">Ocultar Barra Lateral</button>
+  <ul>
+    <li *ngFor="let file of uploadedFiles" class="uploaded-file-item">
+      {{ file.name }}
+    </li>
+  </ul>
+</div>
