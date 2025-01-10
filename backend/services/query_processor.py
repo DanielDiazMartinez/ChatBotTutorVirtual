@@ -18,7 +18,6 @@ def generar_respuesta(pregunta, contexto):
     Genera una respuesta utilizando el cliente Groq.
     """
     client = get_groq_client()
-    print(f"Contexto: {contexto}")
     chat_completion = client.chat.completions.create(
         messages=[
             {

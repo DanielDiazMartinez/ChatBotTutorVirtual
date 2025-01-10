@@ -12,4 +12,4 @@ async def preguntar(pregunta: str):
     resultados = consultar_pinecone(pregunta)
     contexto = procesar_resultados(resultados)
     respuesta = generar_respuesta(pregunta, contexto)
-    return {"pregunta": pregunta, "respuesta": respuesta}
+    return {"pregunta": pregunta, "respuesta": respuesta, "contexto": contexto} 

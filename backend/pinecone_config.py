@@ -10,8 +10,10 @@ def init_pinecone():
     environment = os.environ.get("PINECONE_ENVIRONMENT")  
 
     
-    pc = Pinecone(api_key=api_key)
-
+    pc = Pinecone(
+                  api_key=api_key,
+                  environment=environment
+    )
     # Configura tu índice, si no existe
     index_name = "bbddvector" # TODO: Meter esto en .env
 

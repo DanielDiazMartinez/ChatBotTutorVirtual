@@ -10,6 +10,3 @@ app.include_router(profesor_router, prefix="/profesor", tags=["Profesor"])
 app.include_router(alumno_router, prefix="/alumno", tags=["Alumno"])
 app.include_router(user_router, prefix="/usuario", tags=["Usuario"])
 
-@app.get("/")
-def root():
-    return {"mensaje": "Bienvenido a la API de Gestión de Temarios y Consultas"}

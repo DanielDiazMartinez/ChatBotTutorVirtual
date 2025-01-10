@@ -3,6 +3,7 @@ from models.content_models import Temario
 from utils.file_utils import extraer_texto_pdf, dividir_texto
 from services.embedding_service import generar_embedding
 from pinecone_config import init_pinecone
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 def registrar_temario(db: Session, titulo: str, descripcion: str, archivo: str, profesor_id: int):
     """
@@ -23,10 +24,13 @@ def procesar_pdf_y_subir(ruta_pdf, metadatos):
     # Extraer texto del PDF
     texto = extraer_texto_pdf(ruta_pdf)
 
-    # Dividir texto en fragmentos y generar embeddings
-    fragmentos = dividir_texto(texto, max_tokens=512)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=100,
+        length_function=len
+        )
     items = []
-    for i, fragmento in enumerate(fragmentos):
+    for i, fragmento in enumerate(text_splitter):
         # Evitar fragmentos vacíos
         if not fragmento.strip():
             continue
@@ -47,4 +51,3 @@ def procesar_pdf_y_subir(ruta_pdf, metadatos):
     index.upsert(items)
 
     return f"Se han subido {len(items)} fragmentos del documento '{metadatos['titulo']}' a Pinecone."
-

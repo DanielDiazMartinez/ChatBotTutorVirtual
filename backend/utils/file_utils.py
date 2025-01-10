@@ -10,21 +10,16 @@ def extraer_texto_pdf(ruta_pdf):
             texto += pagina.get_text()
     return texto
 
-def dividir_texto(texto, max_tokens=512):
+def dividir_texto(texto, max_tokens=512, superposicion=50):
     """
-    Divide el texto en fragmentos más pequeños según el límite de tokens.
+    Divide el texto en fragmentos con superposición para preservar contexto.
     """
     palabras = texto.split()
     fragmentos = []
-    fragmento_actual = []
-    
-    for palabra in palabras:
-        fragmento_actual.append(palabra)
-        if len(fragmento_actual) >= max_tokens:
-            fragmentos.append(" ".join(fragmento_actual))
-            fragmento_actual = []
-    
-    if fragmento_actual:
-        fragmentos.append(" ".join(fragmento_actual))
+    num_palabras = len(palabras)
+
+    for i in range(0, num_palabras, max_tokens - superposicion):
+        fragmentos.append(" ".join(palabras[i:min(i + max_tokens, num_palabras)]))
     
     return fragmentos
+
