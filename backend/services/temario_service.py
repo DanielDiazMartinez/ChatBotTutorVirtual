@@ -29,8 +29,11 @@ def procesar_pdf_y_subir(ruta_pdf, metadatos):
         chunk_overlap=100,
         length_function=len
         )
+    
+    fragmentos = text_splitter.split_text(texto)
+
     items = []
-    for i, fragmento in enumerate(text_splitter):
+    for i, fragmento in enumerate(fragmentos):
         # Evitar fragmentos vacíos
         if not fragmento.strip():
             continue

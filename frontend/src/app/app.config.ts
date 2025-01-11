@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http'; // Importar withFetch
-import { authInterceptor } from './interceptors/auth.interceptor'; // Ejemplo de interceptor
+import { authInterceptor } from './core/interceptors/auth.interceptor'; // Ejemplo de interceptor
 
 import { routes } from './app.routes';
 
