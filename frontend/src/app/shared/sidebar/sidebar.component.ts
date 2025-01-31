@@ -3,6 +3,7 @@ import { ModalFormComponent } from '../../features/upload/file-upload-modal/file
 import { CommonModule } from '@angular/common'; 
 import { MatDialog } from '@angular/material/dialog';
 import { FileUploadService } from '../../core/services/file-upload.service';
+
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
@@ -11,13 +12,22 @@ import { FileUploadService } from '../../core/services/file-upload.service';
 })
 export class SidebarComponent {
   
-  uploadedFiles = [
-    { name: 'file1.txt' },
-    { name: 'file2.jpg' },
-    { name: 'file3.pdf' },
-  ];
+  uploadedFiles: { name: string }[] = [];
 
-  constructor(private dialog: MatDialog,private fileUploadService: FileUploadService) {}
+  constructor(private dialog: MatDialog, private fileUploadService: FileUploadService) {
+    this.loadFiles();
+  }
+
+  loadFiles() {
+    this.fileUploadService.getFiles().subscribe({
+      next: (files) => {
+        this.uploadedFiles = files;
+      },
+      error: (error) => {
+        console.error('Error loading files:', error);
+      }
+    });
+  }
 
   openModal() {
     const dialogRef = this.dialog.open(ModalFormComponent, {

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, UploadFile, Form
+from fastapi import APIRouter, Depends, UploadFile, Form, HTTPException
 from sqlalchemy.orm import Session
 from db_config import get_db
-from services.temario_service import registrar_temario, procesar_pdf_y_subir
+from services.temario_service import registrar_temario, procesar_pdf_y_subir, eliminar_temario
 
 router = APIRouter()
 
@@ -14,7 +14,6 @@ async def registrar_temario_endpoint(
     db: Session = Depends(get_db)
 ):
 
-  
     """
     Endpoint para registrar un temario en la base de datos y procesar el PDF.
     """
@@ -31,3 +30,17 @@ async def registrar_temario_endpoint(
     procesar_pdf_y_subir(ruta_archivo, metadatos)
 
     return {"mensaje": "Temario registrado y procesado correctamente", "temario": temario}
+
+@router.delete("/eliminar-temario/{temario_id}")
+async def eliminar_temario_endpoint(
+    temario_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint para eliminar un temario y sus embeddings.
+    """
+    temario = await eliminar_temario(db, temario_id)
+    if not temario:
+        raise HTTPException(status_code=404, detail="Temario no encontrado")
+    
+    return {"mensaje": f"Temario '{temario.titulo}' eliminado correctamente"}

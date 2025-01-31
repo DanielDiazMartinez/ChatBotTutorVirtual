@@ -31,9 +31,9 @@ def listar_usuarios(db: Session = Depends(get_db)):
     return usuarios
 
 @router.get("/temarios", summary="Listar todos los temas")
-def listar_usuarios(db: Session = Depends(get_db)):
+def listar_temarios(db: Session = Depends(get_db)):
     """
-    Devuelve una lista de todos los usuarios registrados en el sistema.
+    Devuelve una lista de todos los temas registrados en el sistema.
     """
     temarios = db.query(Temario).all()
     return temarios

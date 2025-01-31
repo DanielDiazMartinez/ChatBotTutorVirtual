@@ -7,6 +7,7 @@ import { catchError, throwError } from 'rxjs';
 })
 export class FileUploadService {
   private apiUrl = 'http://0.0.0.0:8000/profesor/registrar-temario/';
+  private getFilesUrl = 'http://0.0.0.0:8000/profesor/obtener-temarios/'; // URL para obtener los archivos
 
   constructor(private http: HttpClient) {}
 
@@ -24,6 +25,15 @@ export class FileUploadService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error uploading file:', error);
         return throwError(() => new Error('Error uploading file.'));
+      })
+    );
+  }
+
+  getFiles() {
+    return this.http.get<{ name: string }[]>(this.getFilesUrl).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error fetching files:', error);
+        return throwError(() => new Error('Error fetching files.'));
       })
     );
   }
