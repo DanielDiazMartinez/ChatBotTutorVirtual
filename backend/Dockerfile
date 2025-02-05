@@ -4,6 +4,9 @@ FROM python:3.12-slim
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
+# Instala dependencias del sistema, incluyendo `postgresql-client`
+RUN apt-get update && apt-get install -y postgresql-client
+
 # Copia el archivo de dependencias primero (antes de copiar todo el código)
 COPY requirements.txt .
 

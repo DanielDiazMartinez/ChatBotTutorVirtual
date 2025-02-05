@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import api_router
+from app.api import alumno_routes, teacher_routes
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,4 +22,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
+app.include_router(alumno_routes.router)
+app.include_router(teacher_routes.router)

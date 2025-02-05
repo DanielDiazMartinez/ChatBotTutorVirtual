@@ -14,8 +14,12 @@ services:
     depends_on:
       - db
     command: >
-      sh -c "alembic upgrade head &&
-             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+       sh -c "until pg_isready -h db -p 5432; do sleep 2; done &&
+         alembic upgrade head &&
+         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+#Production
+#sh -c "alembic upgrade head &&
+#uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     x-file-watch:
       paths:
         - ./backend

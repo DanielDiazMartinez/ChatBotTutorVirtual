@@ -9,11 +9,14 @@ class Settings:
     
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
-    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
+    POSTGRES_HOST: str = (
+        "localhost" if os.getenv("ENV", "").lower() == "local" else os.getenv("POSTGRES_HOST", "db")
+    )
+    
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "tutor_virtual")
-    DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    
+    DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    print(DATABASE_URL)
     PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY")
     PINECONE_ENVIRONMENT: str = os.getenv("PINECONE_ENVIRONMENT")
     PINECONE_INDEX: str = os.getenv("PINECONE_INDEX")
