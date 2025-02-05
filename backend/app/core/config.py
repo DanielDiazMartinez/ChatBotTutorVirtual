@@ -16,7 +16,6 @@ class Settings:
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "tutor_virtual")
     DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    print(DATABASE_URL)
     PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY")
     PINECONE_ENVIRONMENT: str = os.getenv("PINECONE_ENVIRONMENT")
     PINECONE_INDEX: str = os.getenv("PINECONE_INDEX")

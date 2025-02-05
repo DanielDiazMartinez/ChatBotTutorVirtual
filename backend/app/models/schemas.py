@@ -31,7 +31,15 @@ class TeacherOut(TeacherBase):
     class Config:
         from_attributes = True  # Permite trabajar con objetos ORM (por ejemplo, SQLAlchemy)
 
-
+class TeacherUpdate(TeacherBase):
+    """
+    Modelo para la actualización de un profesor.
+    Se pueden actualizar el email y el nombre completo.
+    """
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+                                      
 # ----------------------------------------
 # MODELOS PARA ALUMNOS
 # ----------------------------------------
