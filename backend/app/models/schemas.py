@@ -90,3 +90,12 @@ class TokenData(BaseModel):
     id: Optional[int] = Field(None, example=1)
     email: Optional[EmailStr] = Field(None, example="usuario@example.com")
     role: Optional[str] = Field(None, example="teacher")  # Alternativamente "student"
+
+# ----------------------------------------
+# MODELOS PARA LOS DOCUMENTOS
+# ----------------------------------------
+
+class DocumentCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    teacher_id: int  # ID del profesor que sube el documento

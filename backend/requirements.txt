@@ -64,6 +64,7 @@ pyasn1==0.6.1
 pydantic==2.10.4
 pydantic_core==2.27.2
 PyMuPDF==1.25.1
+pypdf==5.2.0
 pyproject_hooks==1.2.0
 python-dotenv==1.0.1
 python-jose==3.3.0

@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
-from app.models.models import Teacher, Student
-from app.models.schemas import  TeacherCreate, StudentCreate, TeacherUpdate
+from app.models.models import Document, Teacher, Student
+from app.models.schemas import  DocumentCreate, TeacherCreate, StudentCreate, TeacherUpdate
 from fastapi import HTTPException
 from app.core.security import get_password_hash
+from app.core.pinecone import init_pinecone
+from app.utils.document_utils import extract_text_from_pdf, generate_embedding
+
 
 ##############################################
 # FUNCIONES PARA TEACHERS
@@ -67,6 +70,46 @@ def update_teacher(teacher_id: int, teacherUpdate: TeacherUpdate, db: Session):
     db.commit()
     return teacher
 
+def update_teacher(teacher_id: int, db: Session):
+    """
+    Actualiza un teacher por su identificador.
+    """
+    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Profesor no encontrado.")
+    db.commit()
+    return teacher
+
+
+def save_document(db: Session, pdf_file, document: DocumentCreate):
+    """
+    Guarda el documento en PostgreSQL y envía su embedding a Pinecone.
+    """
+    pinecone = init_pinecone()
+
+    content = extract_text_from_pdf(pdf_file)
+    if not content:
+        raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
+
+    
+    new_document = Document(
+        title=document.title,
+        content=content,
+        description=document.description,
+        teacher_id=document.teacher_id
+    )
+    db.add(new_document)
+    db.commit()
+    db.refresh(new_document)
+
+  
+    embedding = generate_embedding(content)  
+
+   
+    pinecone.upsert(vectors=[(str(new_document.id), embedding)])
+
+    return new_document
+
 ##############################################
 # FUNCIONES PARA STUDENTS
 ##############################################
@@ -115,12 +158,3 @@ def delete_student(student_id: int, db: Session):
     db.commit()
     return student
 
-def update_teacher(teacher_id: int, db: Session):
-    """
-    Actualiza un teacher por su identificador.
-    """
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
-    if not teacher:
-        raise HTTPException(status_code=404, detail="Profesor no encontrado.")
-    db.commit()
-    return teacher
