@@ -44,7 +44,7 @@ class Document(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    content = Column(String, nullable=False)
+    file_path = Column(String, nullable=True)
     description = Column(String, nullable=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

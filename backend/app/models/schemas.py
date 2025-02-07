@@ -98,4 +98,4 @@ class TokenData(BaseModel):
 class DocumentCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    teacher_id: int  # ID del profesor que sube el documento
+    teacher_id: int  

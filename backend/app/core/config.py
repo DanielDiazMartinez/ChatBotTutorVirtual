@@ -22,6 +22,8 @@ class Settings:
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
     
+    UPLOAD_FOLDER: str = os.getenv("UPLOAD_FOLDER", "uploads")
+    
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

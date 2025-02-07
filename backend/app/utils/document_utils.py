@@ -14,6 +14,6 @@ def extract_text_from_pdf(pdf_file) -> str:
     """
     Extrae el texto de un archivo PDF.
     """
-    pdf_reader = pypdf.PdfReader(pdf_file)
+    pdf_reader = pypdf.PdfReader(pdf_file.file)
     text = " ".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
     return text.strip()

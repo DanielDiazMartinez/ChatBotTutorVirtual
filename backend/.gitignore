@@ -26,7 +26,7 @@ Thumbs.db
 docker-compose.override.yml
 
 # Archivos de subida
-archivos/
+uploads/*
 script.py
 
 #

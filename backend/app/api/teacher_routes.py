@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 from ..core.database import get_db
 from ..services.user_service import registrar_teacher, get_students, get_student_by_id, get_teachers, get_teacher_by_id, save_document
@@ -56,15 +56,17 @@ def update_teacher(teacher_id: int, db: Session = Depends(get_db)):
 
 @router.post("/upload")
 async def upload_document(
-    title: str,
-    description: str = None,
-    teacher_id: int = None,
-    pdf_file: UploadFile = File(...),
+    title: str = Form(...),  
+    description: str = Form(None),
+    teacher_id: int = Form(...),
+    pdf_file: UploadFile = File(...), 
     db: Session = Depends(get_db)
 ):
+    print(f"📌 Recibido en el servidor: title={title}, description={description}, teacher_id={teacher_id}, pdf_file={pdf_file.filename}")
     """
     Sube un documento PDF, guarda los metadatos en PostgreSQL y almacena el embedding en Pinecone.
     """
+    
     document_data = DocumentCreate(title=title, description=description, teacher_id=teacher_id)
-    document = save_document(db, pdf_file.file, document_data)
+    document = save_document(db, pdf_file, document_data)
     return {"message": "Documento subido exitosamente", "document_id": document.id}

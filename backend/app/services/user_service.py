@@ -1,10 +1,12 @@
+import os
 from sqlalchemy.orm import Session
 from app.models.models import Document, Teacher, Student
 from app.models.schemas import  DocumentCreate, TeacherCreate, StudentCreate, TeacherUpdate
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from app.core.security import get_password_hash
-from app.core.pinecone import init_pinecone
+from app.core.pinecone import get_pinecone_index
 from app.utils.document_utils import extract_text_from_pdf, generate_embedding
+from app.core.config import settings
 
 
 ##############################################
@@ -81,30 +83,40 @@ def update_teacher(teacher_id: int, db: Session):
     return teacher
 
 
-def save_document(db: Session, pdf_file, document: DocumentCreate):
+def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     """
     Guarda el documento en PostgreSQL y envía su embedding a Pinecone.
     """
-    pinecone = init_pinecone()
+   
+    if not pdf_file.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
 
     content = extract_text_from_pdf(pdf_file)
+
     if not content:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
 
+    os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
     
+    file_path = os.path.join(settings.UPLOAD_FOLDER, pdf_file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(pdf_file.file.read())
+
+    pinecone = get_pinecone_index()
+
     new_document = Document(
         title=document.title,
-        content=content,
+        file_path=file_path,
         description=document.description,
         teacher_id=document.teacher_id
     )
+    
     db.add(new_document)
     db.commit()
     db.refresh(new_document)
 
-  
     embedding = generate_embedding(content)  
-
    
     pinecone.upsert(vectors=[(str(new_document.id), embedding)])
 
