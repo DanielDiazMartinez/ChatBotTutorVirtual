@@ -95,7 +95,14 @@ class TokenData(BaseModel):
 # MODELOS PARA LOS DOCUMENTOS
 # ----------------------------------------
 
-class DocumentCreate(BaseModel):
+class DocumentBase(BaseModel):
     title: str
     description: Optional[str] = None
     teacher_id: int  
+
+class DocumentOut(DocumentBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+    

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 from ..core.database import get_db
-from ..services.user_service import registrar_teacher, get_students, get_student_by_id, get_teachers, get_teacher_by_id, save_document
-from ..models.schemas import DocumentCreate, TeacherCreate, StudentOut, TeacherOut
+from ..services.user_service import registrar_teacher, get_students, get_student_by_id, get_teachers, get_teacher_by_id, delete_teacher_service, update_teacher_service
+from ..services.document_service import save_document, list_documents
+from ..models.schemas import TeacherCreate, StudentOut, TeacherOut,DocumentOut, DocumentBase
 from typing import List
 from fastapi import HTTPException
 
@@ -47,11 +48,11 @@ def get_teacher(teacher_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{teacher_id}")
 def delete_teacher(teacher_id: int, db: Session = Depends(get_db)):
-    return delete_teacher(teacher_id, db)
+    return delete_teacher_service(teacher_id, db)
 
 @router.put("/{teacher_id}")
 def update_teacher(teacher_id: int, db: Session = Depends(get_db)):
-    return update_teacher(teacher_id, db)
+    return update_teacher_service(teacher_id, db)
 
 
 @router.post("/upload")
@@ -62,11 +63,17 @@ async def upload_document(
     pdf_file: UploadFile = File(...), 
     db: Session = Depends(get_db)
 ):
-    print(f"📌 Recibido en el servidor: title={title}, description={description}, teacher_id={teacher_id}, pdf_file={pdf_file.filename}")
     """
     Sube un documento PDF, guarda los metadatos en PostgreSQL y almacena el embedding en Pinecone.
     """
     
-    document_data = DocumentCreate(title=title, description=description, teacher_id=teacher_id)
+    document_data = DocumentBase(title=title, description=description, teacher_id=teacher_id)
     document = save_document(db, pdf_file, document_data)
     return {"message": "Documento subido exitosamente", "document_id": document.id}
+
+@router.get("/documents/{teacher_id}",response_model=List[DocumentOut])
+def get_documents( teacher_id: int,db: Session = Depends(get_db)):
+    """
+    Obtiene los documentos de un profesor.
+    """
+    return list_documents(db, teacher_id)
