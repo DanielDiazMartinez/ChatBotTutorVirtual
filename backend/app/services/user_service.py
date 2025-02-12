@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
-from app.models.models import  Teacher, Student
-from app.models.schemas import   TeacherCreate, StudentCreate, TeacherUpdate
+from app.models.models import   Message, Teacher, Student
+from app.models.schemas import  TeacherCreate, StudentCreate, TeacherUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
-
 ##############################################
 # FUNCIONES PARA TEACHERS
 ##############################################
@@ -114,4 +113,3 @@ def delete_student(student_id: int, db: Session):
     db.delete(student)
     db.commit()
     return student
-

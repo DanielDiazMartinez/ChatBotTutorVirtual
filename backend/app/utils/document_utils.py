@@ -64,4 +64,4 @@ def insert_document_embeddings(document_id: int, teacher_id: int, title: str, de
         index.upsert(vectors=batch, namespace="documents")
 
 
-    print(f"✅ Documento {document_id} almacenado correctamente en Pinecone con metadatos.")
+   

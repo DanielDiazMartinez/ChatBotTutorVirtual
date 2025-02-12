@@ -1,8 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import List, Optional
 
 # ----------------------------------------
-# MODELOS PARA PROFESORES
+# SCHEMA PARA PROFESORES
 # ----------------------------------------
 
 class TeacherBase(BaseModel):
@@ -41,7 +41,7 @@ class TeacherUpdate(TeacherBase):
     password: Optional[str] = None
                                       
 # ----------------------------------------
-# MODELOS PARA ALUMNOS
+# SCHEMA PARA ALUMNOS
 # ----------------------------------------
 
 class StudentBase(BaseModel):
@@ -71,7 +71,7 @@ class StudentOut(StudentBase):
 
 
 # ----------------------------------------
-# MODELOS PARA LA AUTENTICACIÓN
+# SCHEMA PARA LA AUTENTICACIÓN
 # ----------------------------------------
 
 class Token(BaseModel):
@@ -92,17 +92,52 @@ class TokenData(BaseModel):
     role: Optional[str] = Field(None, example="teacher")  # Alternativamente "student"
 
 # ----------------------------------------
-# MODELOS PARA LOS DOCUMENTOS
+# SCHEMA PARA LOS DOCUMENTOS
 # ----------------------------------------
-
 class DocumentBase(BaseModel):
     title: str
     description: Optional[str] = None
+
+
+class DocumentCreate(DocumentBase):    
     teacher_id: int  
+
+    class Config:
+        from_attributes = True
+        
 
 class DocumentOut(DocumentBase):
     id: int
 
     class Config:
         from_attributes = True
-    
+
+# ----------------------------------------
+#  SCHEMA PARA LAS PREGUNTAS
+# ----------------------------------------
+class ConversationBase(BaseModel):
+    student_id: int
+    document_id: int  # Relación con el documento
+
+class ConversationCreate(ConversationBase):
+    pass
+
+class ConversationOut(ConversationBase):
+    id: int
+    messages: List["MessageOut"] = []
+
+    class Config:
+        from_attributes = True
+
+class MessageBase(BaseModel):
+    text: str
+    is_bot: bool  
+
+class MessageCreate(MessageBase):
+    pass
+
+class MessageOut(MessageBase):
+    id: int
+
+    class Config:
+        from_attributes = True
