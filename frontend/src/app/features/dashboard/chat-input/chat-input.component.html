@@ -1,0 +1,22 @@
+<div class="border-t border-gray-200 p-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="relative bg-gray-50 rounded-lg">
+        <textarea
+          [(ngModel)]="message"
+          (keydown)="onKeyDown($event)"
+          placeholder="Type your message..."
+          class="w-full px-4 py-3 bg-transparent border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          [rows]="rows"
+        ></textarea>
+        <div class="absolute bottom-3 right-3 flex space-x-2">
+          <button 
+            (click)="onSubmit()"
+            class="p-1 text-gray-400 hover:text-gray-600"
+            [disabled]="!message.trim()"
+          >
+            <!-- Aquí puedes usar un ícono de envío -->
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
