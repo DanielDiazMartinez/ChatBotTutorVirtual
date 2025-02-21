@@ -120,6 +120,7 @@ class ConversationBase(BaseModel):
     document_id: int  # Relación con el documento
 
 class ConversationCreate(ConversationBase):
+    text: str
     pass
 
 class ConversationOut(ConversationBase):

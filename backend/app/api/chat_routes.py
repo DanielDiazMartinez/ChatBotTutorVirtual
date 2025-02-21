@@ -8,17 +8,19 @@ from ..models.models import Message
 chat_routes  = APIRouter()
 
 @chat_routes.post("/conversation", response_model=ConversationCreate)
-def create_question(conversaction_data: ConversationCreate, db: Session = Depends(get_db)):
+def create_conversation(conversaction_data: ConversationCreate, db: Session = Depends(get_db)):
     """
     Crea una nueva pregunta y la asocia con un estudiante y un documento.
     """
     return generate_conversation(conversaction_data, db)
 
-@chat_routes.post("/message/{conversation_id}", response_model=MessageCreate)
+@chat_routes.post("/{conversation_id}/message", response_model=MessageCreate)
 def post_message(conversation_id: int, message_data: MessageCreate, db: Session = Depends(get_db)):
     """
     Crea un nuevo mensaje y lo asocia con una conversación.
     """
+    message_data.is_bot = False
+    
     return add_message_to_conversation(conversation_id,message_data, db)
 
 @chat_routes.get("/conversations/student/{student_id}", response_model=list[ConversationOut])

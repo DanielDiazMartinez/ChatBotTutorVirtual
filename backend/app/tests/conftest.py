@@ -17,7 +17,7 @@ def setup_test_database():
     yield
     Base.metadata.drop_all(bind=engine)
 
-@pytest.fixture(scope="module")  # <-- Cambiado a "module"
+@pytest.fixture(scope="module")  
 def db():
     """Devuelve una sesión de base de datos para los tests."""
     session = TestingSessionLocal()
@@ -26,7 +26,7 @@ def db():
     finally:
         session.close()
 
-@pytest.fixture(scope="module")  # <-- Ahora coincide con db
+@pytest.fixture(scope="module")
 def client():
     """Cliente de pruebas para FastAPI."""
     with TestClient(app) as c:

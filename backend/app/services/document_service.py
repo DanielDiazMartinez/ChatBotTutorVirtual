@@ -6,6 +6,8 @@ from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreat
 from fastapi import Depends, HTTPException, UploadFile
 from app.utils.document_utils import extract_text_from_pdf, insert_document_embeddings
 from app.core.config import settings
+from backend.app.services.groq_service import generate_groq_response
+from backend.app.services.pinecone_service import retrieve_context, store_conversation_embedding, store_message_embedding
 
 
 def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
@@ -70,6 +72,22 @@ def generate_conversation(conversation_data: ConversationCreate, db: Session):
     db.commit()
     db.refresh(new_conversation)
 
+    new_message = Message(
+        text=conversation_data.text,
+        is_bot=False,
+        conversation_id=new_conversation.id
+    )
+    
+    db.add(new_message)
+    db.commit()
+    db.refresh(new_message)
+
+    store_message_embedding(new_message.id, new_message.text, new_conversation.id, new_conversation.document_id, new_conversation.student_id, new_message.is_bot)
+
+    context = retrieve_context(new_conversation.id, conversation_data.document_id, conversation_data.text) # Llamada a Pinecone para recuperar contexto
+   
+    generate_groq_response(conversation_data.text,context) # Llamada a Groq para generar respuesta  
+     
     return new_conversation
 
 def add_message_to_conversation(conversation_id: int, message_data: MessageCreate, db: Session ):
@@ -90,4 +108,6 @@ def add_message_to_conversation(conversation_id: int, message_data: MessageCreat
     db.commit()
     db.refresh(new_message)
 
+    store_message_embedding(new_message.id, message_data.text, conversation_id, conversation.document_id, conversation.student_id, message_data.is_bot)
+    
     return new_message

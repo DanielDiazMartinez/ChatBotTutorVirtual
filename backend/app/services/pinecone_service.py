@@ -18,7 +18,7 @@ def store_message_embedding(message_id: int, text: str, conversation_id: int, do
 
     index.upsert(vectors=[(str(message_id), embedding, metadata)])
 
-    print(f"✅ Mensaje {message_id} almacenado en Pinecone con metadatos: {metadata}")
+    print(f"Mensaje {message_id} almacenado en Pinecone con metadatos: {metadata}")
 
 def retrieve_context(conversation_id: int, document_id: int, query_text: str, top_k=5):
     """
