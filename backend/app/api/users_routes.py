@@ -48,10 +48,6 @@ def get_teacher(teacher_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Profesor no encontrado.")
     return teacher
 
-@users_routes.delete("/teachers/{teacher_id}")
-def delete_teacher(teacher_id: int, db: Session = Depends(get_db)):
-    return delete_teacher_service(teacher_id, db)
-
 @users_routes.put("teachers/{teacher_id}")
 def update_teacher(teacher_id: int, db: Session = Depends(get_db)):
     return update_teacher_service(teacher_id, db)

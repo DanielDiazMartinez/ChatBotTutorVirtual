@@ -1,7 +1,5 @@
-from core.config import settings
+from ..core.config import settings
 import requests
-
-
 
 def generate_groq_response(question_text: str, context: str) -> str:
     """

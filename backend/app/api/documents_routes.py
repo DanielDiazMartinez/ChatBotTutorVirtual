@@ -5,7 +5,7 @@ from ..services.document_service import save_document, list_documents
 from ..models.schemas import DocumentOut, DocumentCreate
 from typing import List
 
-documents_routes = APIRouter(prefix="/documents", tags=["Documentos"])
+documents_routes = APIRouter()
 
 @documents_routes.post("/upload")
 async def upload_document(
@@ -23,7 +23,7 @@ async def upload_document(
     document = save_document(db, pdf_file, document_data)
     return {"message": "Documento subido exitosamente", "document_id": document.id}
 
-@documents_routes.get("/documents/{teacher_id}",response_model=List[DocumentOut])
+@documents_routes.get("/{teacher_id}",response_model=List[DocumentOut])
 def get_documents( teacher_id: int,db: Session = Depends(get_db)):
     """
     Obtiene los documentos de un profesor.

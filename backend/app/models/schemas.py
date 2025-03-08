@@ -117,7 +117,7 @@ class DocumentOut(DocumentBase):
 # ----------------------------------------
 class ConversationBase(BaseModel):
     student_id: int
-    document_id: int  # Relación con el documento
+    document_id: int  
 
 class ConversationCreate(ConversationBase):
     text: str

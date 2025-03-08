@@ -6,8 +6,8 @@ from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreat
 from fastapi import Depends, HTTPException, UploadFile
 from app.utils.document_utils import extract_text_from_pdf, insert_document_embeddings
 from app.core.config import settings
-from backend.app.services.groq_service import generate_groq_response
-from backend.app.services.pinecone_service import retrieve_context, store_conversation_embedding, store_message_embedding
+from app.services.groq_service import generate_groq_response
+from app.services.pinecone_service import retrieve_context, store_message_embedding
 
 
 def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
