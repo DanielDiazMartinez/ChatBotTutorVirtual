@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 from ..core.database import get_db
-from ..services.document_service import save_document, list_documents
+from ..services.document_service import delete_document_service, save_document, list_documents
 from ..models.schemas import DocumentOut, DocumentCreate
 from typing import List
 
@@ -29,3 +29,10 @@ def get_documents( teacher_id: int,db: Session = Depends(get_db)):
     Obtiene los documentos de un profesor.
     """
     return list_documents(db, teacher_id)
+
+@documents_routes.delete("/{document_id}")
+def delete_document(document_id: int, db: Session = Depends(get_db)):
+    """
+    Elimina un documento específico.
+    """
+    return delete_document_service(document_id, db)

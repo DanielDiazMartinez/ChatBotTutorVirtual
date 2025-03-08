@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.services.user_service import delete_teacher_service, get_student_by_id, get_students, get_teacher_by_id, get_teachers, registrar_student, registrar_teacher, update_teacher_service
+from app.services.user_service import get_student_by_id, get_students, get_teacher_by_id, get_teachers, registrar_student, registrar_teacher, update_teacher_service
 from app.models.schemas import StudentCreate, StudentOut, TeacherCreate, TeacherOut
 
 users_routes = users_routes = APIRouter()

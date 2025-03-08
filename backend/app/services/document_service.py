@@ -3,11 +3,11 @@ import os
 from sqlalchemy.orm import Session
 from app.models.models import Conversation, Document, Message, Student
 from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreate
-from fastapi import Depends, HTTPException, UploadFile
+from fastapi import  HTTPException, UploadFile
 from app.utils.document_utils import extract_text_from_pdf, insert_document_embeddings
 from app.core.config import settings
 from app.services.groq_service import generate_groq_response
-from app.services.pinecone_service import retrieve_context, store_message_embedding
+from app.services.pinecone_service import retrieve_context, store_message_embedding, delete_document_bbdd_vector
 
 
 def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
@@ -111,3 +111,17 @@ def add_message_to_conversation(conversation_id: int, message_data: MessageCreat
     store_message_embedding(new_message.id, message_data.text, conversation_id, conversation.document_id, conversation.student_id, message_data.is_bot)
     
     return new_message
+
+def delete_document_service(document_id: int, db: Session):
+    """
+    Elimina un documento específico.
+    """
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado.")
+    db.delete(document)
+    db.commit()
+    
+    delete_document_bbdd_vector(document_id)  
+
+    return document 

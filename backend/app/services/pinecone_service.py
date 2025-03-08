@@ -42,3 +42,19 @@ def retrieve_context(conversation_id: int, document_id: int, query_text: str, to
     except Exception as e:
         print(f"Error al consultar Pinecone: {e}")
         return "Ocurrió un error al recuperar el contexto."
+
+
+def delete_document_bbdd_vector(document_id: int):
+    """
+    Elimina todos los embeddings asociados a un documento específico.
+    """
+    
+    # Construye el filtro para encontrar todos los vectores del documento
+    filter_condition = {
+        "document_id": document_id
+    }
+    
+    # Elimina los vectores que coinciden con el filtro
+    result = index.delete(filter=filter_condition)
+
+    print(f"Se eliminaron {result['num_deleted']} embeddings asociados al documento {document_id}")
