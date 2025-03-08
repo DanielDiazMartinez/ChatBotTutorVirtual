@@ -41,17 +41,6 @@ def get_teacher_by_id(teacher_id: int, db: Session):
     """
     return db.query(Teacher).filter(Teacher.id == teacher_id).first()
 
-def delete_teacher_service(teacher_id: int, db: Session):
-    """
-    Elimina un teacher por su identificador.
-    """
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
-    if not teacher:
-        raise HTTPException(status_code=404, detail="Profesor no encontrado.")
-    db.delete(teacher)
-    db.commit()
-    return teacher
-
 def update_teacher_service(teacher_id: int, teacherUpdate: TeacherUpdate, db: Session):
     """
     Actualiza un teacher por su identificador.

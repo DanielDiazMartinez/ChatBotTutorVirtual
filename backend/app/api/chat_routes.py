@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from ..services.chat_service import delete_conversation, get_conversations_by_student
 from ..core.database import get_db
 from ..services.document_service import add_message_to_conversation, generate_conversation
 from ..models.schemas import ConversationCreate, ConversationOut, MessageCreate
-from ..models.models import Message
 
 chat_routes  = APIRouter()
 
