@@ -3,7 +3,7 @@ import os
 from sqlalchemy.orm import Session
 from app.models.models import Conversation, Document, Message, Student
 from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreate
-from fastapi import Depends, HTTPException, UploadFile
+from fastapi import  HTTPException, UploadFile
 from app.utils.document_utils import extract_text_from_pdf, insert_document_embeddings
 from app.core.config import settings
 from app.services.groq_service import generate_groq_response
