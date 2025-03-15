@@ -46,15 +46,44 @@ def retrieve_context(conversation_id: int, document_id: int, query_text: str, to
 
 def delete_document_bbdd_vector(document_id: int):
     """
-    Elimina todos los embeddings asociados a un documento específico.
+    Elimina todos los vectores asociados a un documento específico.
     """
-    
-    # Construye el filtro para encontrar todos los vectores del documento
-    filter_condition = {
-        "document_id": document_id
-    }
-    
-    # Elimina los vectores que coinciden con el filtro
-    result = index.delete(filter=filter_condition)
 
+    result = index.delete(filter={"document_id": document_id}, namespace="documents")
+    
     print(f"Se eliminaron {result['num_deleted']} embeddings asociados al documento {document_id}")
+
+def get_all_vector_ids(document_id: int, namespace="documents"):
+    """
+    Obtiene todos los IDs de vectores asociados a un document_id en Pinecone usando paginación.
+    """
+    vector_ids = []
+    VECTOR_DIMENSION = 384  # Ajusta esto según la dimensión de tu índice
+    batch_size = 1000  # Número máximo de vectores por consulta (top_k)
+
+    while True:
+        response = index.query(
+            vector=[0.0] * VECTOR_DIMENSION,  # Vector vacío con la dimensión correcta
+            top_k=batch_size,  
+            include_values=False,
+            include_metadata=True,
+            filter={"document_id": document_id},
+            namespace=namespace
+        )
+        print(response)
+        batch_ids = [match["id"] for match in response["matches"]]
+        
+
+        if not batch_ids:
+            break  
+
+        vector_ids.extend(batch_ids)
+
+        print(f"Obtenidos {len(batch_ids)} vectores, total acumulado: {len(vector_ids)}")
+
+        # Si la cantidad de resultados obtenidos es menor que batch_size, terminamos
+        if len(batch_ids) < batch_size:
+            break  
+
+    return vector_ids
+

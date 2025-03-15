@@ -39,7 +39,7 @@ def insert_document_embeddings(document_id: int, teacher_id: int, title: str, de
 
     chunks = chunk_text(text)
     total_chunks = len(chunks)
-    print(f"📌 Documento {document_id} dividido en {total_chunks} fragmentos.")
+    print(f"Documento {document_id} dividido en {total_chunks} fragmentos.")
 
     vectors = []
     for i, chunk in enumerate(chunks):

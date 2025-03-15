@@ -119,9 +119,27 @@ def delete_document_service(document_id: int, db: Session):
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado.")
+    
+    try:
+        delete_document_bbdd_vector(document_id)
+    except Exception as e:
+        print(f"Error al eliminar de Pinecone: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error al eliminar vectores del documento"
+        )
+    
+    if document.file_path and os.path.exists(document.file_path):
+            try:
+                os.remove(document.file_path)
+            except OSError as e:
+                print(f"Error al eliminar archivo físico: {str(e)}")
+
     db.delete(document)
     db.commit()
-    
-    delete_document_bbdd_vector(document_id)  
-
-    return document 
+            
+    return {
+        "message": "Documento eliminado correctamente",
+        "document_id": document_id,
+        "file_path": document.file_path
+    }
