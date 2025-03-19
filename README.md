@@ -95,3 +95,12 @@ Convertir fragmentos de texto en vectores de alta dimensionalidad
 Almacenar estos vectores de manera eficiente en PostgreSQL
 Realizar búsquedas semánticas utilizando distancia coseno
 Encontrar contenido relacionado contextualmente a las preguntas
+
+👥 Contribuir
+Las contribuciones son bienvenidas. Para contribuir:
+
+Haz fork del repositorio
+Crea una nueva rama (git checkout -b feature/nueva-caracteristica)
+Haz commit de tus cambios (git commit -m 'Añadir nueva característica')
+Sube tu rama (git push origin feature/nueva-caracteristica)
+Abre un Pull Request
