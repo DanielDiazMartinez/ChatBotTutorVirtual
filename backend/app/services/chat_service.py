@@ -1,7 +1,7 @@
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.services.pinecone_service import retrieve_context
+
 from app.models.models import Conversation, Message
 from app.services.groq_service import generate_groq_response
 
@@ -10,16 +10,16 @@ def process_student_question( conversation_id: int, document_id: int, question_t
     """
     Maneja la pregunta del estudiante, busca contexto en Pinecone y genera una respuesta con Groq.
     """
-
-    context = retrieve_context(conversation_id, document_id, question_text)
-
+    
+    context = any
+    
 
     bot_response = generate_groq_response(question_text, context)
-
+    
  
     question = Message(conversation_id=conversation_id, text=question_text, is_bot=False)
     response = Message(conversation_id=conversation_id, text=bot_response, is_bot=True)
-
+    
     db.add_all([question, response])
     db.commit()
 

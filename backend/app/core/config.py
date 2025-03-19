@@ -29,9 +29,7 @@ class Settings:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    def __init__(self):
-        print(f"PGADMIN_EMAIL: {os.getenv('PGADMIN_DEFAULT_EMAIL')}")
-        print(f"PGADMIN_PASSWORD: {os.getenv('PGADMIN_DEFAULT_PASSWORD')}")
+
     
     PGADMIN_DEFAULT_EMAIL: str = os.getenv("PGADMIN_DEFAULT_EMAIL", "email@example.com" )
     PGADMIN_DEFAULT_PASSWORD: str = os.getenv("PGADMIN_DEFAULT_PASSWORD", "secure_password")
