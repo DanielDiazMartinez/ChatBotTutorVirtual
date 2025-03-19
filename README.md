@@ -1,176 +1,97 @@
-# 📚 ChatBot Tutor Virtual 🤖🎓
+ChatBotTutorVirtual 🤖
+Un asistente virtual educativo que permite a los profesores cargar documentos y a los estudiantes interactuar con un chatbot que responde preguntas basadas en esos documentos, utilizando procesamiento de lenguaje natural y búsqueda vectorial para proporcionar respuestas precisas.
+📋 Descripción
+ChatBotTutorVirtual es una aplicación que conecta profesores y estudiantes a través de un sistema de chat inteligente que analiza documentos educativos. Los profesores pueden subir materiales de estudio, mientras que los estudiantes pueden hacer preguntas sobre los contenidos y recibir respuestas contextualizadas gracias a la búsqueda vectorial con pgvector.
+🛠️ Tecnologías
 
-Un sistema de tutoría virtual basado en IA que permite a los estudiantes hacer preguntas sobre documentos y mantener conversaciones contextuales con un chatbot inteligente.
+Backend: FastAPI, SQLAlchemy, Alembic, pgvector
+Base de datos: PostgreSQL
+Almacenamiento vectorial: pgvector (búsqueda semántica)
+Contenedores: Docker, Docker Compose
+Herramientas adicionales: pgAdmin
 
-## 🚀 Características Principales
+🏗️ Arquitectura
+El proyecto sigue una arquitectura moderna basada en contenedores:
+CopiarCHATBOTTUTORVIRTUAL/
+├── backend/                  # API y lógica de negocio
+│   ├── alembic/              # Migraciones de base de datos
+│   ├── app/
+│   │   ├── api/              # Endpoints de la API
+│   │   │   ├── chat_routes.py
+│   │   │   ├── documents_routes.py
+│   │   │   ├── users_routes.py
+│   │   ├── core/             # Configuración central
+│   │   │   ├── config.py
+│   │   │   ├── database.py
+│   │   │   ├── security.py
+│   │   │   ├── vector_types.py  # Tipos para pgvector
+│   │   ├── models/           # Modelos de datos
+│   │   │   ├── models.py
+│   │   │   ├── schemas.py
+│   ├── Dockerfile
+│   ├── .env
+│   ├── init.sql              # Script inicial para PostgreSQL
+├── frontend/                 # Frontend (aún no implementado)
+├── docker-compose.yml        # Configuración de servicios
+└── README.md
+📊 Modelos de datos
+El sistema utiliza los siguientes modelos principales:
 
-✅ **Autenticación y autorización** para profesores y alumnos  
-✅ **Gestión de documentos** educativos en formato PDF  
-✅ **Sistema de preguntas y respuestas** con IA  
-✅ **Conversaciones contextuales** con un chatbot  
-✅ **Integración con Pinecone** para búsqueda semántica eficiente  
-✅ **Integración con Groq** para generación de respuestas inteligentes  
+Teacher: Gestiona profesores y sus documentos
+Student: Información de estudiantes
+Document: Documentos subidos por profesores
+DocumentChunk: Fragmentos de documentos con embeddings vectoriales
+Conversation: Conversaciones entre estudiantes y el chatbot
+Message: Mensajes individuales en las conversaciones
 
----
+🚀 Instalación y configuración
+Requisitos previos
 
-## 🏗️ **Estructura del Proyecto**
+Docker y Docker Compose
+Git
 
-```
-📦 backend/
-│── 📂 app/                         # Código principal del backend
-│   ├── 📂 api/                     # Definición de endpoints
-│   │   ├── student_routes.py       # Rutas de estudiantes
-│   │   ├── teacher_routes.py       # Rutas de profesores
-│   │   ├── __init__.py
-│   │
-│   ├── 📂 core/                    # Configuraciones de la aplicación
-│   │   ├── config.py               # Configuración global
-│   │   ├── database.py             # Conexión con PostgreSQL
-│   │   ├── pinecone.py             # Configuración de Pinecone
-│   │   ├── security.py             # Seguridad y autenticación
-│   │   ├── __init__.py
-│   │
-│   ├── 📂 models/                  # Modelos SQLAlchemy
-│   │   ├── models.py               # Modelos de BD
-│   │   ├── schemas.py              # Esquemas Pydantic
-│   │   ├── __init__.py
-│   │
-│   ├── 📂 services/                # Lógica de negocio
-│   │   ├── chat_service.py         # Procesamiento de conversaciones
-│   │   ├── document_service.py     # Procesamiento de documentos
-│   │   ├── groq_service.py         # Integración con Groq
-│   │   ├── pinecone_service.py     # Gestión de embeddings
-│   │   ├── user_service.py         # Gestión de usuarios
-│   │   ├── __init__.py
-│   │
-│   ├── 📂 utils/                   # Utilidades generales
-│   │   ├── document_utils.py       # Procesamiento de documentos PDF
-│   │   ├── __init__.py
-│   │
-│   ├── 📂 uploads/                 # Carpeta donde se almacenan los PDFs subidos
-│   │   ├── (Archivos PDF)
-│   │
-│   ├── main.py                     # Punto de entrada del backend
-│
-📦 frontend/
-│── 📂 src/                         # Código fuente del frontend Angular
-│── 📂 public/                      # Archivos estáticos
-│── angular.json                    # Configuración de Angular
-│── package.json                     # Dependencias del frontend
-│
-📜 .env                              # Variables de entorno
-📜 requirements.txt                   # Dependencias de Python
-📜 Dockerfile                         # Configuración de Docker
-📜 docker-compose.yml                 # Configuración para Docker Compose
-📜 README.md                          # Documentación del proyecto
-```
+Pasos para instalar
 
----
+Clona el repositorio
+bashCopiargit clone https://github.com/tu-usuario/ChatBotTutorVirtual.git
+cd ChatBotTutorVirtual
 
-## 🛠️ **Instalación y Configuración**
+Configura las variables de entorno
+bashCopiarcp backend/.env.example backend/.env
+# Edita .env con tus valores
 
-### **1️⃣ Requisitos previos**
-Asegúrate de tener instalado en tu sistema:
-- **Python 3.10+**
-- **Node.js & npm**
-- **PostgreSQL**
-- **Docker y Docker Compose (Opcional, pero recomendado)**
+Inicia los servicios con Docker Compose
+bashCopiardocker-compose up -d
 
----
+Accede a la aplicación
 
-### **2️⃣ Configuración del Backend**
+API: http://localhost:8000
+Documentación API: http://localhost:8000/docs
+pgAdmin: http://localhost:5050
 
-#### 🔹 **1. Clonar el repositorio**
-```bash
-git clone https://github.com/tu-usuario/chatbot-tutor-virtual.git
-cd chatbot-tutor-virtual/backend
-```
 
-#### 🔹 **2. Crear un entorno virtual**
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate      # Windows
-```
 
-#### 🔹 **3. Instalar dependencias**
-```bash
-pip install -r requirements.txt
-```
+📄 API Endpoints
+La API proporciona los siguientes endpoints principales:
 
-#### 🔹 **4. Configurar variables de entorno**
-Crea un archivo `.env` en la raíz del backend y añade:
-```ini
-POSTGRES_USER=your_user
-POSTGRES_PASSWORD=your_password
-POSTGRES_SERVER=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=tutor_virtual
-PINECONE_API_KEY=your_pinecone_key
-PINECONE_ENVIRONMENT=your_pinecone_env
-PINECONE_INDEX=your_pinecone_index
-GROQ_API_KEY=your_groq_key
-SECRET_KEY=your_secret_key
-```
+Autenticación: /api/auth/login, /api/auth/register
+Profesores: /api/teachers/
+Estudiantes: /api/students/
+Documentos: /api/documents/
+Chat: /api/chat/
 
-#### 🔹 **5. Iniciar el backend**
-```bash
-uvicorn app.main:app --reload
-```
+💡 Características principales
 
----
+Autenticación y autorización para profesores y estudiantes
+Carga y procesamiento de documentos PDF
+Generación automática de embeddings vectoriales
+Conversaciones contextualizadas con búsqueda semántica
+Interfaz administrativa para profesores
 
-### **3️⃣ Configuración del Frontend**
-#### 🔹 **1. Instalar dependencias**
-```bash
-cd ../frontend
-npm install
-```
+🔍 Búsqueda vectorial con pgvector
+El sistema utiliza pgvector para:
 
-#### 🔹 **2. Iniciar el frontend**
-```bash
-ng serve --open
-```
-
----
-
-### **4️⃣ Opcional: Ejecutar con Docker**
-```bash
-docker-compose up --build
-```
-
----
-
-## 📡 **Endpoints de la API**
-
-### **🔐 Autenticación**
-- **POST** `/auth/login` → Iniciar sesión
-- **POST** `/auth/register` → Registrar nuevo usuario
-
-### **📄 Documentos**
-- **POST** `/documents/upload` → Subir un documento PDF
-- **GET** `/documents` → Listar documentos disponibles
-- **DELETE** `/documents/{id}` → Eliminar documento
-
-### **💬 Chat y Preguntas**
-- **POST** `/chat/preguntar` → Hacer una pregunta sobre un documento
-- **POST** `/chat/conversaciones` → Crear una nueva conversación
-- **GET** `/chat/conversaciones` → Listar conversaciones del usuario
-- **POST** `/chat/conversaciones/{id}/mensajes` → Enviar un mensaje
-- **GET** `/chat/conversaciones/{id}/mensajes` → Obtener mensajes de una conversación
-
----
-
-## ⭐ **Contribuciones**
-Las contribuciones son bienvenidas. Puedes:
-1. Hacer un **fork** 🍴
-2. Crear una rama (`git checkout -b feature-nueva`)
-3. Hacer tus cambios y commit (`git commit -m "Agregada nueva funcionalidad"`)
-4. Hacer un push (`git push origin feature-nueva`)
-5. Abrir un **Pull Request** 🚀
-
----
-
-## 📌 **Contacto**
-Si tienes dudas o sugerencias, puedes contactarme en **tu-email@ejemplo.com** 📩
-
+Convertir fragmentos de texto en vectores de alta dimensionalidad
+Almacenar estos vectores de manera eficiente en PostgreSQL
+Realizar búsquedas semánticas utilizando distancia coseno
+Encontrar contenido relacionado contextualmente a las preguntas
