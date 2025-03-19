@@ -10,30 +10,19 @@ Almacenamiento vectorial: pgvector (búsqueda semántica)
 Contenedores: Docker, Docker Compose
 Herramientas adicionales: pgAdmin
 
-🏗️ Arquitectura
-El proyecto sigue una arquitectura moderna basada en contenedores:
-CopiarCHATBOTTUTORVIRTUAL/
-├── backend/                  # API y lógica de negocio
-│   ├── alembic/              # Migraciones de base de datos
-│   ├── app/
-│   │   ├── api/              # Endpoints de la API
-│   │   │   ├── chat_routes.py
-│   │   │   ├── documents_routes.py
-│   │   │   ├── users_routes.py
-│   │   ├── core/             # Configuración central
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   ├── security.py
-│   │   │   ├── vector_types.py  # Tipos para pgvector
-│   │   ├── models/           # Modelos de datos
-│   │   │   ├── models.py
-│   │   │   ├── schemas.py
-│   ├── Dockerfile
-│   ├── .env
-│   ├── init.sql              # Script inicial para PostgreSQL
-├── frontend/                 # Frontend (aún no implementado)
-├── docker-compose.yml        # Configuración de servicios
-└── README.md
+## 🏗️ Arquitectura
+
+backend/
+├── alembic/              # Migraciones de base de datos
+├── app/
+│   ├── api/              # Endpoints de la API
+│   ├── core/             # Configuración central
+│   └── models/           # Modelos de datos
+├── Dockerfile
+├── .env
+└── init.sql              # Script inicial para PostgreSQL
+
+
 📊 Modelos de datos
 El sistema utiliza los siguientes modelos principales:
 
