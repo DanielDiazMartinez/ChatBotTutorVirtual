@@ -1,7 +1,4 @@
-"""
-Implementación de pgvector con SQLAlchemy sin dependencias adicionales
-"""
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, func, select
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles

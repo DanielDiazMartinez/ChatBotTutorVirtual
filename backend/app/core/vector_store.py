@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.models import DocumentChunk
-from app.core.vector_types import CosineDistance, EuclideanDistance, InnerProduct
+from models.models import DocumentChunk
+from core.vector_types import CosineDistance, EuclideanDistance, InnerProduct
 from typing import List, Tuple, Optional
 
 def search_similar_chunks(db: Session, 

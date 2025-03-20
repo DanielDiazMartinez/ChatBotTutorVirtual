@@ -54,6 +54,7 @@ nvidia-nvtx-cu12==12.4.127
 orjson==3.10.13
 packaging==24.2
 passlib==1.7.4
+pgvector==0.4.0
 pillow==11.0.0
 pinecone-client==5.0.1
 pinecone-plugin-inference==1.1.0
@@ -61,6 +62,7 @@ pinecone-plugin-interface==0.0.7
 pip-tools==7.4.1
 pluggy==1.5.0
 propcache==0.2.1
+psycopg2==2.9.10
 psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pydantic==2.10.4
