@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 from textwrap import wrap
 # Inicializar el modelo de embeddings (se carga solo una vez)
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+embedding_model = SentenceTransformer("BAAI/bge-large-en-v1.5")
 def generate_embedding(text: str):
     """
     Genera un embedding a partir del contenido del texto.

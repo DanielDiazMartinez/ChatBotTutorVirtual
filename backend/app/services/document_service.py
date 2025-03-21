@@ -7,6 +7,7 @@ from fastapi import  HTTPException, UploadFile
 from app.utils.document_utils import extract_text_from_pdf
 from app.core.config import settings
 from app.services.groq_service import generate_groq_response
+from app.services.vector_service import insert_document_chunks
 
 
 
@@ -44,9 +45,9 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
 
     if not content:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
-    """
-    insert_document_embeddings(new_document.id, new_document.teacher_id, new_document.title, new_document.description, content)
-    """
+    
+    insert_document_chunks(db, new_document.id, content)
+        
     return new_document
 
 def list_documents(db: Session, teacher_id: int):

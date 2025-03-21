@@ -1,7 +1,62 @@
 from sqlalchemy.orm import Session
-from models.models import DocumentChunk
-from core.vector_types import CosineDistance, EuclideanDistance, InnerProduct
+from app.models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct
+from app.utils.document_utils import  chunk_text,generate_embedding
 from typing import List, Tuple, Optional
+
+def insert_document_chunks(
+    db: Session,
+    document_id: int,
+    text: str,
+    chunk_size: int = 500,
+    overlap: int = 100
+) -> List[DocumentChunk]:
+    """
+    Divide el texto de un documento en chunks, genera embeddings para cada uno
+    y los inserta en la base de datos usando pgvector.
+    
+    Args:
+        db: Sesión de SQLAlchemy
+        document_id: ID del documento al que pertenecen los chunks
+        text: Texto completo del documento
+        chunk_size: Tamaño de cada chunk en caracteres
+        overlap: Cantidad de caracteres de superposición entre chunks
+        
+    Returns:
+        Lista de objetos DocumentChunk creados
+    """
+    # Recuperar el documento para asegurarse de que existe
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise ValueError(f"No existe un documento con ID {document_id}")
+    
+    # Dividir el texto en chunks
+    chunks = chunk_text(text, chunk_size=chunk_size)
+    
+    created_chunks = []
+    
+    
+    for i, chunk_content in enumerate(chunks):
+        
+        embedding = generate_embedding(chunk_content)
+        
+        
+        chunk = DocumentChunk(
+            document_id=document_id,
+            content=chunk_content,
+            embedding=embedding,
+            chunk_number=i
+        )
+        
+        # Añadirlo a la sesión
+        db.add(chunk)
+        created_chunks.append(chunk)
+    
+    # Guardar todos los chunks en la base de datos
+    db.commit()
+    
+    print(f"Se insertaron {len(created_chunks)} chunks para el documento ID {document_id}")
+    
+    return created_chunks
 
 def search_similar_chunks(db: Session, 
                           query_embedding: List[float], 
