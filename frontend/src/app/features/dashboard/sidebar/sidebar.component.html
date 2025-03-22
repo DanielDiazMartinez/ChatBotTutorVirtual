@@ -1,0 +1,57 @@
+<!-- sidebar.component.html -->
+<div class="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">AI Tutor Virtual</h1>
+    </div>
+    
+    <!-- Sección de documentos -->
+    <div class="documents-section">
+      <h2 class="section-title">Documentos</h2>
+      <div class="documents-list">
+        <div 
+          *ngFor="let doc of documents" 
+          class="document-item"
+          [class.active]="doc.id === currentDocumentId"
+          (click)="onSelectDocument(doc.id)">
+          <div class="document-title">{{ doc.title }}</div>
+          <div class="document-description">{{ doc.description }}</div>
+        </div>
+        
+        <div *ngIf="documents.length === 0 && !isLoading" class="empty-list">
+          No hay documentos disponibles
+        </div>
+        
+        <div *ngIf="isLoading" class="loading">
+          Cargando documentos...
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sección de conversaciones -->
+    <div class="conversations-section" *ngIf="currentDocumentId">
+      <div class="section-header">
+        <h2 class="section-title">Conversaciones</h2>
+        <button 
+          class="new-conversation-btn"
+          (click)="onCreateNewConversation()">
+          Nueva Conversación
+        </button>
+      </div>
+      
+      <div class="conversations-list">
+        <div 
+          *ngFor="let conv of conversations" 
+          class="conversation-item"
+          [class.active]="conv.id === currentConversationId"
+          (click)="onSelectConversation(conv.id)">
+          <div class="conversation-date">
+            {{ conv.created_at | date:'short' }}
+          </div>
+        </div>
+        
+        <div *ngIf="conversations.length === 0" class="empty-list">
+          No hay conversaciones para este documento
+        </div>
+      </div>
+    </div>
+  </div>

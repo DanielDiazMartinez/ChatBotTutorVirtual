@@ -1,39 +1,36 @@
-        /chatbot-frontend
-        │── /src
-        │   ├── /app
-        │   │   ├── /core           # Servicios, interceptores, etc.
-        │   │   │   ├── /services   # Llamadas HTTP, IA, subida de archivos
-        │   │   │   ├── /guards     # Guards de autenticación o permisos
-        │   │   │   ├── /interceptors # Interceptores HTTP
-        │   │   ├── /shared         # Componentes y utilidades reutilizables
-        │   │   │   ├── /components # Botones, modales, loaders
-        │   │   │   ├── /pipes      # Pipes personalizados
-        │   │   │   ├── /directives # Directivas útiles
-        │   │   ├── /features       # Módulos por funcionalidad
-        │   │   │   ├── /chat       # Módulo del chatbot
-        │   │   │   │   ├── chat.module.ts
-        │   │   │   │   ├── chat.component.ts
-        │   │   │   │   ├── chat.component.html
-        │   │   │   │   ├── chat.component.scss
-        │   │   │   │   ├── chat.service.ts
-        │   │   │   ├── /upload     # Módulo para subir archivos
-        │   │   │   │   ├── upload.module.ts
-        │   │   │   │   ├── upload.component.ts
-        │   │   │   │   ├── upload.component.html
-        │   │   │   │   ├── upload.component.scss
-        │   │   │   │   ├── upload.service.ts
-        │   │   │   ├── /dashboard  # Vista principal
-        │   │   │   │   ├── dashboard.module.ts
-        │   │   │   │   ├── dashboard.component.ts
-        │   │   │   │   ├── dashboard.component.html
-        │   │   │   │   ├── dashboard.component.scss
-        │   │   ├── /assets         # Imágenes, iconos, estilos globales
-        │   │   ├── /environments   # Variables de entorno
-        │   │   ├── app.module.ts
-        │   │   ├── app.component.ts
-        │   │   ├── app.component.html
-        │   │   ├── app.component.scss
-        │   ├── /styles            # Estilos globales
-        │   ├── main.ts
-        │   ├── index.html
-    
+/src/app/
+  /features/
+    /dashboard/
+      dashboard.component.ts    // Componente contenedor principal
+      dashboard.component.html  // Plantilla que organiza todo
+      dashboard.component.scss
+      
+      /sidebar/
+        sidebar.component.ts    // Lista de documentos/conversaciones
+        sidebar.component.html
+        sidebar.component.scss
+      
+      /content-area/           // Área principal dividida en dos
+        content-area.component.ts
+        content-area.component.html
+        content-area.component.scss
+        
+        /pdf-viewer/          // Visualizador de PDF
+          pdf-viewer.component.ts
+          pdf-viewer.component.html
+          pdf-viewer.component.scss
+        
+        /chat-area/           // Área de chat completa
+          chat-area.component.ts
+          chat-area.component.html
+          chat-area.component.scss
+          
+          /message-list/      // Lista de mensajes
+            message-list.component.ts
+            message-list.component.html
+            message-list.component.scss
+          
+          /message-input/     // Input para nuevos mensajes
+            message-input.component.ts
+            message-input.component.html
+            message-input.component.scss
