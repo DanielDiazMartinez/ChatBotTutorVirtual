@@ -1,0 +1,21 @@
+<!-- src/app/features/dashboard/content-area/chat-area/message-list/message-list.component.html -->
+<div class="messages-container" #messagesContainer>
+  <div *ngIf="isLoading" class="loading-messages">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Cargando mensajes...</div>
+  </div>
+  
+  <div *ngIf="!isLoading && messages.length === 0" class="empty-messages">
+    No hay mensajes en esta conversación. ¡Escribe algo para comenzar!
+  </div>
+  
+  <div *ngFor="let message of messages" 
+       class="message-wrapper"
+       [class.bot-message]="message.is_bot" 
+       [class.user-message]="!message.is_bot">
+    <div class="message">
+      <div class="message-content">{{ message.text }}</div>
+      <div class="message-timestamp">{{ message.created_at | date:'short' }}</div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+<!-- content-area.component.html -->
+<div class="content-area">
+    <div class="content-header">
+      <h2 class="content-title">
+        {{conversationId ? 'Conversación #' + conversationId : 'Nueva Conversación'}}
+      </h2>
+      
+      <div class="content-actions">
+        <!-- Botón para mostrar/ocultar el PDF cuando se implemente -->
+        <button 
+          class="toggle-pdf-btn"
+          (click)="togglePdfViewer()"
+          *ngIf="documentId">
+          {{ showPdfViewer ? 'Ocultar Documento' : 'Mostrar Documento' }}
+        </button>
+      </div>
+    </div>
+    
+    <div class="content-container" [class.with-pdf]="showPdfViewer">
+      <!-- Espacio para el visualizador de PDF (cuando showPdfViewer es true) -->
+      <div class="pdf-container" *ngIf="showPdfViewer">
+        <div class="pdf-placeholder">
+          [Visualizador de PDF - Se implementará después]
+        </div>
+      </div>
+      
+      <!-- Área de chat siempre visible -->
+      <div class="chat-container">
+        <app-chat-area
+          [documentId]="documentId"
+          [conversationId]="conversationId">
+        </app-chat-area>
+      </div>
+    </div>
+  </div>
