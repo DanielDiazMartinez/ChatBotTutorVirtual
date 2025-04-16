@@ -1,10 +1,67 @@
-# models.py
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy.sql import func
-
+from sqlalchemy.sql import expression
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.types import UserDefinedType
 
 Base = declarative_base()
+
+# Definición del tipo Vector para SQLAlchemy
+class Vector(UserDefinedType):
+    def __init__(self, dimensions):
+        self.dimensions = dimensions
+
+    def get_col_spec(self, **kw):
+        return f"vector({self.dimensions})"
+
+    def bind_processor(self, dialect):
+        def process(value):
+            if value is None:
+                return None
+            return value
+        return process
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            return value
+        return process
+
+# Definición de funciones SQL para pgvector
+class CosineDistance(expression.FunctionElement):
+    type = None
+    name = 'cosine_distance'
+    inherit_cache = True
+
+@compiles(CosineDistance)
+def _compile_cosine_distance(element, compiler, **kw):
+    return "%s <=> %s" % (
+        compiler.process(element.clauses.clauses[0]),
+        compiler.process(element.clauses.clauses[1])
+    )
+
+class EuclideanDistance(expression.FunctionElement):
+    type = None
+    name = 'euclidean_distance'
+    inherit_cache = True
+
+@compiles(EuclideanDistance)
+def _compile_euclidean_distance(element, compiler, **kw):
+    return "%s <-> %s" % (
+        compiler.process(element.clauses.clauses[0]),
+        compiler.process(element.clauses.clauses[1])
+    )
+
+class InnerProduct(expression.FunctionElement):
+    type = None
+    name = 'inner_product'
+    inherit_cache = True
+
+@compiles(InnerProduct)
+def _compile_inner_product(element, compiler, **kw):
+    return "%s <#> %s" % (
+        compiler.process(element.clauses.clauses[0]),
+        compiler.process(element.clauses.clauses[1])
+    )
 
 # --------------------------#
 # Modelo para los Profesores
@@ -56,12 +113,30 @@ class Document(Base):
     
 
     teacher = relationship("Teacher", back_populates="documents")
-
-
+    chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="document", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Document(id={self.id}, title='{self.title}')>"
+
+# ----------------------------------#
+# Modelo para Chunks de Documento
+# ----------------------------------#
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
+    content = Column(Text, nullable=False)
+    embedding = Column(Vector(1024))  # Ajustar dimensión según el modelo que uses
+    chunk_number = Column(Integer, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    document = relationship("Document", back_populates="chunks")
+    
+    def __repr__(self):
+        return f"<DocumentChunk(id={self.id}, document_id={self.document_id}, chunk_number={self.chunk_number})>"
+
 # ------------------------------#
 # Modelo de Conversación
 # ------------------------------#
@@ -92,6 +167,7 @@ class Message(Base):
     text = Column(Text, nullable=False)
     is_bot = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    embedding = Column(Vector(1024), nullable=True)  # Para almacenar embeddings de consultas/respuestas
 
     conversation = relationship("Conversation", back_populates="messages")
 

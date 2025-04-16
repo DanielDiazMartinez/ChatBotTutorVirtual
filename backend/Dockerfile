@@ -16,8 +16,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto del código de la aplicación
 COPY . .
 
+# Hacer ejecutable el script de inicio
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 # Exponer el puerto de la aplicación
 EXPOSE 8000
 
-# Comando para iniciar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Usar el script como punto de entrada
+ENTRYPOINT ["/start.sh"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

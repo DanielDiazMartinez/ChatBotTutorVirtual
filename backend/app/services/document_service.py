@@ -4,10 +4,11 @@ from sqlalchemy.orm import Session
 from app.models.models import Conversation, Document, Message, Student
 from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreate
 from fastapi import  HTTPException, UploadFile
-from app.utils.document_utils import extract_text_from_pdf, insert_document_embeddings
+from app.utils.document_utils import extract_text_from_pdf
 from app.core.config import settings
 from app.services.groq_service import generate_groq_response
-from app.services.pinecone_service import retrieve_context, store_message_embedding
+from app.services.vector_service import insert_document_chunks
+
 
 
 def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
@@ -44,9 +45,9 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
 
     if not content:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
-   
-    insert_document_embeddings(new_document.id, new_document.teacher_id, new_document.title, new_document.description, content)
-
+    
+    insert_document_chunks(db, new_document.id, content)
+        
     return new_document
 
 def list_documents(db: Session, teacher_id: int):
@@ -81,13 +82,13 @@ def generate_conversation(conversation_data: ConversationCreate, db: Session):
     db.add(new_message)
     db.commit()
     db.refresh(new_message)
-
+    """"
     store_message_embedding(new_message.id, new_message.text, new_conversation.id, new_conversation.document_id, new_conversation.student_id, new_message.is_bot)
 
     context = retrieve_context(new_conversation.id, conversation_data.document_id, conversation_data.text) # Llamada a Pinecone para recuperar contexto
-   
+    
     generate_groq_response(conversation_data.text,context) # Llamada a Groq para generar respuesta  
-     
+    """
     return new_conversation
 
 def add_message_to_conversation(conversation_id: int, message_data: MessageCreate, db: Session ):
@@ -107,7 +108,7 @@ def add_message_to_conversation(conversation_id: int, message_data: MessageCreat
     db.add(new_message)
     db.commit()
     db.refresh(new_message)
-
+    """
     store_message_embedding(new_message.id, message_data.text, conversation_id, conversation.document_id, conversation.student_id, message_data.is_bot)
-    
+    """
     return new_message
