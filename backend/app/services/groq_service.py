@@ -2,10 +2,23 @@ from ..core.config import settings
 import requests
 
 def generate_groq_response(question_text: str, context: str) -> str:
+    prompt = f"""
+    Eres un profesor virtual que responde preguntas de estudiantes sobre documentos específicos.
+    
+    INSTRUCCIONES IMPORTANTES:
+    - Basa tu respuesta ÚNICAMENTE en el contexto proporcionado, no en tu conocimiento general.
+    - Si la respuesta no está en el contexto, di "No encuentro información sobre esto en el documento."
+    - No inventes información que no esté en el contexto.
+    - Cita partes específicas del documento cuando sea relevante.
+    
+    CONTEXTO DEL DOCUMENTO:
+    {context}
+    
+    PREGUNTA DEL ESTUDIANTE:
+    {question_text}
+    
+    RESPUESTA (basada únicamente en el contexto):
     """
-    Usa Groq para generar una respuesta basada en contexto.
-    """
-    prompt = f"Contexto relevante: {context}\nPregunta del estudiante: {question_text}\nRespuesta del profesor virtual:"
 
     headers = {"Authorization": f"Bearer {settings.GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {

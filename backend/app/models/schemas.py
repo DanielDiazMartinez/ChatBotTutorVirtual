@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 
@@ -113,23 +114,48 @@ class DocumentOut(DocumentBase):
         from_attributes = True
 
 # ----------------------------------------
-#  SCHEMA PARA LAS PREGUNTAS
+#  SCHEMA PARA LAS CONVERSACIONES
 # ----------------------------------------
 class ConversationBase(BaseModel):
-    student_id: int
-    document_id: int  
+    """
+    Modelo base para conversaciones.
+    Ahora no requiere student_id ya que puede ser de profesor o estudiante.
+    """
+    document_id: int
 
-class ConversationCreate(ConversationBase):
-    text: str
-    pass
+class ConversationCreate(BaseModel):
+    """
+    Modelo para crear una nueva conversación.
+    """
+    document_id: int
+    text: Optional[str] = None  # Mensaje inicial opcional
 
-class ConversationOut(ConversationBase):
+class ConversationOut(BaseModel):
+    """
+    Modelo de salida para una conversación.
+    """
     id: int
+    student_id: Optional[int] = None
+    teacher_id: Optional[int] = None
+    document_id: int
     messages: List["MessageOut"] = []
 
     class Config:
         from_attributes = True
 
+class ConversationWithResponse(BaseModel):
+    """
+    Esquema que combina una conversación creada y la respuesta inicial del bot.
+    """
+    conversation: ConversationOut
+    bot_response: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+# ----------------------------------------
+#  SCHEMA PARA LOS MENSAJES
+# ----------------------------------------
 class MessageBase(BaseModel):
     text: str
     is_bot: bool  
@@ -139,6 +165,8 @@ class MessageCreate(MessageBase):
 
 class MessageOut(MessageBase):
     id: int
+    conversation_id: int
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

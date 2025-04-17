@@ -29,3 +29,4 @@ def get_documents( teacher_id: int,db: Session = Depends(get_db)):
     Obtiene los documentos de un profesor.
     """
     return list_documents(db, teacher_id)
+

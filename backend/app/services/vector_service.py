@@ -1,7 +1,9 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct
-from app.utils.document_utils import  chunk_text,generate_embedding
+from ..models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct, Conversation, Message, Student, Teacher
+from ..utils.document_utils import  chunk_text,generate_embedding
 from typing import List, Tuple, Optional
+from ..services.groq_service import generate_groq_response
 
 def insert_document_chunks(
     db: Session,
@@ -12,7 +14,7 @@ def insert_document_chunks(
 ) -> List[DocumentChunk]:
     """
     Divide el texto de un documento en chunks, genera embeddings para cada uno
-    y los inserta en la base de datos usando pgvector.
+    y los inserta en la base de datos.
     
     Args:
         db: Sesión de SQLAlchemy
@@ -78,7 +80,7 @@ def search_similar_chunks(db: Session,
     """
     from sqlalchemy import select
     
-    # Seleccionar la función de distancia
+    
     if similarity_metric == "cosine":
         distance_func = CosineDistance
         # Para coseno, menor distancia = mayor similitud
@@ -87,7 +89,7 @@ def search_similar_chunks(db: Session,
         distance_func = EuclideanDistance
         # Para L2, menor distancia = mayor similitud, pero no tiene límite superior
         convert_score = lambda x: 1.0 / (1.0 + x)
-    else:  # dot product
+    else:  
         distance_func = InnerProduct
         # Para producto escalar, mayor valor = mayor similitud
         convert_score = lambda x: -x
@@ -113,3 +115,91 @@ def search_similar_chunks(db: Session,
     
     # Convertir resultados
     return [(chunk, convert_score(distance)) for chunk, distance in results]
+
+def generate_conversation(
+    db: Session,
+    document_id: int,
+    user_id: int,
+    user_type: str,  # "teacher" o "student"
+    initial_message_text: str = None
+) -> Conversation:
+    """
+    Crea una nueva conversación asociada a un profesor o estudiante y un documento.
+    Opcionalmente incluye el primer mensaje.
+    
+    Args:
+        db: Sesión de SQLAlchemy
+        document_id: ID del documento sobre el que trata la conversación
+        user_id: ID del usuario (profesor o estudiante)
+        user_type: Tipo de usuario ("teacher" o "student")
+        initial_message_text: Texto del primer mensaje (opcional)
+        
+    Returns:
+        Objeto Conversation creado
+    """
+    # Verificar que el documento existe
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    # Verificar que el usuario existe
+    if user_type == "student":
+        user = db.query(Student).filter(Student.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+        
+        # Crear la conversación para estudiante
+        new_conversation = Conversation(
+            student_id=user_id,
+            teacher_id=None,
+            document_id=document_id
+        )
+    elif user_type == "teacher":
+        user = db.query(Teacher).filter(Teacher.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Profesor no encontrado")
+        
+        # Crear la conversación para profesor
+        new_conversation = Conversation(
+            student_id=None,
+            teacher_id=user_id,
+            document_id=document_id
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Tipo de usuario no válido. Debe ser 'teacher' o 'student'")
+    
+    # Guardar la conversación
+    db.add(new_conversation)
+    db.commit()
+    db.refresh(new_conversation)
+    
+    # Si se proporciona un mensaje inicial, añadirlo
+    if initial_message_text:
+        question_embedding = generate_embedding(initial_message_text)
+
+        new_message = Message(
+            text=initial_message_text,
+            is_bot=False,
+            conversation_id=new_conversation.id,
+            emmbedding=question_embedding 
+        )
+        db.add(new_message)
+        db.commit()
+        
+        similar_chunks = search_similar_chunks(db, question_embedding, document_id)
+        context = " ".join([chunk.content for chunk, score in similar_chunks if score > 0.65])
+
+        response_text = generate_groq_response(initial_message_text, context)
+        response_embedding = generate_embedding(response_text)
+
+        new_message = Message(
+            text=response_text,
+            is_bot=True,
+            conversation_id=new_conversation.id,
+            emmbedding=response_embedding
+        )
+
+        db.add(new_message)
+        db.commit()
+
+    return response_text,new_conversation 

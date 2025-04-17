@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, func
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, validates
 from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import UserDefinedType
@@ -75,8 +75,8 @@ class Teacher(Base):
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-
     documents = relationship("Document", back_populates="teacher", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="teacher", cascade="all, delete-orphan")  # Añade esta línea
     
     def __repr__(self):
         return f"<Teacher(id={self.id}, email='{self.email}')>"
@@ -144,18 +144,25 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True)  # Ahora puede ser NULL
+    teacher_id = Column(Integer, ForeignKey("teachers.id"), nullable=True)  # Nuevo campo
+    document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    document_id = Column(Integer, ForeignKey("documents.id"), nullable=False) 
-
- # Relaciones
+    
+    # Relaciones
     student = relationship("Student", back_populates="conversations")
+    teacher = relationship("Teacher", back_populates="conversations")  # Nueva relación
     document = relationship("Document", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Conversation(id={self.id}, student_id={self.student_id})>"
-
+    
+    # Validación para asegurar que solo uno de student_id o teacher_id esté presente
+    @validates('student_id', 'teacher_id')
+    def validate_owner(self, key, value):
+        if key == 'student_id' and value is not None:
+            assert self.teacher_id is None, "Una conversación no puede pertenecer a un estudiante y un profesor al mismo tiempo"
+        if key == 'teacher_id' and value is not None:
+            assert self.student_id is None, "Una conversación no puede pertenecer a un estudiante y un profesor al mismo tiempo"
+        return value
 # ------------------------------#
 # Modelo de Mensajes
 # ------------------------------#
