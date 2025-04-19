@@ -119,7 +119,6 @@ class DocumentOut(DocumentBase):
 class ConversationBase(BaseModel):
     """
     Modelo base para conversaciones.
-    Ahora no requiere student_id ya que puede ser de profesor o estudiante.
     """
     document_id: int
 
@@ -161,6 +160,10 @@ class MessageBase(BaseModel):
     is_bot: bool  
 
 class MessageCreate(MessageBase):
+    """
+    Modelo para crear un nuevo mensaje.
+    """
+    created_at: Optional[datetime] = None
     pass
 
 class MessageOut(MessageBase):
@@ -170,3 +173,12 @@ class MessageOut(MessageBase):
 
     class Config:
         from_attributes = True
+
+class MessagePairOut(BaseModel):
+    user_message: MessageOut  # El mensaje que envió el usuario, ya guardado en BD
+    bot_message: MessageOut   # El mensaje de respuesta generado por el bot
+
+    # Reemplaza orm_mode por from_attributes si usas Pydantic V2
+    class Config:
+        orm_mode = True
+        # from_attributes = True # Para Pydantic V2
