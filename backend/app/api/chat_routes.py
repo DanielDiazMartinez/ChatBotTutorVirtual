@@ -12,31 +12,32 @@ chat_routes  = APIRouter()
 
 @chat_routes.post("/conversation", response_model=ConversationWithResponse)
 def create_conversation(
-    conversation_data: ConversationCreate, 
+    conversation_data: ConversationCreate, # Asumiendo que tienes este schema Pydantic para la entrada
     db: Session = Depends(get_db)
 ):
     
-    user_id = 1 #TODO: Cambiar por el ID del estudiante que está haciendo la pregunta
+    user_id = 1 #TODO: Cambiar por el ID del estudiante autenticado
     user_type = "student"  
     
- 
+
     student = db.query(Student).filter(Student.id == user_id).first()
     if not student:
-        raise HTTPException(status_code=404, detail="Estudiante con ID 1 no encontrado")
+        raise HTTPException(status_code=404, detail=f"Estudiante con ID {user_id} no encontrado")
     
 
-    conversation, bot_response = generate_conversation(
+    bot_response_str, conversation_obj = generate_conversation(
         db=db,
         document_id=conversation_data.document_id,
         user_id=user_id,
         user_type=user_type,
-        initial_message_text=conversation_data.text if hasattr(conversation_data, 'text') else None
+  
+        initial_message_text=conversation_data.text
     )
-    
+
 
     return {
-        "conversation": conversation,
-        "bot_response": bot_response
+        "conversation": conversation_obj,
+        "bot_response": bot_response_str 
     }
 
 

@@ -1,12 +1,12 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, func
+from sqlalchemy import Boolean, Column, Float, Integer, String, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import declarative_base, relationship, validates
 from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import UserDefinedType
+from sqlalchemy.dialects.postgresql import dialect as postgresql_dialect
 
 Base = declarative_base()
 
-# Definición del tipo Vector para SQLAlchemy
 class Vector(UserDefinedType):
     def __init__(self, dimensions):
         self.dimensions = dimensions
@@ -26,43 +26,48 @@ class Vector(UserDefinedType):
             return value
         return process
 
+    def dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(self)
+        else:
+            return super().dialect_impl(dialect)
+
 # Definición de funciones SQL para pgvector
 class CosineDistance(expression.FunctionElement):
-    type = None
+    type = Float() # <--- Cambia None por Float()
     name = 'cosine_distance'
     inherit_cache = True
 
 @compiles(CosineDistance)
 def _compile_cosine_distance(element, compiler, **kw):
-    return "%s <=> %s" % (
-        compiler.process(element.clauses.clauses[0]),
-        compiler.process(element.clauses.clauses[1])
-    )
+    # Asegúrate de que los argumentos se procesen correctamente
+    arg1 = compiler.process(element.clauses.clauses[0], **kw)
+    arg2 = compiler.process(element.clauses.clauses[1], **kw)
+    return f"{arg1} <=> {arg2}"
 
 class EuclideanDistance(expression.FunctionElement):
-    type = None
+    type = Float() # <--- Cambia None por Float()
     name = 'euclidean_distance'
     inherit_cache = True
 
 @compiles(EuclideanDistance)
 def _compile_euclidean_distance(element, compiler, **kw):
-    return "%s <-> %s" % (
-        compiler.process(element.clauses.clauses[0]),
-        compiler.process(element.clauses.clauses[1])
-    )
+    # Asegúrate de que los argumentos se procesen correctamente
+    arg1 = compiler.process(element.clauses.clauses[0], **kw)
+    arg2 = compiler.process(element.clauses.clauses[1], **kw)
+    return f"{arg1} <-> {arg2}"
 
 class InnerProduct(expression.FunctionElement):
-    type = None
+    type = Float() # <--- Cambia None por Float()
     name = 'inner_product'
     inherit_cache = True
 
 @compiles(InnerProduct)
 def _compile_inner_product(element, compiler, **kw):
-    return "%s <#> %s" % (
-        compiler.process(element.clauses.clauses[0]),
-        compiler.process(element.clauses.clauses[1])
-    )
-
+    # Asegúrate de que los argumentos se procesen correctamente
+    arg1 = compiler.process(element.clauses.clauses[0], **kw)
+    arg2 = compiler.process(element.clauses.clauses[1], **kw)
+    return f"{arg1} <#> {arg2}"
 # --------------------------#
 # Modelo para los Profesores
 # --------------------------#
@@ -174,7 +179,7 @@ class Message(Base):
     text = Column(Text, nullable=False)
     is_bot = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    embedding = Column(Vector(1024), nullable=True)  # Para almacenar embeddings de consultas/respuestas
+    embedding = Column(Vector(1024), nullable=True)  
 
     conversation = relationship("Conversation", back_populates="messages")
 

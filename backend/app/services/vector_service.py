@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select, literal_column
 from ..models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct, Conversation, Message, Student, Teacher
 from ..utils.document_utils import  chunk_text,generate_embedding
 from typing import List, Tuple, Optional
@@ -60,61 +61,36 @@ def insert_document_chunks(
     
     return created_chunks
 
-def search_similar_chunks(db: Session, 
-                          query_embedding: List[float], 
-                          document_id: Optional[int] = None, 
+def search_similar_chunks(db: Session,
+                          query_embedding: List[float],
+                          document_id: Optional[int] = None,
                           limit: int = 5,
                           similarity_metric: str = "cosine") -> List[Tuple[DocumentChunk, float]]:
     """
     Busca chunks similares a un embedding de consulta usando pgvector
-    
-    Args:
-        db: Sesión de SQLAlchemy
-        query_embedding: Vector de embedding de la consulta
-        document_id: ID del documento para filtrar (opcional)
-        limit: Número máximo de resultados
-        similarity_metric: Métrica de similitud ("cosine", "l2", o "dot")
-        
-    Returns:
-        Lista de tuplas (chunk, score de similitud)
     """
-    from sqlalchemy import select
-    
-    
+    embedding_str = f"CAST(ARRAY[{', '.join(map(str, query_embedding))}] AS vector)"
+
     if similarity_metric == "cosine":
-        distance_func = CosineDistance
-        # Para coseno, menor distancia = mayor similitud
-        convert_score = lambda x: 1.0 - x  # Convertir distancia a similitud
+        distance_expression = CosineDistance(DocumentChunk.embedding, literal_column(embedding_str))
+        convert_score = lambda x: 1.0 - x
     elif similarity_metric == "l2":
-        distance_func = EuclideanDistance
-        # Para L2, menor distancia = mayor similitud, pero no tiene límite superior
+        distance_expression = EuclideanDistance(DocumentChunk.embedding, literal_column(embedding_str))
         convert_score = lambda x: 1.0 / (1.0 + x)
-    else:  
-        distance_func = InnerProduct
-        # Para producto escalar, mayor valor = mayor similitud
+    else:
+        distance_expression = InnerProduct(DocumentChunk.embedding, literal_column(embedding_str))
         convert_score = lambda x: -x
-    
-    # Construir la consulta
+
     query = select(
         DocumentChunk,
-        distance_func(DocumentChunk.embedding, query_embedding).label("distance")
-    )
-    
-    # Filtrar por documento si se especifica
-    if document_id:
-        query = query.filter(DocumentChunk.document_id == document_id)
-    
-    # Ordenar por similitud
-    query = query.order_by(distance_func(DocumentChunk.embedding, query_embedding))
-    
-    # Limitar resultados
-    query = query.limit(limit)
-    
-    # Ejecutar la consulta
+        distance_expression.label("distance")
+    ).filter(DocumentChunk.document_id == document_id if document_id else True).\
+        order_by("distance").\
+        limit(limit)
+
     results = db.execute(query).all()
-    
-    # Convertir resultados
-    return [(chunk, convert_score(distance)) for chunk, distance in results]
+
+    return [(row.DocumentChunk, convert_score(row.distance)) for row in results]
 
 def generate_conversation(
     db: Session,
@@ -181,22 +157,45 @@ def generate_conversation(
             text=initial_message_text,
             is_bot=False,
             conversation_id=new_conversation.id,
-            emmbedding=question_embedding 
+            embedding=question_embedding 
         )
         db.add(new_message)
         db.commit()
         
         similar_chunks = search_similar_chunks(db, question_embedding, document_id)
+        similarity_threshold = 0.65 # Ejemplo de umbral
+        context_chunks = [chunk.content for chunk, score in similar_chunks if score > similarity_threshold]
+         # --- DEBUGGING ---
+        print(f"--- Debug Info: search_similar_chunks results (before filtering) ---")
+        print(similar_chunks)
+        # ---------------
         context = " ".join([chunk.content for chunk, score in similar_chunks if score > 0.65])
 
-        response_text = generate_groq_response(initial_message_text, context)
+        # --- DEBUGGING ---
+        print(f"--- Debug Info: Data sent to Groq ---")
+        print(f"User Question: {initial_message_text}")
+        print(f"Context Chunks Found (count): {len(context_chunks)}")
+        print(f"Similarity Threshold: {similarity_threshold}")
+        print(f"Final Context String (first 500 chars): {context[:1000]}") # Imprime solo una parte si es muy largo
+        # ---------------
+        
+        # Llama a Groq
+        try:
+            response_text = generate_groq_response(initial_message_text, context)
+        # --- DEBUGGING ---
+            print(f"Groq Raw Response: {response_text}")
+        # ---------------
+        except Exception as e:
+            print(f"--- ERROR calling generate_groq_response: {e} ---")
+            response_text = "Lo siento, ocurrió un error al contactar al servicio de IA." # Mensaje de error más específico
+
         response_embedding = generate_embedding(response_text)
 
         new_message = Message(
             text=response_text,
             is_bot=True,
             conversation_id=new_conversation.id,
-            emmbedding=response_embedding
+            embedding=response_embedding
         )
 
         db.add(new_message)

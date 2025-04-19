@@ -23,7 +23,7 @@ class Settings:
 
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
-    
+    GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "llama3-8b-8192") 
     UPLOAD_FOLDER: str = os.getenv("UPLOAD_FOLDER", "uploads")
     
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
