@@ -13,7 +13,7 @@ from app.services.vector_service import insert_document_chunks
 
 def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     """
-    Guarda el documento en PostgreSQL y envía su embedding a Pinecone.
+    Guarda el documento en PostgreSQL.
     """
    
     if not pdf_file.filename.endswith(".pdf"):
@@ -55,60 +55,3 @@ def list_documents(db: Session, teacher_id: int):
     Obtiene los documentos de un profesor.
     """
     return db.query(Document).filter(Document.teacher_id == teacher_id).all()
-
-def generate_conversation(conversation_data: ConversationCreate, db: Session):
-    """
-    Crea una nueva conversación y la asocia con un estudiante.
-    """
-    student = db.query(Student).filter(Student.id == conversation_data.student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-
-    document = db.query(Document).filter(Document.id == conversation_data.document_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
-
-    new_conversation = Conversation(student_id=conversation_data.student_id, document_id=conversation_data.document_id)
-    db.add(new_conversation)
-    db.commit()
-    db.refresh(new_conversation)
-
-    new_message = Message(
-        text=conversation_data.text,
-        is_bot=False,
-        conversation_id=new_conversation.id
-    )
-    
-    db.add(new_message)
-    db.commit()
-    db.refresh(new_message)
-    """"
-    store_message_embedding(new_message.id, new_message.text, new_conversation.id, new_conversation.document_id, new_conversation.student_id, new_message.is_bot)
-
-    context = retrieve_context(new_conversation.id, conversation_data.document_id, conversation_data.text) # Llamada a Pinecone para recuperar contexto
-    
-    generate_groq_response(conversation_data.text,context) # Llamada a Groq para generar respuesta  
-    """
-    return new_conversation
-
-def add_message_to_conversation(conversation_id: int, message_data: MessageCreate, db: Session ):
-    """
-    Añade un mensaje (pregunta o respuesta) a una conversación.
-    """
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversación no encontrada")
-    
-    new_message = Message(
-        text=message_data.text,
-        is_bot=message_data.is_bot,
-        conversation_id=conversation_id
-    )
-
-    db.add(new_message)
-    db.commit()
-    db.refresh(new_message)
-    """
-    store_message_embedding(new_message.id, message_data.text, conversation_id, conversation.document_id, conversation.student_id, message_data.is_bot)
-    """
-    return new_message

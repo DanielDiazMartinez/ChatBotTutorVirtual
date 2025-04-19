@@ -8,7 +8,7 @@ from app.services.groq_service import generate_groq_response
 
 def process_student_question( conversation_id: int, document_id: int, question_text: str,db: Session):
     """
-    Maneja la pregunta del estudiante, busca contexto en Pinecone y genera una respuesta con Groq.
+    Maneja la pregunta del estudiante, busca contexto y genera una respuesta con Groq.
     """
     
     context = any
