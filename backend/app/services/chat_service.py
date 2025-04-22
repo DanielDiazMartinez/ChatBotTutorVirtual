@@ -31,6 +31,17 @@ def get_conversations_by_student(student_id: int, db: Session):
     """
     return db.query(Conversation).filter(Conversation.student_id == student_id).all()
 
+def get_conversation_by_id(conversation_id: int, db: Session):
+    """
+    Obtiene una conversación específica por su ID.
+    """
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    
+    return conversation
+
 def get_all_conversations(db: Session):
     """
     Obtiene todas las conversaciones en la base de datos.
