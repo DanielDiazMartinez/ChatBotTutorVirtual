@@ -175,10 +175,8 @@ class MessageOut(MessageBase):
         from_attributes = True
 
 class MessagePairOut(BaseModel):
-    user_message: MessageOut  # El mensaje que envió el usuario, ya guardado en BD
-    bot_message: MessageOut   # El mensaje de respuesta generado por el bot
+    user_message: MessageOut  
+    bot_message: MessageOut 
 
-    # Reemplaza orm_mode por from_attributes si usas Pydantic V2
     class Config:
-        orm_mode = True
-        # from_attributes = True # Para Pydantic V2
+        from_attributes = True 

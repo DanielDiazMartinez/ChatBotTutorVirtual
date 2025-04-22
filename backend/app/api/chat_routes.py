@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..models.models import Student, Teacher
-from ..services.chat_service import delete_conversation, get_conversations_by_student
+from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_student
 from ..core.database import get_db
 from ..services.vector_service import add_message_and_generate_response, generate_conversation
 from ..models.schemas import ConversationCreate, ConversationOut, ConversationWithResponse, MessageCreate, MessageOut, MessagePairOut
@@ -48,6 +48,20 @@ def get_student_conversations(student_id: int, db: Session = Depends(get_db)):
     if not conversations:
         raise HTTPException(status_code=404, detail="No se encontraron conversaciones para este estudiante.")
     return conversations
+
+@chat_routes.get("/conversation/{conversation_id}", response_model=ConversationOut)
+def get_conversation(conversation_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene una conversación específica.
+    """
+
+    conversation = get_conversation_by_id(conversation_id, db)
+
+    if not conversation:
+
+        raise HTTPException(status_code=404, detail="Conversación no encontrada.")
+    
+    return conversation
 
 @chat_routes.delete("/conversation/{conversation_id}")
 def delete_conv(conversation_id: int, db: Session = Depends(get_db)):
