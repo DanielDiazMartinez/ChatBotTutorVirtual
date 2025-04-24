@@ -133,7 +133,7 @@ class DocumentChunk(Base):
     id = Column(Integer, primary_key=True, index=True)
     document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(1024))  # Ajustar dimensión según el modelo que uses
+    embedding = Column(Vector(768))  # Ajustar dimensión según el modelo que uses
     chunk_number = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -179,7 +179,7 @@ class Message(Base):
     text = Column(Text, nullable=False)
     is_bot = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    embedding = Column(Vector(1024), nullable=True)  
+    embedding = Column(Vector(768), nullable=True)  
 
     conversation = relationship("Conversation", back_populates="messages")
 

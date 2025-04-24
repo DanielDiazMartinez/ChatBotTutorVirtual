@@ -1,12 +1,13 @@
-from typing import Union
+from typing import List, Union
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
-from ..models.models import Student, Teacher
+from ..models.models import DocumentChunk, Student, Teacher
 from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_student
 from ..core.database import get_db
-from ..services.vector_service import add_message_and_generate_response, generate_conversation
-from ..models.schemas import ConversationCreate, ConversationOut, ConversationWithResponse, MessageCreate, MessageOut, MessagePairOut
+from ..services.vector_service import add_message_and_generate_response, generate_conversation, get_context, search_similar_chunks
+from ..models.schemas import ConversationCreate, ConversationOut, ConversationWithResponse, DocumentChunkOut, MessageCreate, MessageOut, MessagePairOut
 
 chat_routes  = APIRouter()
 
@@ -103,3 +104,24 @@ def add_message_to_conversation(
 
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error procesando el mensaje")
 
+@chat_routes.post("/context/{document_id}", response_model=List[DocumentChunkOut])
+def get_context_for_question(document_id: int, db: Session = Depends(get_db), message_data: MessageCreate = None):
+    """
+    Obtiene el contexto de un documento específico.
+    Devuelve una lista de DocumentChunkOut objetos.
+    """
+
+    if message_data is None or message_data.text is None:
+        raise HTTPException(status_code=400, detail="Message text is required")
+
+    similar_chunks: List[Tuple[DocumentChunk, float]] = get_context(
+        db=db,
+        document_id=document_id,
+        message_text=message_data.text
+    )
+
+    context_out = [
+        DocumentChunkOut.model_validate(chunk) for chunk, _ in similar_chunks
+    ]
+
+    return context_out
