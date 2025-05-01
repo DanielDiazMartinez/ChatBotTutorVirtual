@@ -46,7 +46,7 @@ def get_conversations_by_student(student_id: int, db: Session):
     """
     Obtiene todas las conversaciones asociadas a un estudiante.
     """
-    return db.query(Conversation).filter(Conversation.student_id == student_id).all()
+    return db.query(Conversation).filter(Conversation.student_id == student_id).all()#TODO: Mover a otro servicio
 
 def get_conversation_by_id(conversation_id: int, db: Session):
     """
@@ -63,7 +63,7 @@ def get_all_conversations(db: Session):
     """
     Obtiene todas las conversaciones en la base de datos.
     """
-    return db.query(Conversation).all()
+    return db.query(Conversation).all()#TODO: Mover a otro servicio
 
 def delete_conversation(conversation_id: int, db: Session):
     """

@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import List, Optional
 
 # ----------------------------------------
@@ -112,6 +112,14 @@ class DocumentOut(DocumentBase):
 
     class Config:
         from_attributes = True
+
+class DocumentChunkOut(BaseModel):
+    id: int
+    document_id: int
+    content: str
+    chunk_number: int
+
+    model_config = ConfigDict(from_attributes=True) 
 
 # ----------------------------------------
 #  SCHEMA PARA LAS CONVERSACIONES
