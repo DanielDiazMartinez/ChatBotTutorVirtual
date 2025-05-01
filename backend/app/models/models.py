@@ -34,7 +34,7 @@ class Vector(UserDefinedType):
 
 # Definición de funciones SQL para pgvector
 class CosineDistance(expression.FunctionElement):
-    type = Float() # <--- Cambia None por Float()
+    type = Float() 
     name = 'cosine_distance'
     inherit_cache = True
 

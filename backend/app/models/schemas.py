@@ -180,3 +180,21 @@ class MessagePairOut(BaseModel):
 
     class Config:
         from_attributes = True 
+
+class ConversationCreateRequest(BaseModel):
+    """
+    Esquema Pydantic para la solicitud de creación de una nueva conversación.
+    Solo requiere el ID del documento al que estará asociada la conversación.
+    El usuario se determinará a través de la autenticación en el endpoint.
+    """
+    document_id: int = Field(...,
+                             description="El ID único del documento sobre el cual se creará la conversación.",
+                             gt=0) 
+
+  
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "document_id": 42
+            }
+        }
