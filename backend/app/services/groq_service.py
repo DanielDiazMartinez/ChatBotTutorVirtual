@@ -42,7 +42,7 @@ def generate_groq_response(user_question: str, context: str,conversation_history
     ### Instrucciones:
     Eres un asistente útil y preciso. Tu objetivo es responder a las preguntas del estudiante de la manera más completa y concisa posible, utilizando la información proporcionada en el contexto. Mantén un tono profesional y objetivo.
     Debes basar tu respuesta *únicamente* en la información contenida en el 'Contexto' proporcionado. No utilices conocimientos externos ni información previa. Si la respuesta a la pregunta no se encuentra explícitamente en el contexto, responde con: 'Lo siento, no puedo responder a esa pregunta basándome en la información proporcionada.'
-    Si la pregunta del estudiante es ambigua, intenta aclararla basándote en el historial de la conversación. Si la pregunta requiere inferencia, pero la inferencia se puede realizar de manera clara y directa a partir del contexto, hazlo. Sin embargo, no hagas suposiciones ni añadas información que no esté presente en el contexto.
+    Si la pregunta del estudiante es ambigua, intenta aclararla basándote en el historial de la conversación. Si la pregunta requiere inferencia, pero la inferencia se puede realizar de manera clara y directa a partir del contexto, hazlo. Sin embargo, no hagas suposiciones ni añadas información que no esté presente en el contexto. Al responder no es necesario que indiques "Segun el contexto" o "Según la información proporcionada". Simplemente responde a la pregunta de manera directa y clara.
 
     ### Historial de la Conversación:
     {conversation_history}

@@ -1,5 +1,5 @@
 from typing import List, Union
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
@@ -71,11 +71,10 @@ def delete_conv(conversation_id: int, db: Session = Depends(get_db)):
     """
     return delete_conversation(conversation_id, db)
 
-@chat_routes.post("/c/{conversation_id}", response_model=MessagePairOut) # Usa el nuevo response_model
+@chat_routes.post("/c/{conversation_id}", response_model=MessagePairOut) 
 def add_message_to_conversation(
-    conversation_id: int, # ID de la conversación
-    document_id: int, # ID del documento
-    message_data: MessageCreate,    # El cuerpo de la petición es el nuevo mensaje
+    conversation_id: int,
+    message_data: MessageCreate, # Mover message_data antes de document_id si prefieres
     db: Session = Depends(get_db)
 ):
     user_id = 1 # TODO: Cambiar por el ID del estudiante autenticado
@@ -86,13 +85,10 @@ def add_message_to_conversation(
         user_msg_obj, bot_msg_obj = add_message_and_generate_response(
             db=db,
             conversation_id=conversation_id,
-            document_id=document_id, 
             user_id=user_id,
             user_type=user_type,
             message_text=message_data.text
         )
-
-
         return {
             "user_message": user_msg_obj,
             "bot_message": bot_msg_obj

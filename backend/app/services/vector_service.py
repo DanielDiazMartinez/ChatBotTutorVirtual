@@ -42,7 +42,6 @@ def insert_document_chunks(
         
         embedding = generate_embedding(chunk_content)
         
-        
         chunk = DocumentChunk(
             document_id=document_id,
             content=chunk_content,
@@ -113,12 +112,11 @@ def generate_conversation(
     Returns:
         Objeto Conversation creado
     """
-    # Verificar que el documento existe
+    
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     
-    # Verificar que el usuario existe
     if user_type == "student":
         user = db.query(Student).filter(Student.id == user_id).first()
         if not user:
@@ -209,7 +207,7 @@ def add_message_and_generate_response(
     user_id: int,
     user_type: str,
     message_text: str,
-) -> Tuple[Message, Message]: # <--- Tipo de retorno modificado
+) -> Tuple[Message, Message]:
     """
     Añade el mensaje del usuario a una conversación existente,
     genera una respuesta del bot y guarda ambos mensajes.
@@ -225,6 +223,7 @@ def add_message_and_generate_response(
     Returns:
         Una tupla conteniendo el objeto Message del usuario y el objeto Message del bot.
     """
+    print(f"--- Debug Info: add_message_and_generate_response ---")
     # Verificar que la conversación existe
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
