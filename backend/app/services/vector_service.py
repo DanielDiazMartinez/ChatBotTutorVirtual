@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, literal_column
 from ..models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct, Conversation, Message, Student, Teacher
-from ..utils.document_utils import  chunk_text,generate_embedding
+from ..utils.document_utils import  chunk_text_by_tokens_hf,generate_embedding
 from typing import List, Tuple, Optional
 from ..services.groq_service import generate_groq_response
 
@@ -33,7 +33,7 @@ def insert_document_chunks(
         raise ValueError(f"No existe un documento con ID {document_id}")
     
     # Dividir el texto en chunks
-    chunks = chunk_text(text, chunk_size=chunk_size)
+    chunks = chunk_text_by_tokens_hf(text, chunk_size=chunk_size)
     
     created_chunks = []
     
@@ -41,7 +41,6 @@ def insert_document_chunks(
     for i, chunk_content in enumerate(chunks):
         
         embedding = generate_embedding(chunk_content)
-        
         
         chunk = DocumentChunk(
             document_id=document_id,
@@ -113,12 +112,11 @@ def generate_conversation(
     Returns:
         Objeto Conversation creado
     """
-    # Verificar que el documento existe
+    
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     
-    # Verificar que el usuario existe
     if user_type == "student":
         user = db.query(Student).filter(Student.id == user_id).first()
         if not user:
@@ -181,7 +179,7 @@ def generate_conversation(
         
         # Llama a Groq
         try:
-            response_text = generate_groq_response(initial_message_text, context)
+            response_text = generate_groq_response(initial_message_text, context, "")
         # --- DEBUGGING ---
             print(f"Groq Raw Response: {response_text}")
         # ---------------
@@ -209,8 +207,7 @@ def add_message_and_generate_response(
     user_id: int,
     user_type: str,
     message_text: str,
-    document_id: int # Añadido para buscar chunks (asumiendo que se necesita)
-) -> Tuple[Message, Message]: # <--- Tipo de retorno modificado
+) -> Tuple[Message, Message]:
     """
     Añade el mensaje del usuario a una conversación existente,
     genera una respuesta del bot y guarda ambos mensajes.
@@ -226,6 +223,7 @@ def add_message_and_generate_response(
     Returns:
         Una tupla conteniendo el objeto Message del usuario y el objeto Message del bot.
     """
+    print(f"--- Debug Info: add_message_and_generate_response ---")
     # Verificar que la conversación existe
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
@@ -233,7 +231,7 @@ def add_message_and_generate_response(
 
     # Verificar usuario y crear su mensaje
     question_embedding = generate_embedding(message_text)
-    user_msg_obj: Message = None # Inicializar variable
+    user_msg_obj: Message = None 
 
     if user_type == "student":
         user = db.query(Student).filter(Student.id == user_id).first()
@@ -258,20 +256,18 @@ def add_message_and_generate_response(
     else:
         raise HTTPException(status_code=400, detail="Tipo de usuario no válido. Debe ser 'teacher' o 'student'")
 
-    # Guardar el mensaje del usuario PRIMERO
+   
     db.add(user_msg_obj)
-    # Hacemos flush para obtener el ID si fuera necesario, pero commit al final
     db.flush()
-    db.refresh(user_msg_obj) # Para obtener cualquier valor autogenerado como el ID
+    db.refresh(user_msg_obj) 
 
-    # Preparar contexto y llamar a Groq
-    # (Usamos conversation.document_id que ya obtuvimos)
-    similar_chunks = search_similar_chunks(db, question_embedding, conversation.document_id) # <-- Usar document_id de la conversación
+    
+    similar_chunks = search_similar_chunks(db, question_embedding, conversation.document_id) 
     similarity_threshold = 0.65
     context_chunks = [chunk.content for chunk, score in similar_chunks if score > similarity_threshold]
     context = " ".join(context_chunks)
 
-    # --- DEBUGGING ---
+    
     print(f"--- Debug Info: search_similar_chunks results (before filtering) ---")
     print(similar_chunks)
     print(f"--- Debug Info: Data sent to Groq ---")
@@ -282,17 +278,22 @@ def add_message_and_generate_response(
     # ---------------
 
     try:
-        response_text = generate_groq_response(message_text, context)
+        message_history_db = db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at.desc()).limit(6).all()
+        message_history_db.reverse() # Orden cronológico
+        conversation_history = "\n".join(
+            [f"{'Usuario' if not msg.is_bot else 'Bot'}: {msg.text}" for msg in message_history_db]
+        )
+        response_text = generate_groq_response(message_text, context, conversation_history)
         print(f"Groq Raw Response: {response_text}") # DEBUG
     except Exception as e:
         print(f"--- ERROR calling generate_groq_response: {e} ---") # DEBUG
-        # Considerar si lanzar una excepción aquí o devolver un error
+        
         response_text = "Lo siento, ocurrió un error al generar la respuesta."
 
     response_embedding = generate_embedding(response_text)
 
-    # Crear el mensaje del bot
-    bot_msg_obj = Message( # <--- Guardar en variable diferente
+    
+    bot_msg_obj = Message( 
         text=response_text,
         is_bot=True,
         conversation_id=conversation_id,
@@ -309,3 +310,31 @@ def add_message_and_generate_response(
 
 
     return user_msg_obj, bot_msg_obj
+
+def get_context(
+    db: Session,
+    document_id: int,
+    message_text: str,
+    limit: int = 5,
+    similarity_metric: str = "cosine"
+) -> List[Tuple[DocumentChunk, float]]:
+    """
+    Obtiene el contexto de un documento específico.
+    
+    Args:
+        db: Sesión de SQLAlchemy
+        document_id: ID del documento
+        message_text: Texto del mensaje del usuario
+        limit: Número máximo de chunks a devolver
+        similarity_metric: Métrica de similitud a usar ("cosine", "l2", "inner_product")
+        
+    Returns:
+        Lista de tuplas (DocumentChunk, score)
+    """
+    
+    query_embedding = generate_embedding(message_text)
+    
+    
+    similar_chunks = search_similar_chunks(db, query_embedding, document_id, limit, similarity_metric)
+    
+    return similar_chunks

@@ -1,13 +1,13 @@
 
 import os
 from sqlalchemy.orm import Session
-from app.models.models import Conversation, Document, Message, Student
-from app.models.schemas import  ConversationCreate, DocumentCreate, MessageCreate
+from app.models.models import  Document
+from app.models.schemas import   DocumentCreate
 from fastapi import  HTTPException, UploadFile
-from app.utils.document_utils import extract_text_from_pdf
 from app.core.config import settings
-from app.services.groq_service import generate_groq_response
+
 from app.services.vector_service import insert_document_chunks
+from ..utils.document_utils import extract_text_from_pdf
 
 
 
