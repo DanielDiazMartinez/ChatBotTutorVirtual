@@ -60,7 +60,7 @@ def generate_groq_response(user_question: str, context: str,conversation_history
  
     print(f"Model Used: {settings.GROQ_MODEL_NAME}")
     print(f"Prompt (first 500 chars): {prompt[:500]}") 
-
+ 
     try:
         print("--- Debug Info: Executing client.chat.completions.create(...) ---") 
         completion = client.chat.completions.create(
@@ -78,7 +78,7 @@ def generate_groq_response(user_question: str, context: str,conversation_history
             stop=None,       
         )
         print("--- Debug Info: client.chat.completions.create(...) FINISHED ---") # Justo después
-
+        
     
         print(f"--- Debug Info: Groq API Raw Completion Object ---")
         print(completion)
