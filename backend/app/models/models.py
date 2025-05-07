@@ -6,6 +6,19 @@ from sqlalchemy.types import UserDefinedType
 
 Base = declarative_base()
 
+class Admin(Base):
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    full_name = Column(String, nullable=True)
+    hashed_password = Column(String, nullable=False)
+    is_superuser = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<Admin(id={self.id}, email='{self.email}')>"
+
 # --- Modelos de Usuarios ---
 
 class Teacher(Base):

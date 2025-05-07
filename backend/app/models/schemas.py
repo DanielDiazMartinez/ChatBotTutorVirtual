@@ -3,6 +3,35 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import List, Optional
 
 # ----------------------------------------
+# SCHEMA PARA ADMINISTRADORES
+# ----------------------------------------
+
+class AdminBase(BaseModel):
+    """
+    Modelo base para administradores.
+    """
+    email: EmailStr = Field(..., example="admin@example.com")
+    full_name: Optional[str] = Field(None, example="Admin User")
+
+class AdminCreate(AdminBase):
+    """
+    Modelo para crear un nuevo administrador.
+    """
+    password: str = Field(..., min_length=6, example="SecurePassword123!")
+    is_superuser: bool = Field(default=False, example=False)
+
+class AdminOut(AdminBase):
+    """
+    Modelo de salida para administradores.
+    """
+    id: int = Field(..., example=1)
+    is_superuser: bool = Field(..., example=False)
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# ----------------------------------------
 # SCHEMA PARA PROFESORES
 # ----------------------------------------
 
