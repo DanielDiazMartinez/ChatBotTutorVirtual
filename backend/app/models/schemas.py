@@ -187,5 +187,36 @@ class MessagePairOut(BaseModel):
     bot_message: MessageOut 
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+
+# ----------------------------------------
+# SCHEMA PARA ASIGNATURAS
+# ----------------------------------------
+
+class SubjectBase(BaseModel):
+    """
+    Modelo base para asignaturas.
+    """
+    name: str = Field(..., example="Matemáticas")
+    code: str = Field(..., example="MAT101")
+    description: Optional[str] = Field(None, example="Curso básico de matemáticas")
+
+class SubjectCreate(SubjectBase):
+    """
+    Modelo para crear una nueva asignatura.
+    No necesita campos adicionales.
+    """
+    pass
+
+class SubjectOut(SubjectBase):
+    """
+    Modelo de respuesta para asignaturas.
+    Incluye ID y listas de profesores y estudiantes.
+    """
+    id: int
+    teachers: List[TeacherOut] = []
+    students: List[StudentOut] = []
+
+    class Config:
+        from_attributes = True
 
