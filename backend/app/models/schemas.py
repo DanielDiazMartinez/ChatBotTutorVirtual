@@ -130,7 +130,9 @@ class DocumentBase(BaseModel):
 
 
 class DocumentCreate(DocumentBase):    
-    teacher_id: int  
+    teacher_id: int
+    subject_id: Optional[int] = None
+    topic_id: Optional[int] = None  
 
     class Config:
         from_attributes = True
@@ -138,6 +140,10 @@ class DocumentCreate(DocumentBase):
 
 class DocumentOut(DocumentBase):
     id: int
+    teacher_id: int
+    subject_id: Optional[int] = None
+    topic_id: Optional[int] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -164,7 +170,8 @@ class ConversationCreate(BaseModel):
     Modelo para crear una nueva conversación.
     """
     document_id: int
-    text: Optional[str] = None  # Mensaje inicial opcional
+    text: Optional[str] = None
+    topic_id: Optional[int] = None
 
 class ConversationOut(BaseModel):
     """
@@ -174,6 +181,7 @@ class ConversationOut(BaseModel):
     student_id: Optional[int] = None
     teacher_id: Optional[int] = None
     document_id: int
+    topic_id: Optional[int] = None
     messages: List["MessageOut"] = []
 
     class Config:
@@ -245,6 +253,43 @@ class SubjectOut(SubjectBase):
     id: int
     teachers: List[TeacherOut] = []
     students: List[StudentOut] = []
+
+    class Config:
+        from_attributes = True
+
+# ----------------------------------------
+# SCHEMA PARA TEMAS (TOPICS)
+# ----------------------------------------
+
+class TopicBase(BaseModel):
+    """
+    Modelo base para temas.
+    """
+    name: str = Field(..., example="Introducción a Python")
+    description: Optional[str] = Field(None, example="Conceptos básicos de Python")
+    subject_id: int = Field(..., example=1)
+
+class TopicCreate(TopicBase):
+    """
+    Modelo para crear un nuevo tema.
+    """
+    pass
+
+class TopicUpdate(BaseModel):
+    """
+    Modelo para actualizar un tema existente.
+    """
+    name: Optional[str] = None
+    description: Optional[str] = None
+    subject_id: Optional[int] = None
+
+class TopicOut(TopicBase):
+    """
+    Modelo de salida para temas.
+    """
+    id: int
+    created_at: datetime
+    documents: List["DocumentOut"] = []
 
     class Config:
         from_attributes = True

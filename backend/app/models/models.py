@@ -52,6 +52,22 @@ class Student(Base):
     def __repr__(self):
         return f"<Student(id={self.id}, email='{self.email}')>"
 
+class Topic(Base):
+    __tablename__ = "topics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaciones
+    subject = relationship("Subject", back_populates="topics")
+    documents = relationship("Document", back_populates="topic", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="topic", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Topic(id={self.id}, name='{self.name}')>"
 
 # --- Modelos de Documentos y Chunks ---
 
@@ -64,10 +80,12 @@ class Document(Base):
     description = Column(String, nullable=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id", ondelete="CASCADE"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     teacher = relationship("Teacher", back_populates="documents")
     subject = relationship("Subject", back_populates="documents")
+    topic = relationship("Topic", back_populates="documents")
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="document", cascade="all, delete-orphan")
 
@@ -99,11 +117,13 @@ class Conversation(Base):
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id", ondelete="CASCADE"), nullable=True)
     document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
+    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     student = relationship("Student", back_populates="conversations")
     teacher = relationship("Teacher", back_populates="conversations")
     document = relationship("Document", back_populates="conversations")
+    topic = relationship("Topic", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
     @validates('student_id', 'teacher_id')
@@ -162,6 +182,7 @@ class Subject(Base):
     teachers = relationship("Teacher", secondary=teacher_subject, back_populates="subjects")
     students = relationship("Student", secondary=student_subject, back_populates="subjects")
     documents = relationship("Document", back_populates="subject")
+    topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Subject(id={self.id}, name='{self.name}', code='{self.code}')>"
