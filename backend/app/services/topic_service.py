@@ -9,12 +9,10 @@ def create_topic(db: Session, topic: TopicCreate) -> Topic:
     """
     Crea un nuevo tema.
     """
-    # Verificar que la asignatura existe
     subject = db.query(Subject).filter(Subject.id == topic.subject_id).first()
     if not subject:
         raise HTTPException(status_code=404, detail="Asignatura no encontrada")
 
-    # Crear el tema
     db_topic = Topic(
         name=topic.name,
         description=topic.description,
@@ -51,13 +49,11 @@ def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optio
     if not db_topic:
         return None
 
-    # Si se va a cambiar la asignatura, verificar que existe
     if topic_update.subject_id is not None:
         subject = db.query(Subject).filter(Subject.id == topic_update.subject_id).first()
         if not subject:
             raise HTTPException(status_code=404, detail="Asignatura no encontrada")
 
-    # Actualizar solo los campos proporcionados
     update_data = topic_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_topic, field, value)
@@ -69,7 +65,6 @@ def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optio
 def delete_topic(db: Session, topic_id: int) -> bool:
     """
     Elimina un tema.
-    Retorna True si el tema fue eliminado, False si no se encontró.
     """
     db_topic = get_topic_by_id(db, topic_id)
     if not db_topic:

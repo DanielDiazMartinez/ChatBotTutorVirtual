@@ -36,15 +36,15 @@ services:
     networks:
       - app-network
 
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    env_file:
-      - ./backend/.env
-    ports:
-      - "5050:80"
-    networks:
-      - app-network
+  # pgadmin:
+  #   container_name: pgadmin
+  #   image: dpage/pgadmin4
+  #   env_file:
+  #     - ./backend/.env
+  #   ports:
+  #     - "5050:80"
+  #   networks:
+  #     - app-network
 
 volumes:
   postgres_data:
