@@ -1,28 +1,20 @@
 from sqlalchemy.orm import Session
-from app.models.models import   Message, Teacher, Student
-from app.models.schemas import  TeacherCreate, StudentCreate, TeacherUpdate
+from app.models.models import Message, Teacher, Student
+from app.models.schemas import TeacherCreate, StudentCreate, TeacherUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
-##############################################
-# FUNCIONES PARA TEACHERS
-##############################################
 
 def registrar_teacher(teacher: TeacherCreate, db: Session):
     """
     Registra un teacher en la base de datos.
     """
-
-    # Verificar si ya existe un teacher con el mismo email
     existing_teacher = db.query(Teacher).filter(Teacher.email == teacher.email).first()
     if existing_teacher:
         raise HTTPException(status_code=400, detail="El teacher ya está registrado.")
 
     teacher_data = teacher.model_dump()
-    
-   
     teacher_data["hashed_password"] = get_password_hash(teacher_data.pop("password"))
-
-    # Crear el objeto de base de datos
+    
     teacher_db = Teacher(**teacher_data)
     db.add(teacher_db)
     db.commit()
@@ -55,25 +47,17 @@ def update_teacher_service(teacher_id: int, teacherUpdate: TeacherUpdate, db: Se
     db.commit()
     return teacher
 
-##############################################
-# FUNCIONES PARA STUDENTS
-##############################################
 def registrar_student(student: StudentCreate, db: Session):
     """
     Registra un alumno en la base de datos.
     """
-
-    # Verificar si ya existe un alumno con el mismo email
     existing_student = db.query(Student).filter(Student.email == student.email).first()
     if existing_student:
         raise HTTPException(status_code=400, detail="El alumno ya está registrado.")
 
     student_data = student.model_dump()
-    
-   
     student_data["hashed_password"] = get_password_hash(student_data.pop("password"))
-
-    # Crear el objeto de base de datos
+    
     student_db = Student(**student_data)
     db.add(student_db)
     db.commit()
