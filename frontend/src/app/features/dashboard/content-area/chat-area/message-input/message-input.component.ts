@@ -1,4 +1,3 @@
-// src/app/features/dashboard/content-area/chat-area/message-input/message-input.component.ts
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

@@ -1,4 +1,3 @@
-// src/app/features/dashboard/content-area/content-area.component.ts
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatAreaComponent } from './chat-area/chat-area.component';
