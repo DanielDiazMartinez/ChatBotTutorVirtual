@@ -9,6 +9,7 @@ from app.core.database import Base, get_db
 from app.core.config import settings
 from app.models.models import Admin
 from app.services.user_service import get_user_by_email
+from typing import Iterator
 
 SQLALCHEMY_DATABASE_URL_TEST = settings.TEST_DATABASE_URL
 
@@ -47,7 +48,7 @@ def session_setup_teardown():
 
 # Fixture para la sesión de base de datos de prueba por función (test individual)
 @pytest.fixture(scope="function")
-def db_session_test() -> pytest.Session:
+def db_session_test() -> Iterator[Session]:
     connection = engine_test.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
@@ -57,7 +58,7 @@ def db_session_test() -> pytest.Session:
     connection.close()
 
 @pytest.fixture(scope="function")
-def client(db_session_test: Session) -> TestClient:
+def client(db_session_test: Session) -> Iterator[TestClient]:
     def override_get_db():
         try:
             yield db_session_test
