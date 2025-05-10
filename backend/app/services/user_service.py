@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.models import Message, Teacher, Student
+from app.models.models import Admin, Message, Teacher, Student
 from app.models.schemas import TeacherCreate, StudentCreate, TeacherUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
@@ -10,7 +10,7 @@ def registrar_teacher(teacher: TeacherCreate, db: Session):
     """
     existing_teacher = db.query(Teacher).filter(Teacher.email == teacher.email).first()
     if existing_teacher:
-        raise HTTPException(status_code=400, detail="El teacher ya está registrado.")
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     teacher_data = teacher.model_dump()
     teacher_data["hashed_password"] = get_password_hash(teacher_data.pop("password"))
@@ -86,3 +86,23 @@ def delete_student(student_id: int, db: Session):
     db.delete(student)
     db.commit()
     return student
+
+def get_user_by_email(email: str, db: Session):
+    """
+    Función centralizada que busca un usuario por email en todas las tablas (Teacher y Student).
+    Retorna una tupla (usuario, rol) donde rol puede ser 'teacher' o 'student'.
+    """
+    admin = db.query(Admin).filter(Admin.email == email).first()
+    if admin:
+        return admin, 'admin'
+    
+    teacher = db.query(Teacher).filter(Teacher.email == email).first()
+    if teacher:
+        return teacher, 'teacher'
+    
+    
+    student = db.query(Student).filter(Student.email == email).first()
+    if student:
+        return student, 'student'
+   
+    return None, None

@@ -12,15 +12,14 @@ class Settings:
     POSTGRES_HOST: str = (
         "localhost" if os.getenv("ENV", "").lower() == "local" else os.getenv("POSTGRES_HOST", "db")
     )
-    TEST_DATABASE_URL: str = os.getenv("TEST_DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/tutor_virtual_test")
+
+
+    TEST_DATABASE_URL: str = os.getenv("TEST_DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/tutor_virtual_test")
     
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "tutor_virtual")
     DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY")
-    PINECONE_ENVIRONMENT: str = os.getenv("PINECONE_ENVIRONMENT")
-    PINECONE_INDEX: str = os.getenv("PINECONE_INDEX")
-
+   
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
     GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "llama3-8b-8192") 

@@ -4,7 +4,7 @@ from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import UserDefinedType
 
-Base = declarative_base()
+from app.core.database import Base
 
 # --- Clases de Vectores y Funciones SQL para pgvector ---
 
