@@ -22,16 +22,16 @@ def create_new_topic(
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["teacher", "admin"]))
 ):
-    """Crea un nuevo tema"""
+    """Crea un nuevo tema (profesores y administradores)"""
     return create_topic(db=db, topic=topic)
 
 @topics_routes.get("/{topic_id}", response_model=TopicOut)
 def get_topic(
     topic_id: int, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
 ):
-    """Obtiene un tema por su ID"""
+    """Obtiene un tema por su ID (profesores, estudiantes y administradores)"""
     topic = get_topic_by_id(db=db, topic_id=topic_id)
     if not topic:
         raise HTTPException(status_code=404, detail="Tema no encontrado")
@@ -41,17 +41,17 @@ def get_topic(
 def list_topics_by_subject(
     subject_id: int, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
 ):
-    """Lista todos los temas de una asignatura específica"""
+    """Lista todos los temas de una asignatura específica (profesores, estudiantes y administradores)"""
     return get_topics_by_subject(db=db, subject_id=subject_id)
 
 @topics_routes.get("/", response_model=List[TopicOut])
 def list_topics(
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
 ):
-    """Lista todos los temas"""
+    """Lista todos los temas (profesores, estudiantes y administradores)"""
     return get_all_topics(db=db)
 
 @topics_routes.put("/{topic_id}", response_model=TopicOut)
@@ -61,7 +61,7 @@ def update_topic_route(
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["teacher", "admin"]))
 ):
-    """Actualiza un tema"""
+    """Actualiza un tema (profesores y administradores)"""
     updated_topic = update_topic(db=db, topic_id=topic_id, topic_update=topic)
     if not updated_topic:
         raise HTTPException(status_code=404, detail="Tema no encontrado")
@@ -73,7 +73,7 @@ def delete_topic_route(
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["teacher", "admin"]))
 ):
-    """Elimina un tema"""
+    """Elimina un tema (profesores y administradores)"""
     if not delete_topic(db=db, topic_id=topic_id):
         raise HTTPException(status_code=404, detail="Tema no encontrado")
     return {"message": "Tema eliminado correctamente"}

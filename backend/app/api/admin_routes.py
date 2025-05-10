@@ -18,7 +18,7 @@ from app.services.subject_service import create_subject
 router = APIRouter()
 
 @router.post("/register", response_model=AdminOut)
-def create_admin(admin: AdminCreate, db: Session = Depends(get_db),current_admin: Admin = Depends(get_current_active_admin)):
+def create_admin(admin: AdminCreate, db: Session = Depends(get_db)):
     """Registrar un nuevo administrador"""
     admin_service = AdminService(db)
     if admin_service.get_admin_by_email(admin.email):

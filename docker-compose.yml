@@ -11,9 +11,10 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy # Espera a que la BBDD esté saludable
     command: >
-       sh -c "until pg_isready -h db -p 5432; do sleep 2; done &&
+       sh -c "until pg_isready -h db -p 5432 -U $$POSTGRES_USER; do echo 'Waiting for db...'; sleep 2; done &&
          alembic upgrade head &&
          uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     x-file-watch:
@@ -21,6 +22,13 @@ services:
         - ./backend
     networks:
       - app-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              count: all
 
   db:
     image: pgvector/pgvector:pg15
@@ -35,16 +43,12 @@ services:
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
-
-  # pgadmin:
-  #   container_name: pgadmin
-  #   image: dpage/pgadmin4
-  #   env_file:
-  #     - ./backend/.env
-  #   ports:
-  #     - "5050:80"
-  #   networks:
-  #     - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
@@ -55,48 +59,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-
-# services:
-#   backend:
-#     build:
-#       context: ./backend
-#       dockerfile: Dockerfile
-#     container_name: fastapi_app
-#     ports:
-#       - "8000:8000"
-#     env_file:
-#       - ./backend/.env
-#     volumes:
-#       - ./backend:/app
-#       - user_uploads:/app/uploads
-#     depends_on:
-#       - db
-#     command: >
-#       sh -c "alembic upgrade head &&
-#              uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
-
-#   # frontend:
-#   #   build:
-#   #     context: ./frontend
-#   #     dockerfile: Dockerfile
-#   #   container_name: angular_frontend
-#   #   ports:
-#   #     - "80:80"
-
-#   db:
-#     image: postgres:15
-#     container_name: postgres_db
-#     restart: always
-#     env_file:
-#       - ./backend/.env
-#     ports:
-#       - "5432:5432"
-#     volumes:
-
-#       - postgres_data:/var/lib/postgresql/data
-
-# volumes:
-#   postgres_data:
-#     driver: local
-#   user_uploads:
-#     driver: local
