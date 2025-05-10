@@ -3,7 +3,7 @@ import os
 from sqlalchemy.orm import Session
 from app.models.models import  Document
 from app.models.schemas import   DocumentCreate
-from fastapi import  HTTPException, UploadFile
+from fastapi import  HTTPException, UploadFile, logger
 from app.core.config import settings
 
 from app.services.vector_service import insert_document_chunks
@@ -50,8 +50,10 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
         
     return new_document
 
-def list_documents(db: Session, teacher_id: int):
+def list_documents(db: Session, document_id: int):
     """
     Obtiene los documentos de un profesor.
     """
-    return db.query(Document).filter(Document.teacher_id == teacher_id).all()
+    return db.query(Document).filter(Document.id == document_id).all()
+
+

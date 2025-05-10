@@ -4,18 +4,18 @@ from sqlalchemy.orm import Session
 
 from app.models.models import Conversation, Message
 from app.services.groq_service import generate_groq_response
+from app.services.vector_service import search_similar_chunks
+from app.utils.document_utils import get_embedding_for_query
 
-
-def process_student_question( conversation_id: int, document_id: int, question_text: str,db: Session):
+def process_student_question( conversation_id: int, question_text: str,db: Session):
     """
     Maneja la pregunta del estudiante, busca contexto y genera una respuesta con Groq.
     """
-    
-    context = any
-    
+    question_embedding = get_embedding_for_query(question_text)
 
-    bot_response = generate_groq_response(question_text, context)
+    context = search_similar_chunks(question_embedding, conversation_id, db) 
     
+    bot_response = generate_groq_response(question_text, context)
  
     question = Message(conversation_id=conversation_id, text=question_text, is_bot=False)
     response = Message(conversation_id=conversation_id, text=bot_response, is_bot=True)
@@ -29,7 +29,7 @@ def get_conversations_by_student(student_id: int, db: Session):
     """
     Obtiene todas las conversaciones asociadas a un estudiante.
     """
-    return db.query(Conversation).filter(Conversation.student_id == student_id).all()#TODO: Mover a otro servicio
+    return db.query(Conversation).filter(Conversation.student_id == student_id).all()
 
 def get_conversation_by_id(conversation_id: int, db: Session):
     """
@@ -46,7 +46,7 @@ def get_all_conversations(db: Session):
     """
     Obtiene todas las conversaciones en la base de datos.
     """
-    return db.query(Conversation).all()#TODO: Mover a otro servicio
+    return db.query(Conversation).all()
 
 def delete_conversation(conversation_id: int, db: Session):
     """

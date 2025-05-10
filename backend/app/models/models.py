@@ -4,7 +4,7 @@ from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import UserDefinedType
 
-Base = declarative_base()
+from app.core.database import Base
 
 # --- Clases de Vectores y Funciones SQL para pgvector ---
 
@@ -94,7 +94,6 @@ class Admin(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     full_name = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
-    is_superuser = Column(Boolean, default=False)#TODO: Quitar esto
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
