@@ -1,0 +1,32 @@
+<div class="sidebar-container">
+  <div class="sidebar-header">
+    <button class="new-conversation-btn" (click)="onNewConversation()">Nueva Conversación</button>
+  </div>
+  <div class="conversation-list-container">
+    <h3>Conversaciones</h3>
+    <ul class="conversation-list">
+      <li *ngFor="let conversation of conversations" 
+          [class.active]="conversation.id === activeConversationId"
+          [class.pinned]="conversation.pinned"
+          class="conversation-item">
+        <div class="conversation-content" (click)="selectConversation(conversation.id)">
+          <span class="conversation-title">{{conversation.title}}</span>
+          <span class="conversation-date">{{conversation.date}}</span>
+        </div>
+        <div class="conversation-actions">
+          <button class="action-btn pin-btn" 
+                  (click)="onPinConversation(conversation.id, $event)"
+                  [class.pinned]="conversation.pinned"
+                  title="Fijar conversación">
+            📌
+          </button>
+          <button class="action-btn delete-btn" 
+                  (click)="onDeleteConversation(conversation.id, $event)"
+                  title="Eliminar conversación">
+            🗑️
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>

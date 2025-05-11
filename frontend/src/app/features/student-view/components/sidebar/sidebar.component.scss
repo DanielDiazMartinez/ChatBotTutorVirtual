@@ -1,0 +1,140 @@
+.sidebar-container {
+  background-color: #f5f5f5;
+  height: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  .new-conversation-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #548687;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #476f70;
+    }
+  }
+
+  .pin-conversation-btn {
+    // Estilos específicos si los necesitas
+  }
+}
+
+.conversation-list-container {
+  flex: 1;
+  overflow-y: auto;
+
+  h3 {
+    margin: 0 0 1rem;
+    color: #333;
+    font-size: 1.1rem;
+  }
+}
+
+.conversation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .conversation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #548687;
+      background-color: #f8f8f8;
+
+      .conversation-actions {
+        opacity: 1;
+      }
+    }
+
+    &.active {
+      background-color: #e8f0f0;
+      border-color: #548687;
+    }
+
+    &.pinned {
+      border-left: 4px solid #548687;
+    }
+
+    .conversation-content {
+      flex: 1;
+      cursor: pointer;
+      min-width: 0;
+
+      .conversation-title {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .conversation-date {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+      }
+    }
+
+    .conversation-actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      .action-btn {
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        cursor: pointer;
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        font-size: 1.1rem;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        &.pin-btn {
+          &.pinned {
+            color: #548687;
+          }
+        }
+
+        &.delete-btn:hover {
+          background-color: rgba(255, 0, 0, 0.1);
+          color: #dc3545;
+        }
+      }
+    }
+  }
+}
