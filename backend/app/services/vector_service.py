@@ -1,11 +1,23 @@
 from fastapi import HTTPException
+from sqlalchemy import and_, select, literal_column
 from sqlalchemy.orm import Session
-from sqlalchemy import select, literal_column
-from ..models.models import Document, DocumentChunk,CosineDistance, EuclideanDistance, InnerProduct, Conversation, Message, Student, Teacher
-from ..utils.document_utils import get_embedding_for_query
 from typing import List, Tuple, Optional
+
+from ..models.models import (
+    Document, 
+    DocumentChunk,
+    CosineDistance, 
+    EuclideanDistance, 
+    InnerProduct, 
+    Conversation, 
+    Message, 
+    User
+)
+from ..utils.document_utils import (
+    get_embedding_for_query,
+    process_document_and_embed_chunks_semantic
+)
 from ..services.groq_service import generate_groq_response
-from ..utils.document_utils import process_document_and_embed_chunks_semantic
 
 def insert_document_chunks(
     db: Session,
@@ -80,45 +92,25 @@ def create_conversation(
     user_type: str,  # "teacher" o "student"
 ) -> Conversation:
     """
-    Crea una nueva conversación asociada a un profesor o estudiante y un documento.
-    
-    Args:
-        db: Sesión de SQLAlchemy
-        document_id: ID del documento sobre el que trata la conversación
-        user_id: ID del usuario (profesor o estudiante)
-        user_type: Tipo de usuario ("teacher" o "student")
-        
-    Returns:
-        Objeto Conversation creado
+    Crea una nueva conversación.
     """
-    
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
-    
-    if user_type == "student":
-        user = db.query(Student).filter(Student.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-        
-        new_conversation = Conversation(
-            student_id=user_id,
-            teacher_id=None,
-            document_id=document_id
-        )
-    elif user_type == "teacher":
-        user = db.query(Teacher).filter(Teacher.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="Profesor no encontrado")
-        
-        new_conversation = Conversation(
-            student_id=None,
-            teacher_id=user_id,
-            document_id=document_id
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Tipo de usuario no válido. Debe ser 'teacher' o 'student'")
-   
+
+    user = db.query(User).filter(
+        and_(User.id == user_id, User.role == user_type)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    new_conversation = Conversation(
+        student_id=user_id if user_type == "student" else None,
+        teacher_id=user_id if user_type == "teacher" else None,
+        document_id=document_id,
+        subject_id=document.subject_id
+    )
+
     db.add(new_conversation)
     db.commit()
     db.refresh(new_conversation)
@@ -133,28 +125,45 @@ def generate_conversation(
     initial_message_text: str = None
 ) -> Tuple[str, Conversation]:
     """
-    Crea una nueva conversación y opcionalmente añade el primer mensaje con su respuesta.
-    
-    Args:
-        db: Sesión de SQLAlchemy
-        document_id: ID del documento sobre el que trata la conversación
-        user_id: ID del usuario (profesor o estudiante)
-        user_type: Tipo de usuario ("teacher" o "student")
-        initial_message_text: Texto del primer mensaje (opcional)
-        
-    Returns:
-        Tupla con (texto de respuesta, objeto Conversation creado)
+    Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
     """
-    new_conversation = create_conversation(db, document_id, user_id, user_type)
-    
+    new_conversation = create_conversation(
+        db=db,
+        document_id=document_id,
+        user_id=user_id,
+        user_type=user_type
+    )
+
+    bot_msg = None
     if initial_message_text:
-        user_msg, bot_msg = add_message_and_generate_response(
-            db=db,
+        question_embedding = get_embedding_for_query(initial_message_text)
+        user_msg = Message(
+            text=initial_message_text,
+            is_bot=False,
             conversation_id=new_conversation.id,
-            user_id=user_id,
-            user_type=user_type,
-            message_text=initial_message_text
+            embedding=question_embedding
         )
+        db.add(user_msg)
+        db.flush()
+
+        similar_chunks = search_similar_chunks(
+            db=db, 
+            query_embedding=question_embedding,
+            document_id=document_id
+        )
+        context = " ".join([chunk.content for chunk, _ in similar_chunks])
+        bot_response = generate_groq_response(initial_message_text, context, "")
+
+        bot_msg = Message(
+            text=bot_response,
+            is_bot=True,
+            conversation_id=new_conversation.id,
+            embedding=get_embedding_for_query(bot_response)
+        )
+        db.add(bot_msg)
+        db.commit()
+        db.refresh(bot_msg)
+
         return bot_msg.text, new_conversation
     
     return "", new_conversation
@@ -167,95 +176,70 @@ def add_message_and_generate_response(
     message_text: str,
 ) -> Tuple[Message, Message]:
     """
-    Añade el mensaje del usuario a una conversación existente,
-    genera una respuesta del bot y guarda ambos mensajes.
-
-    Args:
-        db: Sesión de SQLAlchemy
-        conversation_id: ID de la conversación
-        user_id: ID del usuario (profesor o estudiante)
-        user_type: Tipo de usuario ("teacher" o "student")
-        message_text: Texto del mensaje del usuario
-        document_id: ID del documento asociado a la conversación
-
-    Returns:
-        Una tupla conteniendo el objeto Message del usuario y el objeto Message del bot.
+    Añade un mensaje del usuario a una conversación existente y genera una respuesta.
     """
-    print(f"--- Debug Info: add_message_and_generate_response ---")
-    # Verificar que la conversación existe
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
 
     # Verificar usuario y crear su mensaje
     question_embedding = get_embedding_for_query(message_text)
-    user_msg_obj: Message = None 
+    user = db.query(User).filter(
+        and_(User.id == user_id, User.role == user_type)
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+    if user_type == "student" and conversation.student_id != user_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
+    elif user_type == "teacher" and conversation.teacher_id != user_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
 
-    if user_type == "student":
-        user = db.query(Student).filter(Student.id == user_id).first()
-        if not user or conversation.student_id != user_id:
-            raise HTTPException(status_code=404, detail="Estudiante no encontrado o no pertenece a esta conversación")
-        user_msg_obj = Message(
-            text=message_text,
-            is_bot=False,
-            conversation_id=conversation_id,
-            embedding=question_embedding
-        )
-    elif user_type == "teacher":
-        user = db.query(Teacher).filter(Teacher.id == user_id).first()
-        if not user or conversation.teacher_id != user_id:
-            raise HTTPException(status_code=404, detail="Profesor no encontrado o no pertenece a esta conversación")
-        user_msg_obj = Message(
-            text=message_text,
-            is_bot=False,
-            conversation_id=conversation_id,
-            embedding=question_embedding
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Tipo de usuario no válido. Debe ser 'teacher' o 'student'")
+    user_msg_obj = Message(
+        text=message_text,
+        is_bot=False,
+        conversation_id=conversation_id,
+        embedding=question_embedding
+    )
 
-   
     db.add(user_msg_obj)
     db.flush()
-    db.refresh(user_msg_obj) 
+    db.refresh(user_msg_obj)
 
+    # Buscar chunks similares y generar respuesta
+    similar_chunks = search_similar_chunks(
+        db=db,
+        query_embedding=question_embedding,
+        document_id=conversation.document_id
+    )
+    context = " ".join([chunk.content for chunk, _ in similar_chunks])
     
-    similar_chunks = search_similar_chunks(db, question_embedding, conversation.document_id) 
-    similarity_threshold = 0.65
-    context_chunks = [chunk.content for chunk, score in similar_chunks if score > similarity_threshold]
-    context = " ".join(context_chunks)
+    # Obtener historial de la conversación
+    message_history = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at.desc()).limit(6).all()
+    message_history.reverse()
+    conversation_history = "\n".join(
+        [f"{'Usuario' if not msg.is_bot else 'Bot'}: {msg.text}" for msg in message_history]
+    )
 
     try:
-        message_history_db = db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at.desc()).limit(6).all()
-        message_history_db.reverse() # Orden cronológico
-        conversation_history = "\n".join(
-            [f"{'Usuario' if not msg.is_bot else 'Bot'}: {msg.text}" for msg in message_history_db]
-        )
         response_text = generate_groq_response(message_text, context, conversation_history)
-        print(f"Groq Raw Response: {response_text}") # DEBUG
     except Exception as e:
-        print(f"--- ERROR calling generate_groq_response: {e} ---") # DEBUG
-        
-        response_text = "Lo siento, ocurrió un error al generar la respuesta."
+        print(f"Error generating Groq response: {e}")
+        response_text = "Lo siento, hubo un error al generar la respuesta."
 
-    response_embedding = get_embedding_for_query(response_text)
-
-    
-    bot_msg_obj = Message( 
+    bot_msg_obj = Message(
         text=response_text,
         is_bot=True,
         conversation_id=conversation_id,
-        embedding=response_embedding
+        embedding=get_embedding_for_query(response_text)
     )
 
-
     db.add(bot_msg_obj)
-
     db.commit()
-
-
     db.refresh(bot_msg_obj)
-
 
     return user_msg_obj, bot_msg_obj
 

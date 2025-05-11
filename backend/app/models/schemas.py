@@ -3,102 +3,42 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import List, Optional
 
 # ----------------------------------------
-# SCHEMA PARA ADMINISTRADORES
+# SCHEMA PARA USUARIOS
 # ----------------------------------------
 
-class AdminBase(BaseModel):
+class UserBase(BaseModel):
     """
-    Modelo base para administradores.
+    Modelo base para todos los usuarios (admin, profesor, alumno).
     """
-    email: EmailStr = Field(..., example="admin@example.com")
-    full_name: Optional[str] = Field(None, example="Admin User")
+    email: EmailStr = Field(..., example="usuario@example.com")
+    full_name: Optional[str] = Field(None, example="Nombre Usuario")
 
-class AdminCreate(AdminBase):
+class UserCreate(UserBase):
     """
-    Modelo para crear un nuevo administrador.
-    """
-    password: str = Field(..., min_length=6, example="SecurePassword123!")
-    is_superuser: bool = Field(default=False, example=False)
-
-class AdminOut(AdminBase):
-    """
-    Modelo de salida para administradores.
-    """
-    id: int = Field(..., example=1)
-    is_superuser: bool = Field(..., example=False)
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# ----------------------------------------
-# SCHEMA PARA PROFESORES
-# ----------------------------------------
-
-class TeacherBase(BaseModel):
-    """
-    Modelo base para los profesores.
-    """
-    email: EmailStr = Field(..., example="profesor@example.com")
-    full_name: Optional[str] = Field(None, example="Juan Pérez")
-
-
-class TeacherCreate(TeacherBase):
-    """
-    Modelo para el registro de un profesor.
-    Se requiere la contraseña para la creación.
+    Modelo para crear un nuevo usuario.
     """
     password: str = Field(..., min_length=6, example="Password123!")
+    role: str = Field(..., example="student")  # 'admin', 'teacher', 'student'
 
-
-class TeacherOut(TeacherBase):
+class UserOut(UserBase):
     """
-    Modelo de salida para un profesor, sin la contraseña.
-    Se puede incluir el identificador u otros campos de solo lectura.
+    Modelo de salida para usuarios.
     """
     id: int = Field(..., example=1)
+    role: str = Field(..., example="student")
+    created_at: datetime
 
-    class Config:
-        from_attributes = True  # Permite trabajar con objetos ORM (por ejemplo, SQLAlchemy)
+    model_config = ConfigDict(from_attributes=True)
 
-class TeacherUpdate(TeacherBase):
+class UserUpdate(BaseModel):
     """
-    Modelo para la actualización de un profesor.
-    Se pueden actualizar el email y el nombre completo.
+    Modelo para actualizar un usuario existente.
     """
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
-                                      
-# ----------------------------------------
-# SCHEMA PARA ALUMNOS
-# ----------------------------------------
-
-class StudentBase(BaseModel):
-    """
-    Modelo base para los alumnos.
-    """
-    email: EmailStr = Field(..., example="alumno@example.com")
-    full_name: Optional[str] = Field(None, example="María Gómez")
-
-
-class StudentCreate(StudentBase):
-    """
-    Modelo para el registro de un alumno.
-    Se requiere la contraseña para la creación.
-    """
-    password: str = Field(..., min_length=6, example="Password123!")
-
-
-class StudentOut(StudentBase):
-    """
-    Modelo de salida para un alumno, sin la contraseña.
-    """
-    id: int = Field(..., example=1)
-
-    class Config:
-        from_attributes = True
-
+    role: Optional[str] = None
+    is_superuser: Optional[bool] = None
 
 # ----------------------------------------
 # SCHEMA PARA LA AUTENTICACIÓN
@@ -115,11 +55,10 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """
     Modelo para la información extraída del token.
-    Permite almacenar datos mínimos como el id, email y rol del usuario (profesor o alumno).
     """
     id: Optional[int] = Field(None, example=1)
     email: Optional[EmailStr] = Field(None, example="usuario@example.com")
-    role: Optional[str] = Field(None, example="teacher")  # Alternativamente "student"
+    role: Optional[str] = Field(None, example="teacher")  # 'admin', 'teacher', 'student'
 
 # ----------------------------------------
 # SCHEMA PARA LOS DOCUMENTOS
@@ -128,15 +67,12 @@ class DocumentBase(BaseModel):
     title: str
     description: Optional[str] = None
 
-
 class DocumentCreate(DocumentBase):    
-    teacher_id: int
+    user_id: int
     subject_id: Optional[int] = None
     topic_id: Optional[int] = None  
 
-    class Config:
-        from_attributes = True
-        
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentOut(DocumentBase):
     id: int
@@ -145,8 +81,7 @@ class DocumentOut(DocumentBase):
     topic_id: Optional[int] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentChunkOut(BaseModel):
     id: int
@@ -154,7 +89,7 @@ class DocumentChunkOut(BaseModel):
     content: str
     chunk_number: int
 
-    model_config = ConfigDict(from_attributes=True) 
+    model_config = ConfigDict(from_attributes=True)
 
 # ----------------------------------------
 #  SCHEMA PARA LAS CONVERSACIONES
@@ -184,8 +119,7 @@ class ConversationOut(BaseModel):
     topic_id: Optional[int] = None
     messages: List["MessageOut"] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ConversationWithResponse(BaseModel):
     """
@@ -194,8 +128,7 @@ class ConversationWithResponse(BaseModel):
     conversation: ConversationOut
     bot_response: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ----------------------------------------
 #  SCHEMA PARA LOS MENSAJES
@@ -209,22 +142,19 @@ class MessageCreate(MessageBase):
     Modelo para crear un nuevo mensaje.
     """
     created_at: Optional[datetime] = None
-    pass
 
 class MessageOut(MessageBase):
     id: int
     conversation_id: int
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MessagePairOut(BaseModel):
     user_message: MessageOut  
     bot_message: MessageOut 
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ----------------------------------------
 # SCHEMA PARA ASIGNATURAS
@@ -241,7 +171,6 @@ class SubjectBase(BaseModel):
 class SubjectCreate(SubjectBase):
     """
     Modelo para crear una nueva asignatura.
-    No necesita campos adicionales.
     """
     pass
 
@@ -251,11 +180,10 @@ class SubjectOut(SubjectBase):
     Incluye ID y listas de profesores y estudiantes.
     """
     id: int
-    teachers: List[TeacherOut] = []
-    students: List[StudentOut] = []
+    teachers: List[UserOut] = []
+    students: List[UserOut] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ----------------------------------------
 # SCHEMA PARA TEMAS (TOPICS)
@@ -289,8 +217,7 @@ class TopicOut(TopicBase):
     """
     id: int
     created_at: datetime
-    documents: List["DocumentOut"] = []
+    documents: List[DocumentOut] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

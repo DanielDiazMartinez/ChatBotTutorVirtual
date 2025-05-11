@@ -7,7 +7,6 @@ erDiagram
         String email UK
         String full_name
         String hashed_password
-        Boolean is_superuser
         DateTime created_at
     }
 

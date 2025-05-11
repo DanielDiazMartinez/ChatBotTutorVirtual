@@ -3,81 +3,70 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import require_role
-from app.services.user_service import get_student_by_id, get_students, get_teacher_by_id, get_teachers, registrar_student, registrar_teacher, update_teacher_service
-from app.models.schemas import StudentCreate, StudentOut, TeacherCreate, TeacherOut
+from app.services.user_service import (
+    create_user,
+    get_user_by_id,
+    get_users_by_role,
+    update_user,
+    delete_user
+)
+from app.models.schemas import UserCreate, UserUpdate, UserOut
 
 users_routes = APIRouter()
 
-@users_routes.post("/register/student")
-def student_register(
-    student: StudentCreate, 
+@users_routes.post("/register", response_model=UserOut, status_code=201)
+def register_user(
+    user: UserCreate, 
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["admin"]))
+):
+    """Registrar un nuevo usuario (solo administradores)"""
+    return create_user(user, db)
+
+@users_routes.get("/list/{role}", response_model=List[UserOut])
+def list_users_by_role(
+    role: str,
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["teacher", "admin"]))
 ):
-    """Registrar un nuevo estudiante (profesores y administradores)"""
-    return registrar_student(student, db)
+    """Listar todos los usuarios de un rol específico (profesores y administradores)"""
+    if role not in ["admin", "teacher", "student"]:
+        raise HTTPException(status_code=400, detail="Rol inválido")
+        
+    users = get_users_by_role(role, db)
+    if not users:
+        raise HTTPException(status_code=200, detail=f"No hay usuarios registrados con el rol {role}")
+    return users
 
-@users_routes.post("/register/teacher")
-def teacher_register(
-    teacher: TeacherCreate, 
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["teacher", "admin"]))
-):
-    """Registrar un nuevo profesor (profesores y administradores)"""
-    return registrar_teacher(teacher, db)
-
-@users_routes.get("/list/students", response_model=List[StudentOut])
-def list_students(
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["teacher", "admin"]))
-):
-    """Listar todos los estudiantes (profesores y administradores)"""
-    students = get_students(db)
-    if not students:
-        raise HTTPException(status_code=404, detail="No hay estudiantes registrados.")
-    return students
-
-@users_routes.get("/students/{student_id}", response_model=StudentOut)
-def get_student(
-    student_id: int, 
+@users_routes.get("/{user_id}", response_model=UserOut)
+def get_user(
+    user_id: int,
+    role: str | None = None,
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["teacher", "student", "admin"]))
 ):
-    """Obtener información de un estudiante (profesores, estudiantes y administradores)"""
-    student = get_student_by_id(student_id, db)
-    if not student:
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado.")
-    return student
+    """Obtener información de un usuario (profesores, estudiantes y administradores)"""
+    user = get_user_by_id(user_id, role, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return user
 
-@users_routes.get("/teachers", response_model=List[TeacherOut])
-def list_teachers(
+@users_routes.put("/{user_id}", response_model=UserOut)
+def update_user_route(
+    user_id: int,
+    user_update: UserUpdate,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+    _: dict = Depends(require_role(["admin"]))
 ):
-    """Listar todos los profesores (profesores, estudiantes y administradores)"""
-    teachers = get_teachers(db)
-    if not teachers:
-        raise HTTPException(status_code=404, detail="No hay profesores registrados.")
-    return teachers
+    """Actualizar información de un usuario (solo administradores)"""
+    return update_user(user_id, user_update, db)
 
-@users_routes.get("/teachers/{teacher_id}", response_model=TeacherOut)
-def get_teacher(
-    teacher_id: int, 
+@users_routes.delete("/{user_id}", response_model=UserOut)
+def delete_user_route(
+    user_id: int,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+    _: dict = Depends(require_role(["admin"]))
 ):
-    """Obtener información de un profesor (profesores, estudiantes y administradores)"""
-    teacher = get_teacher_by_id(teacher_id, db)
-    if not teacher:
-        raise HTTPException(status_code=404, detail="Profesor no encontrado.")
-    return teacher
-
-@users_routes.put("/teachers/{teacher_id}")
-def update_teacher(
-    teacher_id: int, 
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["teacher", "admin"]))
-):
-    """Actualizar información de un profesor (profesores y administradores)"""
-    return update_teacher_service(teacher_id, db)
+    """Eliminar un usuario (solo administradores)"""
+    return delete_user(user_id, db)
 

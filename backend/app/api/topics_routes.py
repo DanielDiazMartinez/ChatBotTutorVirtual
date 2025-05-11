@@ -16,7 +16,7 @@ from ..services.topic_service import (
 
 topics_routes = APIRouter()
 
-@topics_routes.post("/", response_model=TopicOut)
+@topics_routes.post("/", response_model=TopicOut, status_code=201)
 def create_new_topic(
     topic: TopicCreate, 
     db: Session = Depends(get_db),

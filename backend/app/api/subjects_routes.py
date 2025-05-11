@@ -19,7 +19,7 @@ from ..services.subject_service import (
 
 subjects_routes = APIRouter()
 
-@subjects_routes.post("/", response_model=SubjectOut)
+@subjects_routes.post("/", response_model=SubjectOut, status_code=201)
 def create_new_subject(
     subject: SubjectCreate, 
     db: Session = Depends(get_db),

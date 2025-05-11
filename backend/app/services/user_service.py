@@ -1,108 +1,76 @@
 from sqlalchemy.orm import Session
-from app.models.models import Admin, Message, Teacher, Student
-from app.models.schemas import TeacherCreate, StudentCreate, TeacherUpdate
+from app.models.models import User
+from app.models.schemas import UserCreate, UserUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
+from typing import List
 
-def registrar_teacher(teacher: TeacherCreate, db: Session):
+def create_user(user: UserCreate, db: Session):
     """
-    Registra un teacher en la base de datos.
+    Crea un nuevo usuario en la base de datos.
     """
-    existing_teacher = db.query(Teacher).filter(Teacher.email == teacher.email).first()
-    if existing_teacher:
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    teacher_data = teacher.model_dump()
-    teacher_data["hashed_password"] = get_password_hash(teacher_data.pop("password"))
+    user_data = user.model_dump()
+    user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
     
-    teacher_db = Teacher(**teacher_data)
-    db.add(teacher_db)
+    user_db = User(**user_data)
+    db.add(user_db)
     db.commit()
-    db.refresh(teacher_db)
-    return teacher_db
+    db.refresh(user_db)
+    return user_db
 
-def get_teachers(db: Session):
+def get_user_by_id(user_id: int, role: str | None, db: Session):
     """
-    Obtiene todos los teachers registrados.
+    Obtiene un usuario por su ID y opcionalmente por su rol.
     """
-    return db.query(Teacher).all()
+    query = db.query(User).filter(User.id == user_id)
+    if role:
+        query = query.filter(User.role == role)
+    return query.first()
 
-def get_teacher_by_id(teacher_id: int, db: Session):
+def get_users_by_role(role: str, db: Session) -> List[User]:
     """
-    Obtiene un teacher por su identificador.
+    Obtiene todos los usuarios de un rol específico.
     """
-    return db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    return db.query(User).filter(User.role == role).all()
 
-def update_teacher_service(teacher_id: int, teacherUpdate: TeacherUpdate, db: Session):
+def update_user(user_id: int, user_update: UserUpdate, db: Session):
     """
-    Actualiza un teacher por su identificador.
+    Actualiza un usuario existente.
     """
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
-    if not teacher:
-        raise HTTPException(status_code=404, detail="Profesor no encontrado.")
+    user_db = get_user_by_id(user_id, None, db)
+    if not user_db:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+    update_data = user_update.model_dump(exclude_unset=True)
     
-    teacher.email = teacherUpdate.email
-    teacher.full_name = teacherUpdate.full_name
-    teacher.hashed_password = get_password_hash(teacherUpdate.password) 
-    db.commit()
-    return teacher
-
-def registrar_student(student: StudentCreate, db: Session):
-    """
-    Registra un alumno en la base de datos.
-    """
-    existing_student = db.query(Student).filter(Student.email == student.email).first()
-    if existing_student:
-        raise HTTPException(status_code=400, detail="El alumno ya está registrado.")
-
-    student_data = student.model_dump()
-    student_data["hashed_password"] = get_password_hash(student_data.pop("password"))
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+        
+    for field, value in update_data.items():
+        setattr(user_db, field, value)
     
-    student_db = Student(**student_data)
-    db.add(student_db)
     db.commit()
-    db.refresh(student_db)
-    return student_db
+    db.refresh(user_db)
+    return user_db
 
-def get_students(db: Session):
+def delete_user(user_id: int, db: Session):
     """
-    Obtiene todos los alumnos registrados.
+    Elimina un usuario por su ID.
     """
-    return db.query(Student).all()
-
-def get_student_by_id(student_id: int, db: Session):
-    """
-    Obtiene un alumno por su identificador.
-    """
-    return db.query(Student).filter(Student.id == student_id).first()
-
-def delete_student(student_id: int, db: Session):
-    """
-    Elimina un alumno por su identificador.
-    """
-    student = db.query(Student).filter(Student.id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado.")
-    db.delete(student)
+    user = get_user_by_id(user_id, None, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    
+    db.delete(user)
     db.commit()
-    return student
+    return user
 
 def get_user_by_email(email: str, db: Session):
     """
-    Función centralizada que busca un usuario por email en todas las tablas (Teacher y Student).
-    Retorna una tupla (usuario, rol) donde rol puede ser 'teacher' o 'student'.
+    Obtiene un usuario por su email.
     """
-    admin = db.query(Admin).filter(Admin.email == email).first()
-    if admin:
-        return admin, 'admin'
-    
-    teacher = db.query(Teacher).filter(Teacher.email == email).first()
-    if teacher:
-        return teacher, 'teacher'
-    
-    
-    student = db.query(Student).filter(Student.email == email).first()
-    if student:
-        return student, 'student'
-   
-    return None, None
+    return db.query(User).filter(User.email == email).first()
