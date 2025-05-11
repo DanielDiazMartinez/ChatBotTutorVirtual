@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 
-
-from ..models.models import Subject, Teacher, Student
+from ..models.models import Subject, User
 from ..models.schemas import SubjectCreate
 
 def create_subject(db: Session, subject: SubjectCreate) -> Subject:
@@ -51,7 +51,9 @@ def delete_subject(db: Session, subject_id: int) -> bool:
 def add_teacher_to_subject(db: Session, subject_id: int, teacher_id: int) -> bool:
     """Añade un profesor a una asignatura"""
     subject = get_subject_by_id(db, subject_id)
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    teacher = db.query(User).filter(
+        and_(User.id == teacher_id, User.role == "teacher")
+    ).first()
     
     if not subject or not teacher:
         return False
@@ -63,7 +65,9 @@ def add_teacher_to_subject(db: Session, subject_id: int, teacher_id: int) -> boo
 def add_student_to_subject(db: Session, subject_id: int, student_id: int) -> bool:
     """Añade un estudiante a una asignatura"""
     subject = get_subject_by_id(db, subject_id)
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = db.query(User).filter(
+        and_(User.id == student_id, User.role == "student")
+    ).first()
     
     if not subject or not student:
         return False
@@ -75,7 +79,9 @@ def add_student_to_subject(db: Session, subject_id: int, student_id: int) -> boo
 def remove_teacher_from_subject(db: Session, subject_id: int, teacher_id: int) -> bool:
     """Elimina un profesor de una asignatura"""
     subject = get_subject_by_id(db, subject_id)
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    teacher = db.query(User).filter(
+        and_(User.id == teacher_id, User.role == "teacher")
+    ).first()
     
     if not subject or not teacher:
         return False
@@ -89,7 +95,9 @@ def remove_teacher_from_subject(db: Session, subject_id: int, teacher_id: int) -
 def remove_student_from_subject(db: Session, subject_id: int, student_id: int) -> bool:
     """Elimina un estudiante de una asignatura"""
     subject = get_subject_by_id(db, subject_id)
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = db.query(User).filter(
+        and_(User.id == student_id, User.role == "student")
+    ).first()
     
     if not subject or not student:
         return False

@@ -1,14 +1,27 @@
-from typing import List, Union
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
-from ..models.models import DocumentChunk, Student, Teacher
-from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_student
+from ..models.models import DocumentChunk, User
+from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_user_role
 from ..core.database import get_db
-from ..core.auth import require_role
-from ..services.vector_service import add_message_and_generate_response, generate_conversation, get_context, search_similar_chunks
-from ..models.schemas import ConversationCreate, ConversationOut, ConversationWithResponse, DocumentChunkOut, MessageCreate, MessageOut, MessagePairOut
+from ..core.auth import require_role, get_current_user
+from ..services.vector_service import (
+    add_message_and_generate_response, 
+    generate_conversation, 
+    get_context, 
+    search_similar_chunks
+)
+from ..models.schemas import (
+    ConversationCreate, 
+    ConversationOut, 
+    ConversationWithResponse, 
+    DocumentChunkOut, 
+    MessageCreate, 
+    MessageOut, 
+    MessagePairOut
+)
 
 chat_routes = APIRouter()
 
@@ -16,20 +29,14 @@ chat_routes = APIRouter()
 async def create_conversation(
     conversation_data: ConversationCreate, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Crear una nueva conversación (estudiantes, profesores y administradores)"""
-    user_type = "student"  # default
-    if _.get("role") == "teacher":
-        user_type = "teacher"
-    elif _.get("role") == "admin":
-        user_type = "admin"
-
+    """Crear una nueva conversación"""
     bot_response_str, conversation_obj = generate_conversation(
         db=db,
         document_id=conversation_data.document_id,
-        user_id=conversation_data.student_id,
-        user_type=user_type,
+        user_id=current_user.id,
+        user_type=current_user.role,
         initial_message_text=conversation_data.text
     )
 
@@ -38,59 +45,87 @@ async def create_conversation(
         "bot_response": bot_response_str 
     }
 
-@chat_routes.get("/conversations/student/{student_id}", response_model=list[ConversationOut])
-async def get_student_conversations(
-    student_id: int, 
+@chat_routes.get("/conversations/{user_id}", response_model=List[ConversationOut])
+async def get_user_conversations(
+    user_id: int, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Obtener conversaciones de un estudiante (estudiantes, profesores y administradores)"""
-    conversations = get_conversations_by_student(student_id, db)
+    """Obtener conversaciones de un usuario"""
+    # Verificar que el usuario actual puede acceder a estas conversaciones
+    if current_user.id != user_id and current_user.role not in ["admin", "teacher"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="No tienes permiso para ver las conversaciones de este usuario"
+        )
+        
+    conversations = get_conversations_by_user_role(user_id, current_user.role, db)
     if not conversations:
-        raise HTTPException(status_code=404, detail="No se encontraron conversaciones para este estudiante.")
+        raise HTTPException(
+            status_code=404, 
+            detail="No se encontraron conversaciones para este usuario"
+        )
     return conversations
 
 @chat_routes.get("/conversation/{conversation_id}", response_model=ConversationOut)
 async def get_conversation(
     conversation_id: int, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Obtener una conversación específica (estudiantes, profesores y administradores)"""
+    """Obtener una conversación específica"""
     conversation = get_conversation_by_id(conversation_id, db)
     if not conversation:
-        raise HTTPException(status_code=404, detail="Conversación no encontrada.")
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+        
+    # Verificar que el usuario actual puede acceder a esta conversación
+    if current_user.role == "student" and conversation.student_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
+    elif current_user.role == "teacher":
+        # Los profesores pueden ver las conversaciones de las asignaturas que imparten
+        if not (conversation.teacher_id == current_user.id or 
+                (conversation.subject_id and conversation.subject_id in 
+                 [s.id for s in current_user.teaching_subjects])):
+            raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
+        
     return conversation
 
 @chat_routes.delete("/conversation/{conversation_id}")
 async def delete_conv(
     conversation_id: int, 
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Eliminar una conversación (estudiantes, profesores y administradores)"""
-    return delete_conversation(conversation_id, db)
+    """Eliminar una conversación"""
+    conversation = get_conversation_by_id(conversation_id, db)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+        
+    # Verificar que el usuario actual puede eliminar esta conversación
+    if current_user.role == "student":
+        if conversation.student_id != current_user.id:
+            raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
+    elif current_user.role == "teacher":
+        if conversation.teacher_id != current_user.id:
+            raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
+            
+    delete_conversation(conversation_id, db)
+    return {"message": "Conversación eliminada correctamente"}
 
 @chat_routes.post("/c/{conversation_id}", response_model=MessagePairOut)
 async def add_message_to_conversation(
     conversation_id: int,
     message_data: MessageCreate,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Añadir mensaje a una conversación (estudiantes, profesores y administradores)"""
+    """Añadir mensaje a una conversación"""
     try:
-        user_type = "student"  # default
-        if _.get("role") == "teacher":
-            user_type = "teacher"
-        elif _.get("role") == "admin":
-            user_type = "admin"
-
         user_msg_obj, bot_msg_obj = add_message_and_generate_response(
             db=db,
             conversation_id=conversation_id,
-            user_id=None,
-            user_type=user_type,
+            user_id=current_user.id,
+            user_type=current_user.role,
             message_text=message_data.text
         )
         return {
@@ -107,9 +142,9 @@ async def get_context_for_question(
     document_id: int, 
     db: Session = Depends(get_db), 
     message_data: MessageCreate = None,
-    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+    current_user: User = Depends(get_current_user)
 ):
-    """Obtener contexto para una pregunta (estudiantes, profesores y administradores)"""
+    """Obtener contexto para una pregunta"""
     if message_data is None or message_data.text is None:
         raise HTTPException(status_code=400, detail="Message text is required")
 
