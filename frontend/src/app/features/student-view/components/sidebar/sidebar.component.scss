@@ -1,21 +1,24 @@
 .sidebar-container {
   background-color: #f5f5f5;
   height: 100%;
+  width: 300px;
+  min-width: 300px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  border-right: 1px solid #e0e0e0;
 }
 
 .sidebar-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-
+  
   .new-conversation-btn {
     width: 100%;
     padding: 0.75rem;
-    background-color: #548687;
+    background-color: #8FBC94;
     color: white;
     border: none;
     border-radius: 0.5rem;
@@ -24,23 +27,26 @@
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: #476f70;
+      background-color: #7da882;
     }
   }
-
-  .pin-conversation-btn {
-    // Estilos específicos si los necesitas
-  }
+  
 }
 
 .conversation-list-container {
   flex: 1;
   overflow-y: auto;
+  min-height: 0; // Importante para que el scroll funcione correctamente
 
   h3 {
     margin: 0 0 1rem;
     color: #333;
     font-size: 1.1rem;
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    padding: 0.5rem 0;
+    z-index: 1;
   }
 }
 
@@ -54,86 +60,127 @@
 
   .conversation-item {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 0.75rem;
-    background-color: white;
-    border-radius: 0.5rem;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    position: relative;
+    width: calc(100% - 2px);
+    margin: 0;
+    border: 1px solid transparent;
+    padding: 0;
 
     &:hover {
-      border-color: #548687;
-      background-color: #f8f8f8;
-
-      .conversation-actions {
-        opacity: 1;
-      }
+      background-color: #FFFFFF;
     }
 
     &.active {
-      background-color: #e8f0f0;
-      border-color: #548687;
-    }
-
-    &.pinned {
-      border-left: 4px solid #548687;
+      background-color: #FFFFFF;
+      border-color: #8FBC94;
     }
 
     .conversation-content {
       flex: 1;
       cursor: pointer;
+      display: block;
       min-width: 0;
+      width: calc(100% - 40px); // Reducimos el ancho para dejar espacio al botón
+      padding: 8px;
 
       .conversation-title {
         display: block;
         font-weight: 500;
-        margin-bottom: 0.25rem;
-        color: #333;
+        color: #6d6d6d;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        width: 100%;
       }
 
-      .conversation-date {
-        display: block;
-        font-size: 0.8rem;
-        color: #666;
+
+    }
+
+    .options-btn {
+      width: 32px;
+      height: 32px;
+      padding: 4px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 100px;
+      margin-right: 4px;
+      opacity: 0;
+      transition: all 0.2s ease;
+
+      .options-icon {
+        font-size: 18px;
+        color: #6d6d6d;
+      }
+
+      &:hover {
+        background-color: #c5e99b80;
       }
     }
 
-    .conversation-actions {
-      display: flex;
-      gap: 0.5rem;
-      opacity: 0;
-      transition: opacity 0.2s;
+    &:hover .options-btn {
+      opacity: 1;
+    }
+  }
+}
 
-      .action-btn {
-        background: none;
-        border: none;
-        padding: 0.25rem;
-        cursor: pointer;
-        border-radius: 0.25rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        font-size: 1.1rem;
+.options-modal {
+  position: fixed;
+  background: #FFFFFF;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 180px;
+  border: 1px solid #8FBC94;
+  padding: 4px;
 
-        &:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
+  .modal-option {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #6d6d6d;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    margin: 2px 0;
+    font-weight: 500;
+    gap: 8px;
+    
+    svg {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+    }
 
-        &.pin-btn {
-          &.pinned {
-            color: #548687;
-          }
-        }
+    span {
+      flex: 1;
+    }
 
-        &.delete-btn:hover {
-          background-color: rgba(255, 0, 0, 0.1);
-          color: #dc3545;
-        }
+    &:hover {
+      background-color: #c5e99b80;
+    }
+
+    &.delete {
+      color: #dc3545;
+      
+      &:hover {
+        background-color: rgba(220, 53, 69, 0.1);
       }
     }
   }

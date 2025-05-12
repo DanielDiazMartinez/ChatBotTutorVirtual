@@ -11,21 +11,14 @@
           class="conversation-item">
         <div class="conversation-content" (click)="selectConversation(conversation.id)">
           <span class="conversation-title">{{conversation.title}}</span>
-          <span class="conversation-date">{{conversation.date}}</span>
         </div>
-        <div class="conversation-actions">
-          <button class="action-btn pin-btn" 
-                  (click)="onPinConversation(conversation.id, $event)"
-                  [class.pinned]="conversation.pinned"
-                  title="Fijar conversación">
-            📌
-          </button>
-          <button class="action-btn delete-btn" 
-                  (click)="onDeleteConversation(conversation.id, $event)"
-                  title="Eliminar conversación">
-            🗑️
-          </button>
-        </div>
+        <button class="options-btn" (click)="showOptionsModal(conversation, $event)">
+          <svg class="options-icon" viewBox="0 0 24 24" width="18" height="18">
+            <circle cx="12" cy="6" r="2" fill="currentColor"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <circle cx="12" cy="18" r="2" fill="currentColor"/>
+          </svg>
+        </button>
       </li>
     </ul>
   </div>
