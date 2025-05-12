@@ -40,7 +40,7 @@
 
   h3 {
     margin: 0 0 1rem;
-    color: #333;
+    color: #414141;
     font-size: 1.1rem;
     position: sticky;
     top: 0;
@@ -77,6 +77,22 @@
     &.active {
       background-color: #FFFFFF;
       border-color: #8FBC94;
+    }
+
+    &.pinned {
+      background-color: #f8fff8;
+      border-left: 3px solid #8FBC94;
+
+      &:hover {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(143, 188, 148, 0.1);
+      }
+
+      &.active {
+        background-color: #ffffff;
+        border-color: #8FBC94;
+        box-shadow: 0 2px 4px rgba(143, 188, 148, 0.2);
+      }
     }
 
     .conversation-content {
