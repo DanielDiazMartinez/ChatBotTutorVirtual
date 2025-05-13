@@ -4,11 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { ChatMessage } from '../../interfaces/chat.interface';
 import { ChatMessageComponent } from '../chat-message/chat-message.component';
 import { ChatInputComponent } from '../chat-input/chat-input.component';
+import { DocumentsModalComponent } from '../documents-modal/documents-modal.component';
 
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatMessageComponent, ChatInputComponent],
+  imports: [CommonModule, RouterModule, ChatMessageComponent, ChatInputComponent, DocumentsModalComponent],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -23,6 +24,8 @@ export class ChatAreaComponent implements AfterViewChecked {
       timestamp: new Date()
     }
   ];
+
+  isDocumentsModalVisible = false;
 
   constructor(private router: Router) {}
 
@@ -57,8 +60,11 @@ export class ChatAreaComponent implements AfterViewChecked {
     }, 1000);
   }
 
+  toggleDocumentsModal(): void {
+    this.isDocumentsModalVisible = !this.isDocumentsModalVisible;
+  }
+
   goToLogin(): void {
-    // Navegar a login reemplazando la URL actual en el historial
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 }

@@ -6,20 +6,44 @@
   max-width: 100%;
   position: relative;
 
+  &.drawer-open {
+    margin-right: 350px;
+  }
+
   .chat-header {
+    position: fixed;
+    top: 0;
+    left: 300px; // Ancho de la barra lateral
+    right: 0;
+    z-index: 200;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding: 1rem 2rem;
     border-bottom: 1px solid #8FBC94;
     background-color: #c5e99b;
 
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 350px; // Ancho del drawer
+      height: 100%;
+      background-color: #c5e99b;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    &.drawer-open::after {
+      opacity: 1;
+    }
+
     .chat-title {
+      color: #3f6464;
       font-size: 1.5rem;
       font-weight: 500;
-      color: #3f6464;
       letter-spacing: 0.5px;
       text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
     }
@@ -28,6 +52,8 @@
       display: flex;
       gap: 0.5rem;
       align-items: center;
+      position: relative;
+      z-index: 201;
     }
 
     .header-btn {
@@ -42,6 +68,7 @@
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
+      position: relative;
 
       &:hover {
         background-color: rgba(255, 255, 255, 0.8);
@@ -55,19 +82,30 @@
   }
 
   .messages-container {
+    margin-top: 64px;
+    margin-left: 300px; // Ancho de la barra lateral
+    padding: 2rem 0; // Ajustar padding vertical
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    padding: 2rem 0;
+    width: calc(100% - 300px); // Ancho total menos la barra lateral
+    transition: all 0.3s ease;
+
+    &.drawer-open {
+      margin-right: 350px;
+      width: calc(100% - 650px); // Ancho total menos barra lateral y drawer
+    }
 
     .chat-content {
       width: 100%;
-      max-width: 1200px; 
+      max-width: 800px;
       margin: 0 auto;
-      padding: 0 8rem; 
+      padding: 0 2rem; // Reducir padding horizontal
+      display: flex;
+      flex-direction: column;
+      align-items: stretch; // Cambiar a stretch para mejor alineación
     }
 
     &::-webkit-scrollbar {
@@ -89,17 +127,24 @@
   }
 
   app-chat-input {
-    position: sticky;
+    position: fixed;
     bottom: 0;
-    left: 0;
+    left: 300px; // Ancho de la barra lateral
     right: 0;
     background-color: #ffffff;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    padding: 1rem 8rem; 
+    padding: 1rem 0; // Ajustar padding
+    transition: all 0.3s ease;
+    z-index: 150;
+
+    &.drawer-open {
+      right: 350px;
+    }
     
     ::ng-deep .chat-input-container {
-      max-width: 900px;   
+      max-width: 800px;
       margin: 0 auto;
+      padding: 0 2rem; // Ajustar padding para coincidir
     }
   }
 }

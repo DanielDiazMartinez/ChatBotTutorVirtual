@@ -1,0 +1,256 @@
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Document, DocumentTopic } from '../../interfaces/document.interface';
+
+@Component({
+  selector: 'app-documents-modal',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="documents-drawer" [class.show]="isVisible">
+      <div class="drawer-content">
+        <div class="drawer-header">
+          <h2>Documentos</h2>
+        </div>
+        
+        <div class="topics-container">
+          <div *ngFor="let topic of documentTopics" class="topic-section">
+            <h3>{{topic.name}}</h3>
+            <div class="documents-list">
+              <div *ngFor="let doc of topic.documents" class="document-card">
+                <div class="document-icon" [class]="doc.type">
+                  <svg *ngIf="doc.type === 'pdf'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM16 12V9C16 8.45 15.55 8 15 8H13V13H15C15.55 13 16 12.55 16 12ZM14 9H15V12H14V9ZM18 11H19V10H18V9H19V8H17V13H18V11ZM10 11H11C11.55 11 12 10.55 12 10V9C12 8.45 11.55 8 11 8H9V13H10V11ZM10 9H11V10H10V9Z" fill="currentColor"/>
+                  </svg>
+                  <svg *ngIf="doc.type === 'image'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="document-info">
+                  <span class="document-title">{{doc.title}}</span>
+                  <span class="document-date">{{doc.uploadDate | date:'mediumDate'}}</span>
+                </div>
+                <button class="download-btn" (click)="downloadDocument(doc)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .documents-drawer {
+      position: fixed;
+      top: 64px; // Altura del header
+      right: -350px;
+      width: 350px;
+      height: calc(100vh - 64px); // Restar la altura del header
+      background: white;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      z-index: 100; // Reducido para estar debajo del header
+
+      &.show {
+        right: 0;
+      }
+
+      .drawer-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        border-left: 1px solid #e0e0e0;
+      }
+
+      .drawer-header {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 1rem;
+        background-color: #c5e99b;
+        border-bottom: 1px solid #8FBC94;
+
+        h2 {
+          color: #3f6464;
+          margin: 0;
+          font-size: 1.2rem;
+          font-weight: 500;
+          text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+        }
+      }
+
+      .topics-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+
+        .topic-section {
+          margin-bottom: 1.5rem;
+
+          h3 {
+            color: #3f6464;
+            margin: 0 0 0.75rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 0 0.5rem;
+          }
+        }
+
+        .documents-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .document-card {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem;
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 0.5rem;
+          transition: all 0.2s ease;
+          cursor: pointer;
+
+          &:hover {
+            border-color: #c5e99b;
+            background-color: #f8fff8;
+            transform: translateX(-4px);
+          }
+
+          .document-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+
+            &.pdf {
+              color: #e74c3c;
+              background-color: #fde9e7;
+            }
+
+            &.image {
+              color: #3498db;
+              background-color: #e8f4fc;
+            }
+          }
+
+          .document-info {
+            flex: 1;
+            min-width: 0;
+
+            .document-title {
+              display: block;
+              font-weight: 500;
+              color: #3f6464;
+              margin-bottom: 0.25rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .document-date {
+              font-size: 0.8rem;
+              color: #666;
+            }
+          }
+
+          .download-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background-color: rgba(143, 188, 148, 0.1);
+            color: #3f6464;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+
+            &:hover {
+              background-color: #c5e99b;
+              transform: translateY(-2px);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+          }
+        }
+      }
+    }
+  `]
+})
+export class DocumentsModalComponent {
+  @Input() isVisible = false;
+
+  // Datos de ejemplo - Esto debería venir de un servicio
+  documentTopics: DocumentTopic[] = [
+    {
+      name: 'Matemáticas',
+      documents: [
+        {
+          id: '1',
+          title: 'Álgebra Básica',
+          topic: 'Matemáticas',
+          type: 'pdf',
+          url: '/docs/algebra.pdf',
+          uploadDate: new Date('2025-05-10')
+        },
+        {
+          id: '2',
+          title: 'Ejercicios de Geometría',
+          topic: 'Matemáticas',
+          type: 'image',
+          url: '/docs/geometria.jpg',
+          uploadDate: new Date('2025-05-11')
+        }
+      ]
+    },
+    {
+      name: 'Física',
+      documents: [
+        {
+          id: '3',
+          title: 'Fórmulas de Mecánica',
+          topic: 'Física',
+          type: 'pdf',
+          url: '/docs/mecanica.pdf',
+          uploadDate: new Date('2025-05-12')
+        },
+        {
+          id: '4',
+          title: 'Diagrama de Fuerzas',
+          topic: 'Física',
+          type: 'image',
+          url: '/docs/fuerzas.png',
+          uploadDate: new Date('2025-05-12')
+        }
+      ]
+    }
+  ];
+
+  close() {
+    this.isVisible = false;
+  }
+
+  downloadDocument(doc: Document) {
+    // Aquí iría la lógica de descarga
+    // Por ahora solo simularemos la descarga con un console.log
+    console.log('Descargando documento:', doc.title);
+    
+    // En una implementación real, podrías usar window.open o fetch para descargar el archivo
+    window.open(doc.url, '_blank');
+  }
+}
