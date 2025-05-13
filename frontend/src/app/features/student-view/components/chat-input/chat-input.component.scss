@@ -52,8 +52,9 @@
     }
 
     &:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+      background-color: #f5f5f5;
+      cursor: default;
+      color: #cccccc;
     }
 
     svg {
