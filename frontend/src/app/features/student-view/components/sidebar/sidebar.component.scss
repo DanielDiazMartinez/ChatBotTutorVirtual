@@ -4,6 +4,7 @@
   width: 300px;
   min-width: 300px;
   padding: 1rem;
+  padding-top: 4.5rem;  /* Ajustado para alinear con el header del chat */
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -18,29 +19,32 @@
   .new-conversation-btn {
     width: 100%;
     padding: 0.75rem;
-    background-color: #8FBC94;
-    color: white;
+    background-color: #c5e99b;
+    color: #3f6464;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(143, 188, 148, 0.15);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
 
     &:hover {
-      background-color: #7da882;
+      background-color: #8FBC94;
+      color: white;
+      text-shadow: none;
     }
   }
-  
 }
 
 .conversation-list-container {
   flex: 1;
   overflow-y: auto;
-  min-height: 0; // Importante para que el scroll funcione correctamente
-
+  min-height: 0;
+  
   h3 {
     margin: 0 0 1rem;
-    color: #414141;
+    color: #3f6464;
     font-size: 1.1rem;
     position: sticky;
     top: 0;
@@ -62,36 +66,63 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: all 0.2s ease;
     position: relative;
     width: calc(100% - 2px);
     margin: 0;
     border: 1px solid transparent;
     padding: 0;
+    background-color: white;
 
     &:hover {
-      background-color: #FFFFFF;
+      background-color: #ffffff;
+      border-color: #c5e99b;
+      box-shadow: 0 2px 8px rgba(143, 188, 148, 0.1);
     }
 
     &.active {
-      background-color: #FFFFFF;
-      border-color: #8FBC94;
+      background-color: #edf7ed;
+      border: 1px solid #8FBC94;
+      box-shadow: 0 4px 12px rgba(143, 188, 148, 0.15);
+
+      .conversation-title {
+        color: #3f6464;
+        font-weight: 600;
+      }
+
+      &:hover {
+        background-color: #e5f5e5;
+        box-shadow: 0 4px 16px rgba(143, 188, 148, 0.2);
+      }
     }
 
     &.pinned {
-      background-color: #f8fff8;
-      border-left: 3px solid #8FBC94;
+      background: linear-gradient(to right, #f8fff8, #ffffff);
+      border: 1px solid #c5e99b;
+      border-left: 4px solid #8FBC94;
+      box-shadow: 0 2px 8px rgba(143, 188, 148, 0.1);
 
       &:hover {
-        background-color: #ffffff;
-        box-shadow: 0 2px 4px rgba(143, 188, 148, 0.1);
+        background: linear-gradient(to right, #edf7ed, #ffffff);
+        border-color: #8FBC94;
+        box-shadow: 0 4px 12px rgba(143, 188, 148, 0.2);
       }
 
       &.active {
-        background-color: #ffffff;
+        background: linear-gradient(to right, #e5f5e5, #edf7ed);
         border-color: #8FBC94;
-        box-shadow: 0 2px 4px rgba(143, 188, 148, 0.2);
+        border-left: 4px solid #8FBC94;
+        box-shadow: 0 4px 16px rgba(143, 188, 148, 0.25);
+
+        .conversation-title {
+          font-weight: 600;
+        }
+      }
+
+      .conversation-title {
+        font-weight: 600;
+        color: #3f6464;
       }
     }
 
@@ -100,13 +131,13 @@
       cursor: pointer;
       display: block;
       min-width: 0;
-      width: calc(100% - 40px); // Reducimos el ancho para dejar espacio al botón
+      width: calc(100% - 40px);
       padding: 8px;
 
       .conversation-title {
         display: block;
         font-weight: 500;
-        color: #6d6d6d;
+        color: #3f6464;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -115,8 +146,6 @@
         transition: all 0.2s ease;
         width: 100%;
       }
-
-
     }
 
     .options-btn {
@@ -133,11 +162,7 @@
       margin-right: 4px;
       opacity: 0;
       transition: all 0.2s ease;
-
-      .options-icon {
-        font-size: 18px;
-        color: #6d6d6d;
-      }
+      color: #3f6464;
 
       &:hover {
         background-color: #c5e99b80;
@@ -153,8 +178,8 @@
 .options-modal {
   position: fixed;
   background: #FFFFFF;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   overflow: hidden;
   z-index: 1000;
   min-width: 180px;
@@ -169,7 +194,7 @@
     text-align: left;
     cursor: pointer;
     font-size: 14px;
-    color: #6d6d6d;
+    color: #3f6464;
     transition: all 0.2s ease;
     border-radius: 4px;
     display: flex;

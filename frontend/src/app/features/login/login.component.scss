@@ -1,0 +1,127 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.login-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 10rem;
+  border-bottom: 1px solid #8FBC94;
+  background-color: #c5e99b;
+
+  .header-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #3f6464;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+.login-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.login-card {
+  background-color: #c5e99b;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+              0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  width: 100%;
+  max-width: 800px;
+  height: 500px;
+  overflow: hidden;
+  position: relative;
+}
+
+.register-section,
+.login-section {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 2.5rem;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 320px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+.login-divider {
+  width: 1px;
+  background-color: #8FBC94;
+  align-self: stretch;
+  margin: 3rem 0;
+}
+
+input {
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #8FBC94;
+  }
+
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.action-button {
+  background-color: #8FBC94;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #7da882;
+  }
+}
+
+.forgot-password {
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+
+  &:hover {
+    color: #8FBC94;
+  }
+}

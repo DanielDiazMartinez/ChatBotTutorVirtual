@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { StudentViewComponent } from './features/student-view/student-view.component'; // Ajusta la ruta según tu estructura de carpetas
+import { RouterOutlet, RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet,StudentViewComponent],
+  standalone: true,
+  imports: [RouterOutlet, RouterModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   title = 'frontend';

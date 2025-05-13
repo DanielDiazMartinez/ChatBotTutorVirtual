@@ -7,15 +7,22 @@
     max-width: 70%;
     padding: 1rem;
     border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
   }
   
   &.user-message {
     justify-content: flex-end;
     
     .message-content {
-      background-color: #8FBC94;
-      color: white;
+      background-color: #c5e99b;
+      color: #3f6464;
       border-radius: 1rem 1rem 0 1rem;
+      text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3);
     }
   }
   
@@ -23,16 +30,18 @@
     justify-content: flex-start;
     
     .message-content {
-      background-color: #f0f0f0;
-      color: #333;
+      background-color: #f8fff8;
+      color: #3f6464;
       border-radius: 1rem 1rem 1rem 0;
+      border: 1px solid rgba(143, 188, 148, 0.2);
     }
   }
   
   .message-content {
     .message-text {
-      line-height: 1.4;
+      line-height: 1.5;
       font-size: 1rem;
+      font-weight: 400;
     }
   }
 }
