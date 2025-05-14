@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
@@ -9,5 +10,9 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule]
 })
 export class HeaderComponent {
-  // Aquí podemos añadir lógica si es necesaria en el futuro
+  constructor(private router: Router) {}
+  
+  goToLogin(): void {
+    this.router.navigate(['/login'], { replaceUrl: true });
+  }
 }
