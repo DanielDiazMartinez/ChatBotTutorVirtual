@@ -4,33 +4,34 @@
   </div>
   <div class="login-content">
     <div class="login-card">
-    <div class="register-section">
-      <h2>¿No tienes cuenta? Regístrate</h2>
-      <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
-        <input 
-          type="email" 
-          placeholder="Dirección de correo electrónico"
-          formControlName="email">
-        <button type="submit" class="action-button">CONTINUAR</button>
-      </form>
-    </div>
+      <div class="register-section">
+        <h2>¿No tienes cuenta? Regístrate</h2>
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+          <input 
+            type="email" 
+            placeholder="Dirección de correo electrónico"
+            formControlName="email">
+          <button type="submit" class="action-button" [disabled]="registerForm.invalid">CONTINUAR</button>
+        </form>
+      </div>
 
-    <div class="login-divider"></div>
+      <div class="login-divider"></div>
 
-    <div class="login-section">
-      <h2>Inicia sesión</h2>
-      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-        <input 
-          type="email" 
-          placeholder="Dirección de correo electrónico"
-          formControlName="email">
-        <input 
-          type="password" 
-          placeholder="Contraseña"
-          formControlName="password">
-        <a href="#" class="forgot-password">¿Has olvidado la contraseña?</a>
-        <button type="submit" class="action-button">ACCEDER</button>
-      </form>
+      <div class="login-section">
+        <h2>Inicia sesión</h2>
+        <form [formGroup]="loginForm">
+          <input 
+            type="email" 
+            placeholder="Dirección de correo electrónico"
+            formControlName="email">
+          <input 
+            type="password" 
+            placeholder="Contraseña"
+            formControlName="password">
+          <a href="#" class="forgot-password">¿Has olvidado la contraseña?</a>
+          <button type="button" class="action-button" (click)="onLogin()" [disabled]="loginForm.invalid">ACCEDER</button>
+        </form>
+      </div>
     </div>
   </div>
 </div>

@@ -1,14 +1,24 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/login/login.component';
 import { StudentViewComponent } from './features/student-view/student-view.component';
+import { SubjectSelectionComponent } from './features/subject-selection/subject-selection.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/chat', pathMatch: 'full' },
-  { 
-    path: 'login', 
-    component: LoginComponent,
-    // Esto asegura que el componente se carga de forma independiente
-    data: { standalone: true } 
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full'
   },
-  { path: 'chat', component: StudentViewComponent }
+  {
+    path: 'login',
+    component: LoginComponent,
+  },
+  {
+    path: 'subject-selection',
+    component: SubjectSelectionComponent,
+  },
+  {
+    path: 'chat',
+    component: StudentViewComponent,
+  }
 ];

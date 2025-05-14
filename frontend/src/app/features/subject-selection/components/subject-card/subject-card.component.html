@@ -1,0 +1,19 @@
+<div 
+  class="subject-card" 
+  [class.selected]="isSelected"
+  (click)="onSelect()"
+  [attr.aria-selected]="isSelected"
+  role="option">
+  
+  <div class="card-content">
+    <div class="subject-icon">
+      {{ subject.icon }}
+    </div>
+    <h3 class="subject-name">{{ subject.name }}</h3>
+    <p class="subject-description">{{ subject.description }}</p>
+  </div>
+
+  <div class="selection-indicator">
+    <div class="check-icon" *ngIf="isSelected">✓</div>
+  </div>
+</div>

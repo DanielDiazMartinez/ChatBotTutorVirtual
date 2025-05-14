@@ -1,0 +1,21 @@
+<div class="page-container">
+  <app-header></app-header>
+  
+  <main class="main-content">
+    <section class="selection-section">
+      <h2 class="section-title">Selecciona una asignatura</h2>
+      <p class="section-description">
+        Elige la materia en la que necesitas ayuda para comenzar tu sesión de estudio
+      </p>
+
+      <div class="subjects-grid">
+        <app-subject-card
+          *ngFor="let subject of subjects"
+          [subject]="subject"
+          [isSelected]="selectedSubject?.id === subject.id"
+          (selected)="onSubjectSelect($event)"
+        ></app-subject-card>
+      </div>
+    </section>
+  </main>
+</div>

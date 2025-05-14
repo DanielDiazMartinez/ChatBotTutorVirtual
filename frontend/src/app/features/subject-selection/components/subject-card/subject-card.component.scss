@@ -1,0 +1,90 @@
+@use 'sass:color';
+@use 'variables' as *;
+
+// Variables locales
+$card-bg-color: #e8f5e9; // Verde muy claro para el fondo
+$card-hover-shadow: rgba(67, 160, 71, 0.2); // Verde para la sombra
+$card-selected-border: #43a047; // Verde más oscuro para el borde cuando está seleccionado
+
+.subject-card {
+  width: 300px; // Ancho fijo
+  height: 200px; // Alto fijo
+  background-color: $card-bg-color;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px $card-hover-shadow;
+  }
+
+  &.selected {
+    border-color: $card-selected-border;
+    background-color: color.adjust($card-bg-color, $lightness: -5%);
+
+    .selection-indicator {
+      opacity: 1;
+    }
+  }
+}
+
+.card-content {
+  text-align: center;
+  width: 100%;
+}
+
+.subject-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.subject-name {
+  color: #2e7d32; // Verde oscuro para el título
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.subject-description {
+  color: #1b5e20; // Verde más oscuro para la descripción
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  // Asegurar que el texto largo no rompa el diseño
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; // Propiedad estándar
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selection-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  .check-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #43a047; // Verde para el indicador de selección
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+}
