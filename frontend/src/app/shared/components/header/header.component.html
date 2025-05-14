@@ -1,7 +1,12 @@
-<header class="header">
+<header class="header" [class.drawer-open]="isDocumentsModalVisible">
   <div class="header-content">
     <h1 class="logo">Tutor.IA</h1>
     <div class="header-buttons">
+      <button *ngIf="showDocumentsButton" class="header-btn file-btn" (click)="onToggleDocuments()" title="Documentos">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="currentColor"/>
+        </svg>
+      </button>
       <button class="header-btn user-profile-btn" (click)="goToLogin()" title="Perfil">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>

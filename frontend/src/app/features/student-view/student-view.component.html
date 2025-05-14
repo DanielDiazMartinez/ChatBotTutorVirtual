@@ -1,4 +1,10 @@
-<div class="student-view-layout">
+<div class="student-view-layout" [class.drawer-open]="isDocumentsModalVisible">
+  <app-header 
+    [showDocumentsButton]="true"
+    [isDocumentsModalVisible]="isDocumentsModalVisible"
+    (toggleDocuments)="toggleDocumentsModal()">
+  </app-header>
   <app-sidebar></app-sidebar>
-  <app-chat-area></app-chat-area>
+  <app-chat-area [isDocumentsModalVisible]="isDocumentsModalVisible"></app-chat-area>
+  <app-documents-modal [isVisible]="isDocumentsModalVisible"></app-documents-modal>
 </div>

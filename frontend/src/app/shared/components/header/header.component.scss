@@ -3,6 +3,7 @@
 :host {
   display: block;
   width: 100%;
+  z-index: 200;
 }
 
 .header {
@@ -14,6 +15,24 @@
   justify-content: space-between;
   height: 64px;
   min-height: 64px;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 350px; // Ancho del drawer
+    height: 100%;
+    background-color: $primary-color;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  &.drawer-open::after {
+    opacity: 1;
+  }
 }
 
 .header-content {
@@ -24,9 +43,11 @@
 }
 
 .logo {
-  color: white;
+  color: #3f6464;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
   margin: 0;
 }
 

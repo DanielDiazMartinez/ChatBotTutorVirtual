@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ChatMessage } from '../../interfaces/chat.interface';
@@ -15,6 +15,7 @@ import { DocumentsModalComponent } from '../documents-modal/documents-modal.comp
 })
 export class ChatAreaComponent implements AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  @Input() isDocumentsModalVisible = false;
   
   messages: ChatMessage[] = [
     {
@@ -24,8 +25,6 @@ export class ChatAreaComponent implements AfterViewChecked {
       timestamp: new Date()
     }
   ];
-
-  isDocumentsModalVisible = false;
 
   constructor(private router: Router) {}
 
@@ -58,10 +57,6 @@ export class ChatAreaComponent implements AfterViewChecked {
         timestamp: new Date()
       });
     }, 1000);
-  }
-
-  toggleDocumentsModal(): void {
-    this.isDocumentsModalVisible = !this.isDocumentsModalVisible;
   }
 
   goToLogin(): void {

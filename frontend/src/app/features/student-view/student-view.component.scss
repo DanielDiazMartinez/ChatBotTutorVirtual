@@ -6,15 +6,53 @@
   position: fixed;
   top: 0;
   left: 0;
+  flex-direction: column;
+
+  app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    width: 100%;
+  }
+
+  app-sidebar {
+    position: fixed;
+    top: 64px; /* Altura del header */
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+  }
 
   app-chat-area {
+    margin-top: 64px; /* Altura del header */
     flex: 1;
-    height: 100%;
+    height: calc(100vh - 64px);
+    margin-left: 300px;
+    width: calc(100vw - 300px);
     overflow: hidden;
+    transition: all 0.3s ease;
+    margin-right: 0; /* Estado inicial sin margen a la derecha */
   }
-}
-
-.chat-area {
-  flex: 1;
-  padding: 1rem;
+  
+  &.drawer-open {
+    app-chat-area {
+      width: calc(100vw - 650px); /* Restamos el ancho de la barra lateral y el drawer */
+      margin-right: 175px; /* Añadimos margen a la derecha para centrar (la mitad del drawer: 350px/2) */
+    }
+    
+    app-documents-modal {
+      display: block;
+    }
+  }
+  
+  app-documents-modal {
+    position: fixed;
+    top: 64px;
+    right: 0;
+    bottom: 0;
+    width: 350px;
+    z-index: 150;
+  }
 }
