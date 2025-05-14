@@ -1,0 +1,90 @@
+<div class="dashboard-container">
+  <div class="welcome-section">
+    <div class="welcome-message">
+      <h1>Bienvenido, {{teacherName}}</h1>
+      <p class="date-display">{{currentDate | date:'longDate'}}</p>
+    </div>
+    <div class="quick-stats">
+      <div class="stat-card">
+        <div class="stat-icon students-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{getTotalStudents()}}</div>
+          <div class="stat-label">Estudiantes Totales</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon docs-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{getTotalDocuments()}}</div>
+          <div class="stat-label">Documentos Compartidos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-card subjects-card">
+      <div class="card-header">
+        <h2>Mis Asignaturas</h2>
+        <a [routerLink]="['/teacher/subjects']" class="see-all-link">Ver todas</a>
+      </div>
+      <div class="subjects-list">
+        <div *ngFor="let subject of subjects" class="subject-item">
+          <div class="subject-name" [routerLink]="['/teacher/subjects', subject.id]" [queryParams]="{name: subject.name}">{{subject.name}}</div>
+          <div class="subject-stats">
+            <div class="subject-stat">
+              <div class="stat-number">{{subject.students}}</div>
+              <div class="stat-label">Estudiantes</div>
+            </div>
+            <div class="subject-stat">
+              <div class="stat-number">{{subject.documents}}</div>
+              <div class="stat-label">Documentos</div>
+            </div>
+          </div>
+          <div class="subject-students" *ngIf="subject.topStudents && subject.topStudents.length > 0">
+            <div class="students-label">Estudiantes destacados:</div>
+            <div class="students-list">
+              <span *ngFor="let student of subject.topStudents" 
+                    class="student-name" 
+                    [routerLink]="['/teacher/student-profile']" 
+                    [queryParams]="{name: student.name}">
+                {{ student.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="dashboard-card questions-card">
+      <div class="card-header">
+        <h2>Preguntas Recientes</h2>
+        <a [routerLink]="['/teacher/questions']" class="see-all-link">Ver todas</a>
+      </div>
+      <div class="questions-list">
+        <div *ngFor="let question of recentQuestions" class="question-item">
+          <div class="question-text">{{question.text}}</div>
+          <div class="question-meta">
+            <div class="student-link" [routerLink]="['/teacher/student-profile']" [queryParams]="{name: question.student}">{{question.student}}</div>
+            <div class="question-details">
+              <span class="question-subject">{{question.subject}}</span>
+              <span class="question-date">{{question.date | date:'dd/MM/yyyy'}}</span>
+            </div>
+          </div>
+          <button class="answer-btn">Responder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

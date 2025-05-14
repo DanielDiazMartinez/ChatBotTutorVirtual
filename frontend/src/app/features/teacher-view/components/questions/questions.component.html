@@ -1,0 +1,108 @@
+<div class="questions-container">
+  <div class="section-header">
+    <h1>Análisis de Preguntas</h1>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="subject">Asignatura:</label>
+        <select id="subject" (change)="onSubjectChange($event)">
+          <option *ngFor="let subject of subjects" [value]="subject">{{subject}}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="topic">Tema:</label>
+        <select id="topic" (change)="onTopicChange($event)">
+          <option *ngFor="let topic of topics" [value]="topic">{{topic}}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-icon questions-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.totalQuestions}}</div>
+        <div class="stat-label">Total de Preguntas</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.averageSuccess}}%</div>
+        <div class="stat-label">Tasa de Acierto Media</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content difficulty-stats">
+        <div class="difficulty-item">
+          <span class="difficulty-badge easy">Fácil</span>
+          <div class="difficulty-bar">
+            <div class="bar-fill easy" [style.width]="stats.byDifficulty.easy + '%'"></div>
+          </div>
+          <div class="difficulty-value">{{stats.byDifficulty.easy}}%</div>
+        </div>
+        <div class="difficulty-item">
+          <span class="difficulty-badge medium">Media</span>
+          <div class="difficulty-bar">
+            <div class="bar-fill medium" [style.width]="stats.byDifficulty.medium + '%'"></div>
+          </div>
+          <div class="difficulty-value">{{stats.byDifficulty.medium}}%</div>
+        </div>
+        <div class="difficulty-item">
+          <span class="difficulty-badge hard">Difícil</span>
+          <div class="difficulty-bar">
+            <div class="bar-fill hard" [style.width]="stats.byDifficulty.hard + '%'"></div>
+          </div>
+          <div class="difficulty-value">{{stats.byDifficulty.hard}}%</div>
+        </div>
+      </div>
+      <div class="stat-label">Tasa de Acierto por Dificultad</div>
+    </div>
+  </div>
+
+  <div class="questions-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Pregunta</th>
+          <th>Asignatura</th>
+          <th>Tema</th>
+          <th>Dificultad</th>
+          <th>Tasa de Acierto</th>
+          <th>Intentos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let question of getFilteredQuestions()">
+          <td class="question-text">{{question.text}}</td>
+          <td>{{question.subject}}</td>
+          <td>{{question.topic}}</td>
+          <td>
+            <span class="difficulty-badge" [class]="getDifficultyClass(question.difficulty)">
+              {{question.difficulty}}
+            </span>
+          </td>
+          <td>
+            <div class="success-rate" [class]="getSuccessRateClass(question.correctPercentage)">
+              <div class="rate-bar">
+                <div class="bar-fill" [style.width]="question.correctPercentage + '%'"></div>
+              </div>
+              <div class="rate-value">{{question.correctPercentage}}%</div>
+            </div>
+          </td>
+          <td>{{question.attempts}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

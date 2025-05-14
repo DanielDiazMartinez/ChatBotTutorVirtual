@@ -9,6 +9,22 @@
             type="email" 
             placeholder="Dirección de correo electrónico"
             formControlName="email">
+          
+          <div class="role-selector">
+            <label>Selecciona tu rol:</label>
+            <div class="role-options">
+              <div *ngFor="let role of userRoles" class="role-option">
+                <input 
+                  type="radio" 
+                  [id]="'register-' + role.value" 
+                  [value]="role.value" 
+                  formControlName="role"
+                  [checked]="role.value === 'student'">
+                <label [for]="'register-' + role.value">{{role.label}}</label>
+              </div>
+            </div>
+          </div>
+          
           <button type="submit" class="action-button" [disabled]="registerForm.invalid">CONTINUAR</button>
         </form>
       </div>
@@ -26,6 +42,22 @@
             type="password" 
             placeholder="Contraseña"
             formControlName="password">
+            
+          <div class="role-selector">
+            <label>Selecciona tu rol:</label>
+            <div class="role-options">
+              <div *ngFor="let role of userRoles" class="role-option">
+                <input 
+                  type="radio" 
+                  [id]="'login-' + role.value" 
+                  [value]="role.value" 
+                  formControlName="role"
+                  [checked]="role.value === 'student'">
+                <label [for]="'login-' + role.value">{{role.label}}</label>
+              </div>
+            </div>
+          </div>
+            
           <a href="#" class="forgot-password">¿Has olvidado la contraseña?</a>
           <button type="button" class="action-button" (click)="onLogin()" [disabled]="loginForm.invalid">ACCEDER</button>
         </form>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../shared/components/header/header.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -14,23 +15,38 @@ import { HeaderComponent } from '../../shared/components/header/header.component
 export class LoginComponent {
   loginForm: FormGroup;
   registerForm: FormGroup;
+  
+  // Opciones para el selector de rol
+  userRoles = [
+    { value: 'student', label: 'Estudiante' },
+    { value: 'teacher', label: 'Profesor' }
+  ];
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder, 
+    private router: Router,
+    private authService: AuthService
+  ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      role: ['student', Validators.required]
     });
 
     this.registerForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]]
+      email: ['', [Validators.required, Validators.email]],
+      role: ['student', Validators.required]
     });
   }
 
   onLogin() {
     if (this.loginForm.valid) {
+      const email = this.loginForm.get('email')?.value;
+      const password = this.loginForm.get('password')?.value;
+      const role = this.loginForm.get('role')?.value;
+      
       console.log('Login:', this.loginForm.value);
-      console.log('Redirigiendo a la selección de asignaturas...');
-      this.router.navigate(['/subject-selection']);
+      this.authService.login(email, password, role);
     } else {
       console.log('Formulario inválido');
       // Marcar los campos como touched para mostrar los errores
@@ -40,9 +56,11 @@ export class LoginComponent {
 
   onRegister() {
     if (this.registerForm.valid) {
+      const email = this.registerForm.get('email')?.value;
+      const role = this.registerForm.get('role')?.value;
+      
       console.log('Register:', this.registerForm.value);
-      console.log('Redirigiendo a la selección de asignaturas tras registro...');
-      this.router.navigate(['/subject-selection']);
+      this.authService.register(email, role);
     } else {
       console.log('Formulario de registro inválido');
       this.registerForm.markAllAsTouched();

@@ -1,0 +1,326 @@
+@use 'variables' as *;
+
+.dashboard-container {
+  padding: 0;
+  height: 100%;
+  overflow-y: auto; /* Habilitar scroll vertical */
+  flex: 1;
+  padding-bottom: 2rem; /* Añadir espacio al final para mejorar la experiencia */
+}
+
+.welcome-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.welcome-message {
+  h1 {
+    color: #3f6464;
+    font-size: 2rem;
+    margin: 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .date-display {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+.quick-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  
+  .stat-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    min-width: 200px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-color: #c5e99b;
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      
+      &.students-icon {
+        background-color: #e3f2fd;
+        color: #1565c0;
+      }
+      
+      &.docs-icon {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+    }
+    
+    .stat-content {
+      .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #3f6464;
+        margin-bottom: 0.25rem;
+      }
+      
+      .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  min-height: fit-content; /* Asegurar que el grid se expanda según su contenido */
+  padding-bottom: 2rem; /* Añadir espacio al final */
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    
+    h2 {
+      color: #3f6464;
+      font-size: 1.25rem;
+      margin: 0;
+    }
+    
+    .see-all-link {
+      color: #8FBC94;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        color: #3f6464;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.subjects-list {
+  padding: 0.5rem;
+  
+  .subject-item {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid #f0f0f0;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &:hover {
+      background-color: #f9fff9;
+      border-color: #c5e99b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    
+    .subject-name {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #3f6464;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      
+      &:hover {
+        color: #8FBC94;
+      }
+    }
+    
+    .subject-students {
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed #e0e0e0;
+      
+      .students-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+      
+      .students-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        
+        .student-name {
+          padding: 0.25rem 0.5rem;
+          background-color: #f0f6f0;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          color: #3f6464;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background-color: #c5e99b;
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+    
+    .subject-stats {
+      display: flex;
+      justify-content: space-between;
+      
+      .subject-stat {
+        text-align: center;
+        
+        .stat-number {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #3f6464;
+          margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+          font-size: 0.8rem;
+          color: #888;
+        }
+      }
+    }
+  }
+}
+
+
+
+.questions-list {
+  padding: 0.5rem;
+  
+  .question-item {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+    border: 1px solid #f0f0f0;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &:hover {
+      background-color: #f9fff9;
+      border-color: #c5e99b;
+    }
+    
+    .question-text {
+      font-size: 1rem;
+      color: #3f6464;
+      margin-bottom: 0.75rem;
+    }
+    
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      .question-student {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: #3f6464;
+}
+
+.student-link {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: #3f6464;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          color: #8FBC94;
+          text-decoration: underline;
+          transform: translateY(-1px);
+        }
+        
+        &::after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 1px;
+          bottom: -1px;
+          left: 0;
+            background-color: #8FBC94;
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+          }
+          
+          &:hover::after {
+            transform: scaleX(1);
+          }
+        }
+      }
+      
+      .question-details {
+        font-size: 0.85rem;
+        color: #888;
+        
+        .question-subject {
+          margin-right: 0.5rem;
+          color: #666;
+        }
+      }
+    }
+    
+    .answer-btn {
+      background-color: #c5e99b;
+      color: #3f6464;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #8FBC94;
+        color: white;
+      }
+    }
+  }

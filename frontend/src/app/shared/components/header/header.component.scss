@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use '../../.././../styles/variables' as *;
 
 :host {
   display: block;
@@ -8,8 +8,8 @@
 
 .header {
   background-color: $primary-color;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -42,6 +42,12 @@
   align-items: center;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
 .logo {
   color: #3f6464;
   font-size: 1.5rem;
@@ -49,11 +55,49 @@
   letter-spacing: 0.5px;
   text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
   margin: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Navegación principal
+.main-navigation {
+  ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 1rem;
+    
+    li {
+      a {
+        color: #3f6464;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        
+        &:hover, &.active {
+          background-color: rgba(255, 255, 255, 0.3);
+          color: #2a4545;
+        }
+        
+        &.active {
+          box-shadow: 0 2px 0 #8FBC94;
+        }
+      }
+    }
+  }
 }
 
 .header-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: center;
   position: relative;
   z-index: 201;
@@ -80,5 +124,259 @@
 
   &:active {
     transform: translateY(0);
+  }
+}
+
+// Contenedores de los menus desplegables
+.notification-container,
+.profile-container {
+  position: relative;
+}
+
+// Badge para notificaciones nuevas
+.notification-badge {
+  width: 10px;
+  height: 10px;
+  background-color: #ff5252;
+  border-radius: 50%;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  box-shadow: 0 0 0 2px $primary-color;
+}
+
+// Menús desplegables
+.dropdown-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 300px;
+  overflow: hidden;
+  z-index: 1000;
+  border: 1px solid #e0e0e0;
+  
+  .dropdown-header {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #3f6464;
+    }
+    
+    .read-all-btn {
+      background: none;
+      border: none;
+      color: #8FBC94;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 500;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+    
+    .user-info {
+      .user-name {
+        margin: 0;
+        font-size: 1rem;
+        color: #3f6464;
+      }
+      
+      .user-role {
+        font-size: 0.8rem;
+        color: #666;
+      }
+    }
+  }
+  
+  .dropdown-content {
+    max-height: 300px;
+    overflow-y: auto;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #ddd;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background-color: #f5f5f5;
+    }
+    
+    .notification-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f5f5f5;
+      position: relative;
+      transition: background-color 0.2s ease;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background-color: #f9f9f9;
+        cursor: pointer;
+      }
+      
+      &.unread {
+        background-color: #f0f7ff;
+      }
+      
+      .notification-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #4285f4;
+        border-radius: 50%;
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+      }
+      
+      .notification-content {
+        padding-left: 0.5rem;
+        
+        .notification-title {
+          font-weight: 500;
+          font-size: 0.9rem;
+          margin-bottom: 0.25rem;
+          color: #333;
+        }
+        
+        .notification-message {
+          font-size: 0.85rem;
+          color: #666;
+          margin-bottom: 0.5rem;
+        }
+        
+        .notification-time {
+          font-size: 0.75rem;
+          color: #888;
+        }
+      }
+    }
+    
+    .no-notifications {
+      padding: 1.5rem;
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: #333;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+      font-size: 0.9rem;
+      
+      svg {
+        color: #666;
+      }
+      
+      &:hover {
+        background-color: #f5f5f5;
+      }
+      
+      &.logout-btn {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        color: #e53935;
+        
+        svg {
+          color: #e53935;
+        }
+        
+        &:hover {
+          background-color: #ffebee;
+        }
+      }
+    }
+  }
+  
+  .dropdown-footer {
+    padding: 0.75rem;
+    text-align: center;
+    border-top: 1px solid #f0f0f0;
+    
+    a {
+      color: #8FBC94;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Avatar de usuario
+.avatar-container {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $primary-light-color;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+  }
+  
+  .main-navigation {
+    display: none;
+  }
+  
+  .dropdown-menu {
+    width: 280px;
+    right: -10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropdown-menu {
+    width: 260px;
   }
 }

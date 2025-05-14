@@ -1,0 +1,114 @@
+<div class="profile-container">
+  <!-- Pantalla de carga -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="profile-content" *ngIf="!isLoading && student">
+    <!-- Cabecera con botón de retroceso -->
+    <div class="profile-header">
+      <button class="back-button" (click)="onBack()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
+        </svg>
+        Volver
+      </button>
+      <h2 class="section-title">Ficha del Estudiante</h2>
+    </div>
+
+    <!-- Información del estudiante -->
+    <div class="student-info-container">
+      <div class="student-avatar-container">
+        <img [src]="student.avatarUrl || 'assets/images/default-avatar.png'" alt="Avatar de {{ student.name }}" class="student-avatar">
+      </div>
+      <div class="student-details">
+        <h1 class="student-name">{{ student.name }}</h1>
+        <div class="student-email">{{ student.email }}</div>
+        <div class="student-subjects">
+          <span class="subject-badge" *ngFor="let subject of student.subjects">{{ subject }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Análisis de rendimiento -->
+    <div class="performance-section" *ngIf="student.performance">
+      <h2>Análisis de Rendimiento</h2>
+      
+      <div class="performance-metrics">
+        <div class="metric-card">
+          <div class="metric-heading">
+            <div class="metric-title">Participación</div>
+            <div class="metric-value">{{ student.performance.participationRate }}%</div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" 
+                [style.width]="student.performance.participationRate + '%'"
+                [ngClass]="getProgressBarClass(student.performance.participationRate)"></div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-heading">
+            <div class="metric-title">Preguntas Realizadas</div>
+            <div class="metric-value">{{ student.performance.questionsAsked }}</div>
+          </div>
+          <div class="metrics-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-heading">
+            <div class="metric-title">Acceso a Documentos</div>
+            <div class="metric-value">{{ student.performance.documentAccess }}%</div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" 
+                [style.width]="student.performance.documentAccess + '%'"
+                [ngClass]="getProgressBarClass(student.performance.documentAccess)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actividad reciente -->
+    <div class="activity-section">
+      <h2>Actividad Reciente</h2>
+      
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of recentActivities">
+          <div class="activity-icon" [ngClass]="activity.type">
+            <svg *ngIf="activity.type === 'question'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" fill="currentColor"/>
+            </svg>
+            <svg *ngIf="activity.type === 'document'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ activity.content }}</div>
+            <div class="activity-meta">
+              <span class="activity-subject">{{ activity.subject }}</span>
+              <span class="activity-date">{{ activity.date | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Espacio adicional para navegación -->
+    <div class="bottom-spacing"></div>
+  </div>
+
+  <!-- Mensaje de error si no se encuentra el estudiante -->
+  <div class="error-message" *ngIf="!isLoading && !student">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+    </svg>
+    <h2>No se encontró el estudiante</h2>
+    <p>Lo sentimos, no pudimos encontrar la información del estudiante solicitado.</p>
+    <button class="back-button" (click)="onBack()">Volver</button>
+  </div>
+</div>

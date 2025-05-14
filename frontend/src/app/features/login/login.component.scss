@@ -43,9 +43,41 @@
   h2 {
     color: #333;
     font-size: 1.5rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     font-weight: 500;
     text-align: center;
+  }
+  
+  .role-selector {
+    margin: 1rem 0;
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    
+    .role-options {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      
+      .role-option {
+        display: flex;
+        align-items: center;
+        
+        input[type="radio"] {
+          margin-right: 0.5rem;
+          cursor: pointer;
+        }
+        
+        label {
+          margin-bottom: 0;
+          cursor: pointer;
+        }
+      }
+    }
   }
 
   form {

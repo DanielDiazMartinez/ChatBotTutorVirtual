@@ -1,17 +1,115 @@
 <header class="header" [class.drawer-open]="isDocumentsModalVisible">
   <div class="header-content">
-    <h1 class="logo">Tutor.IA</h1>
+    <div class="header-left">
+      <h1 class="logo" (click)="goToDashboard()">Tutor.IA</h1>
+      
+      <nav class="main-navigation" *ngIf="currentUser.role === 'teacher'">
+        <ul>
+          <li>
+            <a [routerLink]="['/teacher/dashboard']" routerLinkActive="active">Dashboard</a>
+          </li>
+          <li>
+            <a [routerLink]="['/teacher/questions']" routerLinkActive="active">Preguntas</a>
+          </li>
+          <li>
+            <a [routerLink]="['/teacher/documents']" routerLinkActive="active">Documentos</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    
     <div class="header-buttons">
       <button *ngIf="showDocumentsButton" class="header-btn file-btn" (click)="onToggleDocuments()" title="Documentos">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="currentColor"/>
         </svg>
       </button>
-      <button class="header-btn user-profile-btn" (click)="goToLogin()" title="Perfil">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
-        </svg>
-      </button>
+      
+      <!-- Botón de Notificaciones -->
+      <div class="notification-container">
+        <button class="header-btn notification-btn" (click)="toggleNotifications()" title="Notificaciones">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+          </svg>
+          <span class="notification-badge" *ngIf="hasNewNotifications"></span>
+        </button>
+        
+        <!-- Panel de Notificaciones -->
+        <div class="dropdown-menu notifications-menu" *ngIf="isNotificationsOpen">
+          <div class="dropdown-header">
+            <h3>Notificaciones</h3>
+            <button class="read-all-btn" (click)="markAllNotificationsAsRead()">Marcar todas como leídas</button>
+          </div>
+          <div class="dropdown-content">
+            <ng-container *ngIf="notificationItems.length > 0; else noNotifications">
+              <div class="notification-item" *ngFor="let notification of notificationItems" [class.unread]="!notification.read">
+                <div class="notification-dot" *ngIf="!notification.read"></div>
+                <div class="notification-content">
+                  <div class="notification-title">{{ notification.title }}</div>
+                  <div class="notification-message">{{ notification.message }}</div>
+                  <div class="notification-time">{{ notification.time }}</div>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #noNotifications>
+              <div class="no-notifications">No tienes notificaciones</div>
+            </ng-template>
+          </div>
+          <div class="dropdown-footer">
+            <a href="#">Ver todas</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Botón de Perfil de Usuario -->
+      <div class="profile-container">
+        <button class="header-btn user-profile-btn" (click)="toggleProfileMenu()" title="Perfil">
+          <div class="avatar-container" *ngIf="currentUser?.avatar; else defaultAvatar">
+            <img [src]="currentUser.avatar" (error)="handleAvatarError($event)" alt="Avatar de {{currentUser.role === 'teacher' ? 'profesor' : 'estudiante'}}" class="user-avatar">
+          </div>
+          <ng-template #defaultAvatar>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+            </svg>
+          </ng-template>
+        </button>
+        
+        <!-- Menú de Usuario -->
+        <div class="dropdown-menu profile-menu" *ngIf="isProfileMenuOpen">
+          <div class="dropdown-header">
+            <div class="user-info">
+              <h3 class="user-name">{{ currentUser.name }}</h3>
+              <span class="user-role">{{ currentUser.role === 'teacher' ? 'Profesor' : 'Estudiante' }}</span>
+            </div>
+          </div>
+          <div class="dropdown-content">
+            <a class="menu-item" [routerLink]="['/profile']">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+              </svg>
+              Mi perfil
+            </a>
+            <a class="menu-item" [routerLink]="['/settings']">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
+              </svg>
+              Ajustes
+            </a>
+            <a class="menu-item" *ngIf="currentUser.role === 'teacher'" [routerLink]="['/teacher/dashboard']">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
+              </svg>
+              Panel de profesor
+            </a>
+            <button class="menu-item logout-btn" (click)="logout()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" fill="currentColor"/>
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
