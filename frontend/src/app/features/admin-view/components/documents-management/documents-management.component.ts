@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { DocumentsComponent as SharedDocumentsComponent } from '../../../../shared/components/documents/documents.component';
 
 @Component({
-  selector: 'app-documents',
+  selector: 'app-documents-management',
   standalone: true,
   imports: [CommonModule, SharedDocumentsComponent],
-  template: '<app-documents [isAdminView]="false"></app-documents>'
+  template: '<app-documents [isAdminView]="true"></app-documents>'
 })
-export class DocumentsComponent {
-  // Este componente simplemente utiliza el componente compartido de documentos
+export class DocumentsManagementComponent {
+  // Este componente simplemente utiliza el componente compartido de documentos con la vista de admin
 }

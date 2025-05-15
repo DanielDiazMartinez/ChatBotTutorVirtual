@@ -1,0 +1,490 @@
+// Estilos para el componente de gestión de asociaciones
+.associations-container {
+  padding: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+  }
+}
+
+.view-selector {
+  display: flex;
+  gap: 0.5rem;
+
+  .view-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+
+    &.active {
+      background: #1976d2;
+      color: white;
+      border-color: #1976d2;
+    }
+  }
+}
+
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+
+  .search-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+
+    .search-input {
+      width: 100%;
+      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+  }
+
+  .assign-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #1565c0;
+    }
+  }
+}
+
+.assign-form {
+  padding: 1.5rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background: transparent;
+      border: 1px solid #ddd;
+      color: #666;
+    }
+
+    .save-btn {
+      background: #1976d2;
+      color: white;
+      border: none;
+
+      &:disabled {
+        background: #b0bec5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.users-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .user-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+      font-weight: 500;
+
+      &.profesor {
+        background: #1976d2;
+      }
+
+      &.estudiante {
+        background: #66bb6a;
+      }
+    }
+
+    .user-name {
+      margin: 0 0 0.25rem;
+      font-size: 1rem;
+    }
+
+    .user-email {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #666;
+    }
+  }
+
+  .remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(244, 67, 54, 0.1);
+    }
+  }
+}
+
+.no-users, .no-subjects {
+  padding: 1.5rem;
+  text-align: center;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.subjects-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.subject-card {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .subject-name {
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+  }
+
+  .subject-description {
+    margin: 0 0 1.5rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .subject-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .stat-item {
+      text-align: center;
+
+      .stat-count {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      .stat-label {
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+
+    .view-btn {
+      padding: 0.5rem 1rem;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #1565c0;
+      }
+    }
+  }
+}
+
+.role-section {
+  margin-bottom: 2rem;
+  
+  .role-title {
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+    font-size: 1.1rem;
+  }
+}
+
+.subject-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+}
+
+// Estilos para la vista por usuarios
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.users-group {
+  .users-group-title {
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+  }
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.user-card-large {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .user-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f5f5f5;
+
+    .user-avatar-large {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      color: white;
+      font-weight: 500;
+      font-size: 1.25rem;
+
+      &.profesor {
+        background: #1976d2;
+      }
+
+      &.estudiante {
+        background: #66bb6a;
+      }
+    }
+
+    .user-details {
+      .user-name {
+        margin: 0 0 0.25rem;
+        font-size: 1.1rem;
+      }
+
+      .user-email {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+  }
+
+  .user-card-body {
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .subject-count {
+      text-align: center;
+
+      .count {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      .label {
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+  }
+}
+
+.user-subjects {
+  .user-header {
+    margin-bottom: 2rem;
+    
+    .user-info-large {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      
+      .user-avatar-large {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        color: white;
+        font-weight: 500;
+        font-size: 2rem;
+
+        &.profesor {
+          background: #1976d2;
+        }
+
+        &.estudiante {
+          background: #66bb6a;
+        }
+      }
+      
+      .user-details {
+        .user-name-large {
+          margin: 0 0 0.5rem;
+          font-size: 1.5rem;
+        }
+        
+        .user-email-large {
+          margin: 0 0 0.25rem;
+          font-size: 1rem;
+          color: #666;
+        }
+        
+        .user-role {
+          margin: 0;
+          font-size: 0.9rem;
+          color: #999;
+        }
+      }
+    }
+  }
+  
+  .subjects-heading {
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  
+  .subject-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    .subject-content {
+      .subject-name {
+        margin: 0 0 0.25rem;
+        font-size: 1rem;
+      }
+      
+      .subject-description {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+  }
+}

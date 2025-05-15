@@ -16,6 +16,23 @@
           </li>
         </ul>
       </nav>
+
+      <nav class="main-navigation" *ngIf="currentUser.role === 'admin'">
+        <ul>
+          <li>
+            <a [routerLink]="['/admin/dashboard']" routerLinkActive="active">Dashboard</a>
+          </li>
+          <li>
+            <a [routerLink]="['/admin/subjects-management']" routerLinkActive="active">Asignaturas</a>
+          </li>
+          <li>
+            <a [routerLink]="['/admin/users-management']" routerLinkActive="active">Usuarios</a>
+          </li>
+          <li>
+            <a [routerLink]="['/admin/documents-management']" routerLinkActive="active">Documentos</a>
+          </li>
+        </ul>
+      </nav>
     </div>
     
     <div class="header-buttons">
@@ -79,7 +96,10 @@
           <div class="dropdown-header">
             <div class="user-info">
               <h3 class="user-name">{{ currentUser.name }}</h3>
-              <span class="user-role">{{ currentUser.role === 'teacher' ? 'Profesor' : 'Estudiante' }}</span>
+              <span class="user-role">{{ 
+                currentUser.role === 'teacher' ? 'Profesor' : 
+                currentUser.role === 'admin' ? 'Administrador' : 'Estudiante' 
+              }}</span>
             </div>
           </div>
           <div class="dropdown-content">
@@ -100,6 +120,12 @@
                 <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
               </svg>
               Panel de profesor
+            </a>
+            <a class="menu-item" *ngIf="currentUser.role === 'admin'" [routerLink]="['/admin/dashboard']">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
+              </svg>
+              Panel de administrador
             </a>
             <button class="menu-item logout-btn" (click)="logout()">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

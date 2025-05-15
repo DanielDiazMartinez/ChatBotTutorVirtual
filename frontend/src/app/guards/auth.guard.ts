@@ -47,3 +47,24 @@ export const studentGuard = () => {
   // Si no está logueado, redirigir al login
   return router.parseUrl('/login');
 };
+
+export const adminGuard = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  
+  if (authService.isAdmin()) {
+    return true;
+  }
+  
+  if (authService.isLoggedIn()) {
+    // Si está logueado pero no es administrador, redirigir según su rol
+    if (authService.isTeacher()) {
+      return router.parseUrl('/teacher');
+    } else {
+      return router.parseUrl('/subject-selection');
+    }
+  }
+  
+  // Si no está logueado, redirigir al login
+  return router.parseUrl('/login');
+};

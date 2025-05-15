@@ -29,7 +29,8 @@ export class AuthService {
         this.currentUserSubject.next({
           name: user.name,
           role: user.role,
-          avatar: user.role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
+          avatar: user.role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 
+                 user.role === 'admin' ? 'assets/images/admin-avatar.svg' : 'assets/images/student-avatar.svg'
         });
       } catch (error) {
         console.error('Error al parsear los datos del usuario:', error);
@@ -38,13 +39,23 @@ export class AuthService {
     }
   }
   
-  login(email: string, password: string, role: 'student' | 'teacher'): void {
+  login(email: string, password: string, role: 'student' | 'teacher' | 'admin'): void {
     // En un escenario real, aquí se haría una llamada al API de autenticación
-    const userData: UserProfile = {
-      name: role === 'teacher' ? 'Profesor Martínez' : 'Ana García',
-      role: role,
-      avatar: role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
-    };
+    let userData: UserProfile;
+    
+    if (role === 'admin') {
+      userData = {
+        name: 'Administrador Sistema',
+        role: role,
+        avatar: 'assets/images/admin-avatar.svg'
+      };
+    } else {
+      userData = {
+        name: role === 'teacher' ? 'Profesor Martínez' : 'Ana García',
+        role: role,
+        avatar: role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
+      };
+    }
     
     // Guardar datos en localStorage solo en el navegador
     if (isPlatformBrowser(this.platformId)) {
@@ -59,20 +70,32 @@ export class AuthService {
     this.currentUserSubject.next(userData);
     
     // Redirigir según el rol
-    if (role === 'teacher') {
+    if (role === 'admin') {
+      this.router.navigate(['/admin']);
+    } else if (role === 'teacher') {
       this.router.navigate(['/teacher']);
     } else {
       this.router.navigate(['/subject-selection']);
     }
   }
   
-  register(email: string, role: 'student' | 'teacher'): void {
+  register(email: string, role: 'student' | 'teacher' | 'admin'): void {
     // En un escenario real, aquí se registraría al usuario en el backend
-    const userData: UserProfile = {
-      name: role === 'teacher' ? 'Profesor Nuevo' : 'Estudiante Nuevo',
-      role: role,
-      avatar: role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
-    };
+    let userData: UserProfile;
+    
+    if (role === 'admin') {
+      userData = {
+        name: 'Administrador Nuevo',
+        role: role,
+        avatar: 'assets/images/admin-avatar.svg'
+      };
+    } else {
+      userData = {
+        name: role === 'teacher' ? 'Profesor Nuevo' : 'Estudiante Nuevo',
+        role: role,
+        avatar: role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
+      };
+    }
     
     // Guardar datos en localStorage solo en el navegador
     if (isPlatformBrowser(this.platformId)) {
@@ -87,7 +110,9 @@ export class AuthService {
     this.currentUserSubject.next(userData);
     
     // Redirigir según el rol
-    if (role === 'teacher') {
+    if (role === 'admin') {
+      this.router.navigate(['/admin']);
+    } else if (role === 'teacher') {
       this.router.navigate(['/teacher']);
     } else {
       this.router.navigate(['/subject-selection']);
@@ -121,5 +146,10 @@ export class AuthService {
   
   isStudent(): boolean {
     return this.currentUserSubject.value?.role === 'student';
+  }
+  
+  isAdmin(): boolean {
+    // Verificar si el usuario tiene rol de administrador
+    return this.currentUserSubject.value?.role === 'admin';
   }
 }

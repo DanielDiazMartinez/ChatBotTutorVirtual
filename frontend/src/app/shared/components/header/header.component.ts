@@ -71,6 +71,8 @@ export class HeaderComponent implements OnInit {
   goToDashboard(): void {
     if (this.currentUser.role === 'teacher') {
       this.router.navigate(['/teacher/dashboard']);
+    } else if (this.currentUser.role === 'admin') {
+      this.router.navigate(['/admin/dashboard']);
     } else {
       this.router.navigate(['/subject-selection']);
     }

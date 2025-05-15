@@ -1,0 +1,102 @@
+<div class="subjects-container">
+  <div class="section-header">
+    <h1>Gestión de Asignaturas</h1>
+    <div class="header-actions">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar asignatura..." class="search-input" [disabled]="isLoading">
+        <span class="search-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+      </div>
+      <button class="add-subject-btn" (click)="toggleNewSubjectForm()" [disabled]="isLoading">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nueva Asignatura
+      </button>
+    </div>
+  </div>
+  
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <span>Cargando...</span>
+  </div>
+
+  <!-- Formulario para nueva asignatura -->
+  <div class="new-subject-form" *ngIf="showNewSubjectForm">
+    <h2>Crear nueva asignatura</h2>
+    <div class="form-group">
+      <label for="subjectName">Nombre de la asignatura</label>
+      <input type="text" id="subjectName" [(ngModel)]="newSubject.name" placeholder="Nombre de la asignatura">
+    </div>
+    <div class="form-group">
+      <label for="subjectDescription">Descripción</label>
+      <textarea id="subjectDescription" [(ngModel)]="newSubject.description" placeholder="Descripción de la asignatura" rows="3"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="cancel-btn" (click)="toggleNewSubjectForm()">Cancelar</button>
+      <button class="save-btn" (click)="addNewSubject()" [disabled]="!validateNewSubject()">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Lista de asignaturas -->
+  <div class="subjects-list">
+    <div class="subject-card" *ngFor="let subject of getFilteredSubjects()">
+      <div class="subject-header">
+        <h2 class="subject-name">{{ subject.name }}</h2>
+        <div class="subject-actions">
+          <button class="action-btn" (click)="toggleSubjectStatus(subject)">
+            <span class="status-badge" [ngClass]="subject.active ? 'active' : 'inactive'">
+              {{ subject.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </button>
+          <button class="action-btn edit-btn" [routerLink]="['/admin/subjects', subject.id]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </button>
+          <button class="action-btn delete-btn" (click)="deleteSubject(subject.id)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <p class="subject-description">{{ subject.description }}</p>
+      <div class="subject-stats">
+        <div class="stat-item">
+          <svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 11.08V8l-6-6H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-3.08c1.16-.41 2-1.52 2-2.83v-2.17c0-1.31-.84-2.42-2-2.83z"></path>
+            <path d="M16 2v6h6"></path>
+          </svg>
+          <span class="stat-value">{{ subject.teacherCount }}</span>
+          <span class="stat-label">Profesores</span>
+        </div>
+        <div class="stat-item">
+          <svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="stat-value">{{ subject.studentCount }}</span>
+          <span class="stat-label">Estudiantes</span>
+        </div>
+        <button class="manage-users-btn" (click)="openManageUsersDialog(subject)">
+          Gestionar usuarios
+        </button>
+      </div>
+    </div>
+    
+    <div class="no-results" *ngIf="getFilteredSubjects().length === 0">
+      <p>No se encontraron asignaturas con los criterios especificados</p>
+    </div>
+  </div>
+</div>

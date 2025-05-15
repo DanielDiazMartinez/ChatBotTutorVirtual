@@ -19,7 +19,8 @@ export class LoginComponent {
   // Opciones para el selector de rol
   userRoles = [
     { value: 'student', label: 'Estudiante' },
-    { value: 'teacher', label: 'Profesor' }
+    { value: 'teacher', label: 'Profesor' },
+    { value: 'admin', label: 'Administrador' }
   ];
 
   constructor(
