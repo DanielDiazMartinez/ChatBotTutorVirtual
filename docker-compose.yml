@@ -1,4 +1,19 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: angular_app
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
   backend:
     build:
       context: ./backend
@@ -49,12 +64,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
+      
 volumes:
   postgres_data:
     driver: local
   user_uploads:
     driver: local
+
 
 networks:
   app-network:
