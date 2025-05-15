@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Document, DocumentTopic } from '../../interfaces/document.interface';
 
@@ -14,30 +14,37 @@ import { Document, DocumentTopic } from '../../interfaces/document.interface';
         </div>
         
         <div class="topics-container">
-          <div *ngFor="let topic of documentTopics" class="topic-section">
-            <h3>{{topic.name}}</h3>
-            <div class="documents-list">
-              <div *ngFor="let doc of topic.documents" class="document-card">
-                <div class="document-icon" [class]="doc.type">
-                  <svg *ngIf="doc.type === 'pdf'" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM16 12V9C16 8.45 15.55 8 15 8H13V13H15C15.55 13 16 12.55 16 12ZM14 9H15V12H14V9ZM18 11H19V10H18V9H19V8H17V13H18V11ZM10 11H11C11.55 11 12 10.55 12 10V9C12 8.45 11.55 8 11 8H9V13H10V11ZM10 9H11V10H10V9Z" fill="currentColor"/>
-                  </svg>
-                  <svg *ngIf="doc.type === 'image'" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
-                  </svg>
+          <div *ngIf="filteredTopics.length > 0; else noDocuments">
+            <div *ngFor="let topic of filteredTopics" class="topic-section">
+              <h3>{{topic.name}}</h3>
+              <div class="documents-list">
+                <div *ngFor="let doc of topic.documents" class="document-card">
+                  <div class="document-icon" [class]="doc.type">
+                    <svg *ngIf="doc.type === 'pdf'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM16 12V9C16 8.45 15.55 8 15 8H13V13H15C15.55 13 16 12.55 16 12ZM14 9H15V12H14V9ZM18 11H19V10H18V9H19V8H17V13H18V11ZM10 11H11C11.55 11 12 10.55 12 10V9C12 8.45 11.55 8 11 8H9V13H10V11ZM10 9H11V10H10V9Z" fill="currentColor"/>
+                    </svg>
+                    <svg *ngIf="doc.type === 'image'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div class="document-info">
+                    <span class="document-title">{{doc.title}}</span>
+                    <span class="document-date">{{doc.uploadDate | date:'mediumDate'}}</span>
+                  </div>
+                  <button class="download-btn" (click)="downloadDocument(doc)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+                    </svg>
+                  </button>
                 </div>
-                <div class="document-info">
-                  <span class="document-title">{{doc.title}}</span>
-                  <span class="document-date">{{doc.uploadDate | date:'mediumDate'}}</span>
-                </div>
-                <button class="download-btn" (click)="downloadDocument(doc)">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
+          <ng-template #noDocuments>
+            <div class="no-documents">
+              <p>No hay documentos disponibles para esta asignatura</p>
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>
@@ -190,10 +197,70 @@ import { Document, DocumentTopic } from '../../interfaces/document.interface';
         }
       }
     }
+    
+    .no-documents {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: #666;
+      font-size: 0.9rem;
+      text-align: center;
+      
+      p {
+        margin: 0;
+      }
+    }
   `]
 })
-export class DocumentsModalComponent {
+export class DocumentsModalComponent implements OnChanges {
   @Input() isVisible = false;
+  @Input() currentSubjectId: string | undefined;
+  
+  // Documentos filtrados según la asignatura actual
+  filteredTopics: DocumentTopic[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Filtrar documentos cuando cambia la asignatura seleccionada
+    this.filterDocuments();
+  }
+
+  // Método para filtrar documentos según la asignatura actual
+  filterDocuments(): void {
+    // Si no hay asignatura seleccionada, mostrar todos los documentos
+    if (!this.currentSubjectId) {
+      this.filteredTopics = [...this.documentTopics];
+      return;
+    }
+
+    // Mapear asignaturas al nombre
+    const subjectNames: {[key: string]: string} = {
+      '1': 'Matemáticas',
+      '2': 'Física',
+      '3': 'Química',
+      '4': 'Biología',
+      '5': 'Historia',
+      '6': 'Literatura'
+    };
+
+    const currentSubjectName = subjectNames[this.currentSubjectId];
+    
+    if (currentSubjectName) {
+      // Filtrar solo los temas de la asignatura actual
+      this.filteredTopics = this.documentTopics.filter(
+        topic => topic.name === currentSubjectName
+      );
+      
+      // Si no hay temas para esta asignatura, mostrar arreglo vacío
+      if (this.filteredTopics.length === 0) {
+        console.log(`No hay documentos para la asignatura: ${currentSubjectName}`);
+      }
+    } else {
+      // Si no se puede mapear el ID a un nombre, mostrar todos los documentos
+      console.log(`ID de asignatura no reconocido: ${this.currentSubjectId}`);
+      this.filteredTopics = [...this.documentTopics];
+    }
+  }
 
   // Datos de ejemplo - Esto debería venir de un servicio
   documentTopics: DocumentTopic[] = [

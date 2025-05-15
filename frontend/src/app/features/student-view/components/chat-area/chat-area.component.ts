@@ -1,10 +1,11 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked, Input } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ChatMessage } from '../../interfaces/chat.interface';
 import { ChatMessageComponent } from '../chat-message/chat-message.component';
 import { ChatInputComponent } from '../chat-input/chat-input.component';
 import { DocumentsModalComponent } from '../documents-modal/documents-modal.component';
+import { Subject } from '../../../subject-selection/interfaces/subject.interface';
 
 @Component({
   selector: 'app-chat-area',
@@ -13,9 +14,10 @@ import { DocumentsModalComponent } from '../documents-modal/documents-modal.comp
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent implements AfterViewChecked {
+export class ChatAreaComponent implements AfterViewChecked, OnChanges {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @Input() isDocumentsModalVisible = false;
+  @Input() currentSubject: Subject | null = null;
   
   messages: ChatMessage[] = [
     {
@@ -25,11 +27,34 @@ export class ChatAreaComponent implements AfterViewChecked {
       timestamp: new Date()
     }
   ];
+  
+  // Método getter para obtener un mensaje de bienvenida personalizado con la asignatura
+  get welcomeMessage(): string {
+    return this.currentSubject 
+      ? `Estás en la asignatura de ${this.currentSubject.name}. ¿En qué puedo ayudarte?` 
+      : '¡Hola! ¿En qué puedo ayudarte hoy?';
+  }
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    // Actualizar el primer mensaje de bienvenida cuando se cargue el componente
+    setTimeout(() => {
+      if (this.messages.length > 0 && !this.messages[0].isUser) {
+        this.messages[0].content = this.welcomeMessage;
+      }
+    }, 0);
+  }
 
   ngAfterViewChecked() {
     this.scrollToBottom();
+  }
+  
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['currentSubject'] && !changes['currentSubject'].firstChange) {
+      // Actualizar el mensaje de bienvenida si cambia la asignatura
+      if (this.messages.length > 0 && !this.messages[0].isUser) {
+        this.messages[0].content = this.welcomeMessage;
+      }
+    }
   }
 
   private scrollToBottom(): void {

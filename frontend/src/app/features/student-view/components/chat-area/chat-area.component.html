@@ -1,4 +1,14 @@
 <div class="chat-area-container">
+  <div class="subject-indicator" *ngIf="currentSubject">
+    <div class="subject-info">
+      <div class="subject-icon">{{ currentSubject.icon }}</div>
+      <div class="subject-details">
+        <h2>{{ currentSubject.name }}</h2>
+        <p class="subject-description">{{ currentSubject.description }}</p>
+      </div>
+    </div>
+  </div>
+  
   <div class="messages-container" #messagesContainer [class.drawer-open]="isDocumentsModalVisible">
     <div class="chat-content">
       <app-chat-message

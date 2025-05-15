@@ -9,6 +9,40 @@
   &.drawer-open {
     margin-right: 350px;
   }
+  
+  .subject-indicator {
+    background-color: #f5f9f5;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    
+    .subject-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 800px;
+      margin-left: 2rem;
+      padding-left: 0;
+      
+      .subject-icon {
+        font-size: 1.75rem;
+      }
+      
+      .subject-details {
+        h2 {
+          margin: 0;
+          font-size: 1.2rem;
+          color: #3f6464;
+          font-weight: 500;
+        }
+        
+        .subject-description {
+          margin: 0;
+          font-size: 0.85rem;
+          color: #666;
+        }
+      }
+    }
+  }
 
   .messages-container {
     padding: 2rem 0; // Ajustar padding vertical

@@ -6,6 +6,12 @@
     (toggleDocuments)="toggleDocumentsModal()">
   </app-header>
   <app-sidebar></app-sidebar>
-  <app-chat-area [isDocumentsModalVisible]="isDocumentsModalVisible"></app-chat-area>
-  <app-documents-modal [isVisible]="isDocumentsModalVisible"></app-documents-modal>
+  <app-chat-area 
+    [isDocumentsModalVisible]="isDocumentsModalVisible"
+    [currentSubject]="currentSubject"
+  ></app-chat-area>
+  <app-documents-modal 
+    [isVisible]="isDocumentsModalVisible"
+    [currentSubjectId]="currentSubject?.id"
+  ></app-documents-modal>
 </div>
