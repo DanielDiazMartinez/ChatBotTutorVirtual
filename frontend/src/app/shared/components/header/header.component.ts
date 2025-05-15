@@ -26,32 +26,6 @@ export class HeaderComponent implements OnInit {
   @Output() toggleDocuments = new EventEmitter<void>();
   
   isProfileMenuOpen = false;
-  isNotificationsOpen = false;
-  hasNewNotifications = true;
-  
-  notificationItems = [
-    {
-      id: '1',
-      title: 'Nuevo examen disponible',
-      message: 'Se ha publicado un nuevo examen de Matemáticas',
-      time: '10 min',
-      read: false
-    },
-    {
-      id: '2',
-      title: 'Pregunta respondida',
-      message: 'El profesor ha respondido a tu pregunta sobre límites',
-      time: '1h',
-      read: false
-    },
-    {
-      id: '3',
-      title: 'Documento compartido',
-      message: 'Se ha compartido un nuevo documento en la asignatura de Física',
-      time: '2h',
-      read: true
-    }
-  ];
   
   constructor(private router: Router, private authService: AuthService) {}
   
@@ -84,24 +58,6 @@ export class HeaderComponent implements OnInit {
   
   toggleProfileMenu(): void {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
-    if (this.isProfileMenuOpen) {
-      this.isNotificationsOpen = false;
-    }
-  }
-  
-  toggleNotifications(): void {
-    this.isNotificationsOpen = !this.isNotificationsOpen;
-    if (this.isNotificationsOpen) {
-      this.isProfileMenuOpen = false;
-    }
-  }
-  
-  markAllNotificationsAsRead(): void {
-    this.notificationItems = this.notificationItems.map(item => ({
-      ...item,
-      read: true
-    }));
-    this.hasNewNotifications = false;
   }
   
   logout(): void {

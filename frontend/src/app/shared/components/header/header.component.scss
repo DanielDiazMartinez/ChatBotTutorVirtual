@@ -127,22 +127,9 @@
   }
 }
 
-// Contenedores de los menus desplegables
-.notification-container,
+// Contenedor del menu desplegable de perfil
 .profile-container {
   position: relative;
-}
-
-// Badge para notificaciones nuevas
-.notification-badge {
-  width: 10px;
-  height: 10px;
-  background-color: #ff5252;
-  border-radius: 50%;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  box-shadow: 0 0 0 2px $primary-color;
 }
 
 // Menús desplegables
@@ -215,64 +202,7 @@
       background-color: #f5f5f5;
     }
     
-    .notification-item {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #f5f5f5;
-      position: relative;
-      transition: background-color 0.2s ease;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      &:hover {
-        background-color: #f9f9f9;
-        cursor: pointer;
-      }
-      
-      &.unread {
-        background-color: #f0f7ff;
-      }
-      
-      .notification-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #4285f4;
-        border-radius: 50%;
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-      }
-      
-      .notification-content {
-        padding-left: 0.5rem;
-        
-        .notification-title {
-          font-weight: 500;
-          font-size: 0.9rem;
-          margin-bottom: 0.25rem;
-          color: #333;
-        }
-        
-        .notification-message {
-          font-size: 0.85rem;
-          color: #666;
-          margin-bottom: 0.5rem;
-        }
-        
-        .notification-time {
-          font-size: 0.75rem;
-          color: #888;
-        }
-      }
-    }
-    
-    .no-notifications {
-      padding: 1.5rem;
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-    }
+    // La sección de notificaciones ha sido eliminada
     
     .menu-item {
       display: flex;
