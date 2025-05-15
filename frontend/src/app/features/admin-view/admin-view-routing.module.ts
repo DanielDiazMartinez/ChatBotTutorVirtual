@@ -25,6 +25,10 @@ const routes: Routes = [
         loadChildren: () => import('./components/subjects-management/subjects-management.module').then(m => m.SubjectsManagementModule)
       },
       {
+        path: 'subjects/:id',
+        loadChildren: () => import('./components/subjects-management/subject-edit/subject-edit.module').then(m => m.SubjectEditModule)
+      },
+      {
         path: 'questions',
         loadChildren: () => import('./components/questions-management/questions-management.module').then(m => m.QuestionsManagementModule)
       },

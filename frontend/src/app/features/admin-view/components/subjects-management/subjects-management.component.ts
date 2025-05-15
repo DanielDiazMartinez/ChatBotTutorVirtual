@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SubjectService, Subject } from '../../../../core/services/subject.service';
@@ -29,7 +29,8 @@ export class SubjectsManagementComponent implements OnInit {
 
   constructor(
     private dialog: MatDialog,
-    private subjectService: SubjectService
+    private subjectService: SubjectService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -118,9 +119,10 @@ export class SubjectsManagementComponent implements OnInit {
   }
 
   editSubject(subjectId: string): void {
-    // Por ahora solo mostramos un mensaje, en el futuro podríamos
-    // navegar a una vista de edición detallada
-    console.log(`Editar asignatura con ID: ${subjectId}`);
+    // Ahora navegamos a la vista de edición
+    // El botón de edición en el HTML ya tiene el RouterLink configurado,
+    // pero mantenemos este método por si se quiere llamar programáticamente
+    this.router.navigate(['/admin/subjects', subjectId]);
   }
 
   deleteSubject(subjectId: string): void {
