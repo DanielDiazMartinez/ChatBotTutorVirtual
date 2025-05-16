@@ -1,10 +1,9 @@
-// filepath: /home/dani/Proyectos/ChatBotTutorVirtual/frontend/src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/login/login.component';
 import { StudentViewComponent } from './features/student-view/student-view.component';
 import { SubjectSelectionComponent } from './features/subject-selection/subject-selection.component';
 import { TeacherViewComponent } from './features/teacher-view/teacher-view.component';
-import { authGuard, teacherGuard, studentGuard, adminGuard } from './guards/auth.guard';
+import { authGuard, teacherGuard, adminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -24,7 +23,7 @@ export const routes: Routes = [
   {
     path: 'chat',
     component: StudentViewComponent,
-    canActivate: [studentGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'admin',

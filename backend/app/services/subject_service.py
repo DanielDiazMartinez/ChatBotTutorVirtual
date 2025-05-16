@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from ..models.models import Subject, User
+from ..models.models import Subject, User, teacher_subject, student_subject
 from ..models.schemas import SubjectCreate
 
 def create_subject(db: Session, subject: SubjectCreate) -> Subject:
@@ -48,62 +48,33 @@ def delete_subject(db: Session, subject_id: int) -> bool:
     db.commit()
     return True
 
-def add_teacher_to_subject(db: Session, subject_id: int, teacher_id: int) -> bool:
-    """Añade un profesor a una asignatura"""
-    subject = get_subject_by_id(db, subject_id)
-    teacher = db.query(User).filter(
-        and_(User.id == teacher_id, User.role == "teacher")
-    ).first()
+def add_user_to_subject(db: Session, subject_id: int, user_id: int, role: str) -> bool:
+    """Agrega un usuario a una asignatura"""
+    db_subject = get_subject_by_id(db, subject_id)
+    db_user = db.query(User).filter(User.id == user_id).first()
     
-    if not subject or not teacher:
+    if not db_subject or not db_user:
         return False
     
-    subject.teachers.append(teacher)
-    db.commit()
-    return True
-
-def add_student_to_subject(db: Session, subject_id: int, student_id: int) -> bool:
-    """Añade un estudiante a una asignatura"""
-    subject = get_subject_by_id(db, subject_id)
-    student = db.query(User).filter(
-        and_(User.id == student_id, User.role == "student")
-    ).first()
-    
-    if not subject or not student:
+    # Verificar que el usuario tiene el rol correcto (profesor o estudiante)
+    if not (db_user.role == "teacher" or db_user.role == "student"):
         return False
-    
-    subject.students.append(student)
-    db.commit()
-    return True
-
-def remove_teacher_from_subject(db: Session, subject_id: int, teacher_id: int) -> bool:
-    """Elimina un profesor de una asignatura"""
-    subject = get_subject_by_id(db, subject_id)
-    teacher = db.query(User).filter(
-        and_(User.id == teacher_id, User.role == "teacher")
-    ).first()
-    
-    if not subject or not teacher:
-        return False
-    
-    if teacher in subject.teachers:
-        subject.teachers.remove(teacher)
+        
+    try:
+        if db_user.role == "teacher":
+            # Verificar si ya existe la relación
+            if db_user not in db_subject.teachers:
+                db_subject.teachers.append(db_user)
+                
+        elif db_user.role == "student":
+            # Verificar si ya existe la relación
+            if db_user not in db_subject.students:
+                db_subject.students.append(db_user)
+        else:
+            return False
+        
         db.commit()
         return True
-    return False
-
-def remove_student_from_subject(db: Session, subject_id: int, student_id: int) -> bool:
-    """Elimina un estudiante de una asignatura"""
-    subject = get_subject_by_id(db, subject_id)
-    student = db.query(User).filter(
-        and_(User.id == student_id, User.role == "student")
-    ).first()
-    
-    if not subject or not student:
+    except Exception as e:
+        db.rollback()
         return False
-    
-    if student in subject.students:
-        subject.students.remove(student)
-        db.commit()
-        return True
-    return False

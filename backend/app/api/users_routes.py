@@ -5,25 +5,31 @@ from app.core.database import get_db
 from app.core.auth import require_role
 from app.services.user_service import (
     create_user,
+    get_all_users,
+    get_subjects_by_user_id,
     get_user_by_id,
     get_users_by_role,
     update_user,
     delete_user
 )
-from app.models.schemas import UserCreate, UserUpdate, UserOut
+from app.models.schemas import APIResponse, SubjectOut, UserCreate, UserUpdate, UserOut
 
 users_routes = APIRouter()
 
-@users_routes.post("/register", response_model=UserOut, status_code=201)
+@users_routes.post("/register", response_model=APIResponse, status_code=201)
 def register_user(
     user: UserCreate, 
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_role(["admin"]))
+    db: Session = Depends(get_db)
 ):
     """Registrar un nuevo usuario (solo administradores)"""
-    return create_user(user, db)
+    user_created = create_user(user, db)
+    return {
+        "data": user_created,
+        "message": "Usuario registrado correctamente",
+        "status": 201
+    }
 
-@users_routes.get("/list/{role}", response_model=List[UserOut])
+@users_routes.get("/list/{role}", response_model=APIResponse)
 def list_users_by_role(
     role: str,
     db: Session = Depends(get_db),
@@ -35,10 +41,37 @@ def list_users_by_role(
         
     users = get_users_by_role(role, db)
     if not users:
-        raise HTTPException(status_code=200, detail=f"No hay usuarios registrados con el rol {role}")
-    return users
+        return {
+            "data": [],
+            "message": f"No hay usuarios registrados con el rol {role}",
+            "status": 200
+        }
+    return {
+        "data": users,
+        "message": f"Usuarios con rol {role} obtenidos correctamente",
+        "status": 200
+    }
 
-@users_routes.get("/{user_id}", response_model=UserOut)
+@users_routes.get("/list", response_model=APIResponse)
+def list_user_all(
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["teacher", "admin"]))
+):      
+    users = get_all_users(db)
+    if not users:
+        return {
+            "data": [],
+            "message": f"No hay usuarios registrados",
+            "status": 200
+        }
+    
+    return {
+        "data": users,
+        "message": f"Usuarios obtenidos correctamente",
+        "status": 200
+    }
+
+@users_routes.get("/{user_id}", response_model=APIResponse)
 def get_user(
     user_id: int,
     role: str | None = None,
@@ -49,9 +82,13 @@ def get_user(
     user = get_user_by_id(user_id, role, db)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return user
+    return {
+        "data": user,
+        "message": "Usuario obtenido correctamente",
+        "status": 200
+    }
 
-@users_routes.put("/{user_id}", response_model=UserOut)
+@users_routes.put("/{user_id}", response_model=APIResponse)
 def update_user_route(
     user_id: int,
     user_update: UserUpdate,
@@ -59,14 +96,44 @@ def update_user_route(
     _: dict = Depends(require_role(["admin"]))
 ):
     """Actualizar información de un usuario (solo administradores)"""
-    return update_user(user_id, user_update, db)
+    user_updated = update_user(user_id, user_update, db)
+    return {
+        "data": user_updated,
+        "message": "Usuario actualizado correctamente",
+        "status": 200
+    }
 
-@users_routes.delete("/{user_id}", response_model=UserOut)
+@users_routes.delete("/{user_id}", response_model=APIResponse)
 def delete_user_route(
     user_id: int,
     db: Session = Depends(get_db),
     _: dict = Depends(require_role(["admin"]))
 ):
     """Eliminar un usuario (solo administradores)"""
-    return delete_user(user_id, db)
+    user_deleted = delete_user(user_id, db)
+    return {
+        "data": user_deleted,
+        "message": "Usuario eliminado correctamente",
+        "status": 200
+    }
 
+
+@users_routes.get("/{user_id}/subjects", response_model=APIResponse)
+def list_subjects_by_user_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+):
+    """Obtener las materias de un usuario (profesores, estudiantes y administradores)"""
+    subjects = get_subjects_by_user_id(user_id, db)
+    if not subjects:
+        return {
+            "data": [],
+            "message": "No hay materias registradas para este usuario",
+            "status": 200
+        }
+    return {
+        "data": subjects,
+        "message": "Materias obtenidas correctamente",
+        "status": 200
+    }

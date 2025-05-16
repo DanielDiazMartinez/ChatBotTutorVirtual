@@ -25,6 +25,9 @@
             </div>
           </div>
           
+          <div class="info-message">
+            Actualmente el registro debe ser gestionado por un administrador.
+          </div>
           <button type="submit" class="action-button" [disabled]="registerForm.invalid">CONTINUAR</button>
         </form>
       </div>
@@ -59,7 +62,12 @@
           </div>
             
           <a href="#" class="forgot-password">¿Has olvidado la contraseña?</a>
-          <button type="button" class="action-button" (click)="onLogin()" [disabled]="loginForm.invalid">ACCEDER</button>
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+          <button type="button" class="action-button" (click)="onLogin()" [disabled]="loginForm.invalid || isLoggingIn">
+            {{ isLoggingIn ? 'ACCEDIENDO...' : 'ACCEDER' }}
+          </button>
         </form>
       </div>
     </div>

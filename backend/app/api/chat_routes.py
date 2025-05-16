@@ -14,6 +14,7 @@ from ..services.vector_service import (
     search_similar_chunks
 )
 from ..models.schemas import (
+    APIResponse,
     ConversationCreate, 
     ConversationOut, 
     ConversationWithResponse, 
@@ -25,7 +26,7 @@ from ..models.schemas import (
 
 chat_routes = APIRouter()
 
-@chat_routes.post("/conversation", response_model=ConversationWithResponse)
+@chat_routes.post("/conversation", response_model=APIResponse)
 async def create_conversation(
     conversation_data: ConversationCreate, 
     db: Session = Depends(get_db),
@@ -41,11 +42,15 @@ async def create_conversation(
     )
 
     return {
-        "conversation": conversation_obj,
-        "bot_response": bot_response_str 
+        "data": {
+            "conversation": conversation_obj,
+            "bot_response": bot_response_str
+        },
+        "message": "Conversación creada correctamente",
+        "status": 200 
     }
 
-@chat_routes.get("/conversations/{user_id}", response_model=List[ConversationOut])
+@chat_routes.get("/conversations/{user_id}", response_model=APIResponse)
 async def get_user_conversations(
     user_id: int, 
     db: Session = Depends(get_db),
@@ -61,13 +66,18 @@ async def get_user_conversations(
         
     conversations = get_conversations_by_user_role(user_id, current_user.role, db)
     if not conversations:
-        raise HTTPException(
-            status_code=404, 
-            detail="No se encontraron conversaciones para este usuario"
-        )
-    return conversations
+        return {
+            "data": [],
+            "message": "No se encontraron conversaciones para este usuario",
+            "status": 200
+        }
+    return {
+        "data": conversations,
+        "message": "Conversaciones obtenidas correctamente",
+        "status": 200
+    }
 
-@chat_routes.get("/conversation/{conversation_id}", response_model=ConversationOut)
+@chat_routes.get("/conversation/{conversation_id}", response_model=APIResponse)
 async def get_conversation(
     conversation_id: int, 
     db: Session = Depends(get_db),
@@ -88,9 +98,13 @@ async def get_conversation(
                  [s.id for s in current_user.teaching_subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
         
-    return conversation
+    return {
+        "data": conversation,
+        "message": "Conversación obtenida correctamente",
+        "status": 200
+    }
 
-@chat_routes.delete("/conversation/{conversation_id}")
+@chat_routes.delete("/conversation/{conversation_id}", response_model=APIResponse)
 async def delete_conv(
     conversation_id: int, 
     db: Session = Depends(get_db),
@@ -110,9 +124,13 @@ async def delete_conv(
             raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
             
     delete_conversation(conversation_id, db)
-    return {"message": "Conversación eliminada correctamente"}
+    return {
+        "data": None,
+        "message": "Conversación eliminada correctamente",
+        "status": 200
+    }
 
-@chat_routes.post("/c/{conversation_id}", response_model=MessagePairOut)
+@chat_routes.post("/c/{conversation_id}", response_model=APIResponse)
 async def add_message_to_conversation(
     conversation_id: int,
     message_data: MessageCreate,
@@ -129,15 +147,19 @@ async def add_message_to_conversation(
             message_text=message_data.text
         )
         return {
-            "user_message": user_msg_obj,
-            "bot_message": bot_msg_obj
+            "data": {
+                "user_message": user_msg_obj,
+                "bot_message": bot_msg_obj
+            },
+            "message": "Mensaje añadido correctamente",
+            "status": 200
         }
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error procesando el mensaje")
 
-@chat_routes.post("/context/{document_id}", response_model=List[DocumentChunkOut])
+@chat_routes.post("/context/{document_id}", response_model=APIResponse)
 async def get_context_for_question(
     document_id: int, 
     db: Session = Depends(get_db), 
@@ -158,4 +180,8 @@ async def get_context_for_question(
         DocumentChunkOut.model_validate(chunk) for chunk, _ in similar_chunks
     ]
 
-    return context_out
+    return {
+        "data": context_out,
+        "message": "Contexto obtenido correctamente",
+        "status": 200
+    }

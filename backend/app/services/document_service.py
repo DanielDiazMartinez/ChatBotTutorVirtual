@@ -21,7 +21,7 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
 
     os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
 
-    subfolder_path = os.path.join(settings.UPLOAD_FOLDER, str(document.teacher_id))
+    subfolder_path = os.path.join(settings.UPLOAD_FOLDER, str(document.user_id))
 
     os.makedirs(subfolder_path, exist_ok=True)
     
@@ -34,7 +34,7 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
         title=document.title,
         file_path=file_path,
         description=document.description,
-        teacher_id=document.teacher_id
+        teacher_id=document.user_id
     )
     
     db.add(new_document)

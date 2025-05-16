@@ -20,7 +20,13 @@ def create_user(user: UserCreate, db: Session):
     db.add(user_db)
     db.commit()
     db.refresh(user_db)
-    return user_db
+    return {
+        "id": user_db.id,
+        "email": user_db.email,
+        "full_name": user_db.full_name,
+        "role": user_db.role,
+        "created_at": user_db.created_at
+    }
 
 def get_user_by_id(user_id: int, role: str | None, db: Session):
     """
@@ -29,19 +35,58 @@ def get_user_by_id(user_id: int, role: str | None, db: Session):
     query = db.query(User).filter(User.id == user_id)
     if role:
         query = query.filter(User.role == role)
-    return query.first()
+    user_db = query.first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    return {
+    "id": user_db.id,
+    "email": user_db.email,
+    "full_name": user_db.full_name,
+    "role": user_db.role,
+    "created_at": user_db.created_at
+}
+    
 
 def get_users_by_role(role: str, db: Session) -> List[User]:
     """
     Obtiene todos los usuarios de un rol específico.
     """
-    return db.query(User).filter(User.role == role).all()
+    users = db.query(User).filter(User.role == role).all()
+
+    return [
+        {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "created_at": user.created_at
+        }
+        for user in users
+    ]
+
+def get_all_users(db: Session) -> List[dict]:
+    """
+    Obtiene todos los usuarios de la base de datos y los convierte en diccionarios.
+    """
+    users = db.query(User).all()
+    if not users:
+        raise HTTPException(status_code=404, detail="No hay usuarios registrados.")
+    return [
+        {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "created_at": user.created_at
+        }
+        for user in users
+    ]
 
 def update_user(user_id: int, user_update: UserUpdate, db: Session):
     """
     Actualiza un usuario existente.
     """
-    user_db = get_user_by_id(user_id, None, db)
+    user_db = db.query(User).filter(User.id == user_id).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
@@ -55,22 +100,46 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session):
     
     db.commit()
     db.refresh(user_db)
-    return user_db
+    return {
+        "id": user_db.id,
+        "email": user_db.email,
+        "full_name": user_db.full_name,
+        "role": user_db.role,
+        "created_at": user_db.created_at
+    }
 
 def delete_user(user_id: int, db: Session):
     """
     Elimina un usuario por su ID.
     """
-    user = get_user_by_id(user_id, None, db)
+    user = db.query(User).filter(User.id == user_id).first()
+    
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     
     db.delete(user)
     db.commit()
-    return user
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role,
+        "created_at": user.created_at
+    }
 
 def get_user_by_email(email: str, db: Session):
     """
     Obtiene un usuario por su email.
     """
     return db.query(User).filter(User.email == email).first()
+
+def get_subjects_by_user_id(user_id: int, db: Session):
+    """
+    Obtiene los proyectos asociados a un usuario por su ID.
+    """
+    user = get_user_by_id(user_id, None, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    
+    return user.teaching_subjects

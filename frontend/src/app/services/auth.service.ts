@@ -69,7 +69,7 @@ export class AuthService {
     // Actualizar el BehaviorSubject
     this.currentUserSubject.next(userData);
     
-    // Redirigir según el rol
+    
     if (role === 'admin') {
       this.router.navigate(['/admin']);
     } else if (role === 'teacher') {

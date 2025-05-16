@@ -28,15 +28,15 @@ export class ApiService {
   post<T>(endpoint: string, data: any): Observable<ApiResponse<T>> {
     return this.http.post<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, data);
   }
-
+  
   put<T>(endpoint: string, data: any): Observable<ApiResponse<T>> {
     return this.http.put<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, data);
   }
-
+  
   delete<T>(endpoint: string): Observable<ApiResponse<T>> {
     return this.http.delete<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`);
   }
-
+  
   upload<T>(endpoint: string, formData: FormData): Observable<ApiResponse<T>> {
     return this.http.post<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, formData);
   }

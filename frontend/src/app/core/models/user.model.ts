@@ -1,14 +1,14 @@
 export interface User {
   id: number;
   email: string;
-  name: string;
+  full_name: string;
   role: 'admin' | 'teacher' | 'student';
 }
 
 export interface UserCreate {
   email: string;
   password: string;
-  name: string;
+  full_name: string;
   role: 'admin' | 'teacher' | 'student';
 }
 

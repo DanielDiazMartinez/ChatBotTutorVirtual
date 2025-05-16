@@ -30,7 +30,5 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     
-    PGADMIN_DEFAULT_EMAIL: str = os.getenv("PGADMIN_DEFAULT_EMAIL", "email@example.com" )
-    PGADMIN_DEFAULT_PASSWORD: str = os.getenv("PGADMIN_DEFAULT_PASSWORD", "secure_password")
 
 settings = Settings()

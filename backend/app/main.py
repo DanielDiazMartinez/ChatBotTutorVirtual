@@ -27,10 +27,10 @@ app = FastAPI(
 # Ampliar los origins permitidos
 origins = [
     "http://localhost:8000",  # FastAPI
-    "http://127.0.0.1:8000",
-    "http://localhost:5050",  # pgAdmin
-    "http://127.0.0.1:5050"
-    
+    "http://127.0.0.1:8000",  
+    "http://127.0.0.1:5050",
+    "http://localhost:4200",  # Angular dev server
+    "http://127.0.0.1:4200"
 ]
 
 app.add_middleware(

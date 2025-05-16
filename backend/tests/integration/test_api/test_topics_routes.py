@@ -12,7 +12,7 @@ def test_crear_tema_como_admin(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = subject_response.json()["id"]
+    subject_id = subject_response.json()["id"]["data"]
 
     topic_data = {
         "name": "Álgebra Lineal",
@@ -25,7 +25,7 @@ def test_crear_tema_como_admin(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == topic_data["name"]
     assert data["description"] == topic_data["description"]
     assert data["subject_id"] == subject_id

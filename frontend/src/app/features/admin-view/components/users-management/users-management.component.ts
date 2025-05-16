@@ -2,128 +2,260 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { UserService } from '../../../../core/services/user.service';
+import { User, UserCreate } from '../../../../core/models/user.model';
+import { finalize } from 'rxjs';
+import { DeleteUserModalComponent } from '../../../../shared/components/delete-user-modal/delete-user-modal.component';
+import { EditUserComponent } from './edit-user.component';
 
-interface User {
-  id: string;
+// Interfaz para la gestión local de usuarios con campos adicionales
+export interface UserViewModel {
+  id: number;
   name: string;
   email: string;
-  role: 'profesor' | 'estudiante';
-  subjects?: string[];
-  active: boolean;
+  role: 'admin' | 'teacher' | 'student';
+  subjects: string[];
 }
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DeleteUserModalComponent, EditUserComponent],
   templateUrl: './users-management.component.html',
   styleUrls: ['./users-management.component.scss']
 })
 export class UsersManagementComponent implements OnInit {
-  users: User[] = [];
+  users: UserViewModel[] = [];
   searchTerm: string = '';
   showNewUserForm: boolean = false;
-  roleFilter: string = 'todos';
+  roleFilter: string = '';
+  loading: boolean = false;
+  error: string | null = null;
+  filteredUsers: UserViewModel[] = [];
+  showDeleteModal: boolean = false;
+  selectedUser: UserViewModel | null = null;
+  editingUser: UserViewModel | null = null;
 
-  // Datos de prueba
-  mockUsers: User[] = [
-    { id: '1', name: 'Ana García', email: 'ana.garcia@profesor.edu', role: 'profesor', active: true },
-    { id: '2', name: 'Carlos López', email: 'carlos.lopez@profesor.edu', role: 'profesor', active: true },
-    { id: '3', name: 'María Rodríguez', email: 'maria@estudiante.edu', role: 'estudiante', subjects: ['Matemáticas', 'Física'], active: true },
-    { id: '4', name: 'Pedro Sánchez', email: 'pedro@estudiante.edu', role: 'estudiante', subjects: ['Física', 'Biología'], active: true },
-    { id: '5', name: 'Laura Martínez', email: 'laura@estudiante.edu', role: 'estudiante', subjects: ['Biología', 'Literatura'], active: true },
-    { id: '6', name: 'Javier Fernández', email: 'javier@profesor.edu', role: 'profesor', active: false },
-  ];
+  // Aquí van las variables de touched
+  nameTouched = false;
+  emailTouched = false;
+  passwordTouched = false;
+  confirmPasswordTouched = false;
 
   newUser = {
     name: '',
     email: '',
-    role: 'estudiante' as 'profesor' | 'estudiante',
+    role: 'student' as 'admin' | 'teacher' | 'student',
     password: '',
     confirmPassword: ''
   };
 
-  constructor() {}
+  constructor(private userService: UserService) {}
 
   ngOnInit(): void {
-    this.users = this.mockUsers;
+    this.loadUsers();
   }
-
-  getFilteredUsers(): User[] {
-    return this.users.filter(user => {
-      const matchesTerm = 
-        user.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesRole = 
-        this.roleFilter === 'todos' || 
-        user.role === this.roleFilter;
-
-      return matchesTerm && matchesRole;
+  
+  loadUsers(): void {
+    this.loading = true;
+    console.log('1. Iniciando carga de usuarios...');
+    this.userService.getAllUsers()
+      .pipe(finalize(() => {
+        this.loading = false;
+        console.log('2. Finalizada la carga de usuarios');
+      }))
+      .subscribe({
+        next: (response) => {
+          console.log('3. Respuesta del servidor:', response);
+          if (response.data) {
+            this.users = response.data.map((user: User) => ({
+              id: user.id,
+              name: user.full_name || '',
+              email: user.email,
+              role: user.role,
+              subjects: []
+            }));
+            console.log('4. Usuarios cargados en this.users:', this.users);
+            this.applyFilters();
+          } else {
+            console.log('5. No hay datos en la respuesta');
+          }
+        },
+        error: (error) => {
+          console.error('6. Error en la carga:', error);
+          this.error = error.error?.detail || error.message || 'Error al cargar los usuarios';
+        }
+      });
+  }
+  
+  applyFilters(): void {
+    this.filteredUsers = this.users.filter(user => {
+      const matchesSearch = user.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const matchesRole = !this.roleFilter || user.role === this.roleFilter;
+      return matchesSearch && matchesRole;
     });
   }
 
+  getRoleInSpanish(role: string): string {
+    switch (role) {
+      case 'admin':
+        return 'administrador';
+      case 'teacher':
+        return 'profesor';
+      case 'student':
+        return 'estudiante';
+      default:
+        return role;
+    }
+  }
+  
   toggleNewUserForm(): void {
     this.showNewUserForm = !this.showNewUserForm;
     if (!this.showNewUserForm) {
-      this.resetNewUserForm();
-    }
-  }
-
-  resetNewUserForm(): void {
-    this.newUser = {
-      name: '',
-      email: '',
-      role: 'estudiante',
-      password: '',
-      confirmPassword: ''
-    };
-  }
-
-  addNewUser(): void {
-    if (this.validateNewUser()) {
-      // En un caso real, aquí enviaríamos los datos a un servicio
-      const newUserId = (this.users.length + 1).toString();
-      const newUserObj: User = {
-        id: newUserId,
-        name: this.newUser.name,
-        email: this.newUser.email,
-        role: this.newUser.role,
-        active: true
+      this.newUser = {
+        name: '',
+        email: '',
+        role: 'student',
+        password: '',
+        confirmPassword: ''
       };
-      
-      if (this.newUser.role === 'estudiante') {
-        newUserObj.subjects = [];
-      }
-
-      this.users.push(newUserObj);
-      this.toggleNewUserForm();
     }
   }
 
   validateNewUser(): boolean {
-    // Esta validación es básica, en un caso real sería más exhaustiva
-    return (
-      this.newUser.name.length > 0 &&
-      this.newUser.email.length > 0 &&
-      this.newUser.password.length >= 6 &&
-      this.newUser.password === this.newUser.confirmPassword
-    );
+    // No setea error, solo retorna si es válido
+    return !!this.newUser.name && !!this.newUser.email && !!this.newUser.password && !!this.newUser.confirmPassword &&
+      this.newUser.password === this.newUser.confirmPassword &&
+      this.newUser.password.length >= 6;
+  }
+  getNameError(): string | null {
+    if (!this.newUser.name && this.nameTouched) return 'El nombre es obligatorio';
+    return null;
+  }
+  getEmailError(): string | null {
+    if (!this.newUser.email && this.emailTouched) return 'El correo es obligatorio';
+    return null;
+  }
+  getPasswordError(): string | null {
+    if (!this.newUser.password && this.passwordTouched) return 'La contraseña es obligatoria';
+    if (this.newUser.password.length > 0 && this.newUser.password.length < 6 && this.passwordTouched) return 'La contraseña debe tener al menos 6 caracteres';
+    return null;
+  }
+  getConfirmPasswordError(): string | null {
+    if (!this.newUser.confirmPassword && this.confirmPasswordTouched) return 'La confirmación es obligatoria';
+    if (this.newUser.password !== this.newUser.confirmPassword && this.confirmPasswordTouched) return 'Las contraseñas no coinciden';
+    return null;
+  }
+  addNewUser(): void {
+    // Limpiar error global
+    this.error = null;
+    if (this.validateNewUser()) {
+      this.loading = true;
+      const userData: UserCreate = {
+        email: this.newUser.email,
+        password: this.newUser.password,
+        full_name: this.newUser.name,
+        role: this.newUser.role
+      };
+      this.userService.createUser(userData)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+          next: (response) => {
+            if (response.data) {
+              const newUser: UserViewModel = {
+                id: response.data.id,
+                name: response.data.full_name,
+                email: response.data.email,
+                role: response.data.role,
+                subjects: []
+              };
+              this.users.push(newUser);
+              this.applyFilters();
+              this.toggleNewUserForm(); // Oculta el formulario y muestra la lista
+              // Limpiar los touched
+              this.nameTouched = false;
+              this.emailTouched = false;
+              this.passwordTouched = false;
+              this.confirmPasswordTouched = false;
+            }
+          },
+          error: (error) => {
+            this.error = error.error?.detail || error.message || 'Error al crear el usuario';
+            console.error('Error creating user:', error);
+          }
+        });
+    }
   }
 
-  toggleUserStatus(user: User): void {
-    user.active = !user.active;
-    // En un caso real, aquí actualizaríamos el estado en el servidor
+  editUser(userId: number): void {
+    const user = this.users.find(u => u.id === userId);
+    if (user) {
+      // Hacemos una copia para no modificar el original hasta guardar
+      this.editingUser = { ...user };
+    }
   }
 
-  editUser(userId: string): void {
-    // En un caso real, aquí navegaríamos a una vista de edición detallada
-    console.log(`Editar usuario con ID: ${userId}`);
+  onEditUserSave(editedUser: UserViewModel): void {
+    this.loading = true;
+    this.userService.updateUser(editedUser.id, {
+      full_name: editedUser.name,
+      email: editedUser.email,
+      role: editedUser.role
+    }).pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          // Actualizar en la lista local
+          const idx = this.users.findIndex(u => u.id === editedUser.id);
+          if (idx !== -1 && response.data) {
+            this.users[idx] = {
+              ...this.users[idx],
+              name: response.data.full_name,
+              email: response.data.email,
+              role: response.data.role
+            };
+            this.applyFilters();
+          }
+          this.editingUser = null;
+        },
+        error: (error) => {
+          this.error = error.error?.detail || error.message || 'Error al actualizar el usuario';
+        }
+      });
   }
 
-  deleteUser(userId: string): void {
-    // En un caso real, aquí mostraríamos un diálogo de confirmación
-    // y luego eliminaríamos al usuario
-    this.users = this.users.filter(user => user.id !== userId);
+  onEditUserCancel(): void {
+    this.editingUser = null;
+  }
+
+  deleteUser(userId: number): void {
+    this.selectedUser = this.users.find(user => user.id === userId) || null;
+    if (this.selectedUser) {
+      this.showDeleteModal = true;
+    }
+  }
+
+  onDeleteConfirm(): void {
+    if (this.selectedUser) {
+      this.loading = true;
+      this.userService.deleteUser(this.selectedUser.id).subscribe({
+        next: () => {
+          this.users = this.users.filter(user => user.id !== this.selectedUser?.id);
+          this.applyFilters();
+          this.showDeleteModal = false;
+          this.selectedUser = null;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.error = error.error?.detail || error.message || 'Error al eliminar el usuario';
+          this.loading = false;
+        }
+      });
+    }
+  }
+
+  onDeleteCancel(): void {
+    this.showDeleteModal = false;
+    this.selectedUser = null;
   }
 }

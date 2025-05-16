@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from typing import List, Optional
+from typing import Any, List, Optional
 
 # ----------------------------------------
 # SCHEMA PARA USUARIOS
@@ -50,6 +50,24 @@ class Token(BaseModel):
     """
     access_token: str = Field(..., example="jwt_token_aqui")
     token_type: str = Field(default="bearer", example="bearer")
+
+class UserLogin(BaseModel):
+    """
+    Modelo para datos de inicio de sesión.
+    """
+    email: EmailStr = Field(..., example="usuario@example.com")
+    password: str = Field(..., example="password123")
+
+class UserResponse(BaseModel):
+    """
+    Modelo para respuesta de datos de usuario en autenticación.
+    """
+    id: int
+    email: str
+    name: str = Field(alias="full_name") 
+    role: str
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenData(BaseModel):
@@ -218,6 +236,15 @@ class TopicOut(TopicBase):
     id: int
     created_at: datetime
     documents: List[DocumentOut] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class APIResponse(BaseModel):
+    data: Any
+    message: Optional[str] = None
+    error: Optional[str] = None
+    status: Optional[int] = 200
 
     model_config = ConfigDict(from_attributes=True)
 

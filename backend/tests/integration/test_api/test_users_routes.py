@@ -13,7 +13,7 @@ def test_registrar_usuario_admin(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = response.json()["data"]
     assert data["email"] == admin_data["email"]
     assert data["role"] == "admin"
 
@@ -30,7 +30,7 @@ def test_registrar_profesor(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = response.json()["data"]
     assert data["email"] == teacher_data["email"]
     assert data["role"] == "teacher"
 
@@ -47,7 +47,7 @@ def test_registrar_estudiante(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = response.json()["data"]
     assert data["email"] == student_data["email"]
     assert data["role"] == "student"
 
@@ -88,12 +88,12 @@ def test_obtener_usuario_por_id(client, db_session_test, admin_auth_headers):
         json=user_data,
         headers=admin_auth_headers
     )
-    user_id = create_response.json()["id"]
+    user_id = create_response.json()["data"]["id"]
 
     # Obtener el usuario creado
     response = client.get(f"/api/v1/users/{user_id}", headers=admin_auth_headers)
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["email"] == user_data["email"]
 
 def test_actualizar_usuario(client, db_session_test, admin_auth_headers):
@@ -109,7 +109,7 @@ def test_actualizar_usuario(client, db_session_test, admin_auth_headers):
         json=user_data,
         headers=admin_auth_headers
     )
-    user_id = create_response.json()["id"]
+    user_id = create_response.json()["data"]["id"]
 
     # Actualizar el usuario
     update_data = {
@@ -122,7 +122,7 @@ def test_actualizar_usuario(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["full_name"] == update_data["full_name"]
 
 def test_eliminar_usuario(client, db_session_test, admin_auth_headers):
@@ -138,7 +138,7 @@ def test_eliminar_usuario(client, db_session_test, admin_auth_headers):
         json=user_data,
         headers=admin_auth_headers
     )
-    user_id = create_response.json()["id"]
+    user_id = create_response.json()["data"]["id"]
 
     # Eliminar el usuario
     response = client.delete(f"/api/v1/users/{user_id}", headers=admin_auth_headers)
