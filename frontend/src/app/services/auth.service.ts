@@ -39,29 +39,22 @@ export class AuthService {
     }
   }
   
-  login(email: string, password: string, role: 'student' | 'teacher' | 'admin'): void {
+  login(email: string, password: string): void {
     // En un escenario real, aquí se haría una llamada al API de autenticación
     let userData: UserProfile;
     
-    if (role === 'admin') {
-      userData = {
-        name: 'Administrador Sistema',
-        role: role,
-        avatar: 'assets/images/admin-avatar.svg'
-      };
-    } else {
-      userData = {
-        name: role === 'teacher' ? 'Profesor Martínez' : 'Ana García',
-        role: role,
-        avatar: role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
-      };
-    }
+    // El rol vendrá determinado por el backend según las credenciales
+    userData = {
+      name: 'Usuario',
+      role: 'student', // Este valor vendrá del backend
+      avatar: 'assets/images/student-avatar.svg'
+    };
     
     // Guardar datos en localStorage solo en el navegador
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('currentUser', JSON.stringify({
         email,
-        role,
+        role: userData.role,
         name: userData.name
       }));
     }
@@ -69,10 +62,10 @@ export class AuthService {
     // Actualizar el BehaviorSubject
     this.currentUserSubject.next(userData);
     
-    
-    if (role === 'admin') {
+    // Redirigir según el rol
+    if (userData.role === 'admin') {
       this.router.navigate(['/admin']);
-    } else if (role === 'teacher') {
+    } else if (userData.role === 'teacher') {
       this.router.navigate(['/teacher']);
     } else {
       this.router.navigate(['/subject-selection']);

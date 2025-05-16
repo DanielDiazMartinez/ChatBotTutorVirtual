@@ -5,7 +5,7 @@ from typing import List, Optional
 from ..models.models import Topic, Subject
 from ..models.schemas import TopicCreate, TopicUpdate
 
-def create_topic(db: Session, topic: TopicCreate) -> Topic:
+def create_topic(db: Session, topic: TopicCreate) -> dict:
     """
     Crea un nuevo tema.
     """
@@ -21,31 +21,68 @@ def create_topic(db: Session, topic: TopicCreate) -> Topic:
     db.add(db_topic)
     db.commit()
     db.refresh(db_topic)
-    return db_topic
+    return {
+        "id": db_topic.id,
+        "name": db_topic.name,
+        "description": db_topic.description,
+        "subject_id": db_topic.subject_id,
+        "created_at": db_topic.created_at
+    }
 
-def get_topic_by_id(db: Session, topic_id: int) -> Optional[Topic]:
+def get_topic_by_id(db: Session, topic_id: int) -> Optional[dict]:
     """
     Obtiene un tema por su ID.
     """
-    return db.query(Topic).filter(Topic.id == topic_id).first()
+    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not db_topic:
+        return None
+    
+    
+    return {
+        "id": db_topic.id,
+        "name": db_topic.name,
+        "description": db_topic.description,
+        "subject_id": db_topic.subject_id,
+        "created_at": db_topic.created_at
+    }
 
-def get_topics_by_subject(db: Session, subject_id: int) -> List[Topic]:
+def get_topics_by_subject(db: Session, subject_id: int) -> List[dict]:
     """
     Obtiene todos los temas de una asignatura específica.
     """
-    return db.query(Topic).filter(Topic.subject_id == subject_id).all()
+    topics = db.query(Topic).filter(Topic.subject_id == subject_id).all()
+    return [
+        {
+            "id": topic.id,
+            "name": topic.name,
+            "description": topic.description,
+            "subject_id": topic.subject_id,
+            "created_at": topic.created_at
+        }
+        for topic in topics
+    ]
 
-def get_all_topics(db: Session) -> List[Topic]:
+def get_all_topics(db: Session) -> List[dict]:
     """
     Obtiene todos los temas.
     """
-    return db.query(Topic).all()
+    topics = db.query(Topic).all()
+    return [
+        {
+            "id": topic.id,
+            "name": topic.name,
+            "description": topic.description,
+            "subject_id": topic.subject_id,
+            "created_at": topic.created_at
+        }
+        for topic in topics
+    ]
 
-def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optional[Topic]:
+def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optional[dict]:
     """
     Actualiza un tema existente.
     """
-    db_topic = get_topic_by_id(db, topic_id)
+    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not db_topic:
         return None
 
@@ -60,13 +97,19 @@ def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optio
 
     db.commit()
     db.refresh(db_topic)
-    return db_topic
+    return {
+        "id": db_topic.id,
+        "name": db_topic.name,
+        "description": db_topic.description,
+        "subject_id": db_topic.subject_id,
+        "created_at": db_topic.created_at
+    }
 
 def delete_topic(db: Session, topic_id: int) -> bool:
     """
     Elimina un tema.
     """
-    db_topic = get_topic_by_id(db, topic_id)
+    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not db_topic:
         return False
     

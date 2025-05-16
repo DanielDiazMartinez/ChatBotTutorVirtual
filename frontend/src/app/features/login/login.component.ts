@@ -15,13 +15,6 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   loginForm: FormGroup;
   registerForm: FormGroup;
-  
-  // Opciones para el selector de rol
-  userRoles = [
-    { value: 'student', label: 'Estudiante' },
-    { value: 'teacher', label: 'Profesor' },
-    { value: 'admin', label: 'Administrador' }
-  ];
 
   constructor(
     private fb: FormBuilder, 
@@ -30,13 +23,11 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      role: ['student', Validators.required]
+      password: ['', Validators.required]
     });
 
     this.registerForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      role: ['student', Validators.required]
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 

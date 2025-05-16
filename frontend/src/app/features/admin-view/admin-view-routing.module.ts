@@ -13,10 +13,6 @@ const routes: Routes = [
         pathMatch: 'full'
       },
       {
-        path: 'dashboard',
-        loadChildren: () => import('./components/dashboard/dashboard.module').then(m => m.DashboardModule)
-      },
-      {
         path: 'users',
         loadChildren: () => import('./components/users-management/users-management.module').then(m => m.UsersManagementModule)
       },
@@ -35,6 +31,10 @@ const routes: Routes = [
       {
         path: 'associations',
         loadChildren: () => import('./components/associations-management/associations-management.module').then(m => m.AssociationsManagementModule)
+      },
+      {
+        path: 'dashboard',
+        loadChildren: () => import('./components/admin-dashboard/admin-dashboard.module').then(m => m.AdminDashboardModule)
       }
     ]
   }

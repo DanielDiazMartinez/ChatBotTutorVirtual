@@ -62,16 +62,20 @@ def test_verificar_estudiantes_asignados(client, db_session_test, admin_auth_hea
     assert create_response.status_code == status.HTTP_201_CREATED
     subject_id = create_response.json()["data"]["id"]
     
-    # Obtener ID de un estudiante
-    user_response = client.get("/api/v1/users", headers=admin_auth_headers)
-    users = user_response.json()["data"]
-    
-    # Buscar usuario con rol 'student'
-    student_id = None
-    for user in users:
-        if user["role"] == "student":
-            student_id = user["id"]
-            break
+    # Crear un nuevo estudiante para la prueba
+    student_data = {
+        "email": "student_fisica@example.com",
+        "password": "password123",
+        "full_name": "Estudiante Fisica",
+        "role": "student"
+    }
+    create_student_response = client.post(
+        "/api/v1/users/register",
+        json=student_data,
+        headers=admin_auth_headers
+    )
+    assert create_student_response.status_code == status.HTTP_201_CREATED
+    student_id = create_student_response.json()["data"]["id"]
     
     assert student_id is not None, "No se encontró un usuario con rol 'student'"
     

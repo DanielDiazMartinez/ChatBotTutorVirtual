@@ -9,21 +9,7 @@
             type="email" 
             placeholder="Dirección de correo electrónico"
             formControlName="email">
-          
-          <div class="role-selector">
-            <label>Selecciona tu rol:</label>
-            <div class="role-options">
-              <div *ngFor="let role of userRoles" class="role-option">
-                <input 
-                  type="radio" 
-                  [id]="'register-' + role.value" 
-                  [value]="role.value" 
-                  formControlName="role"
-                  [checked]="role.value === 'student'">
-                <label [for]="'register-' + role.value">{{role.label}}</label>
-              </div>
-            </div>
-          </div>
+        
           
           <div class="info-message">
             Actualmente el registro debe ser gestionado por un administrador.
@@ -46,20 +32,7 @@
             placeholder="Contraseña"
             formControlName="password">
             
-          <div class="role-selector">
-            <label>Selecciona tu rol:</label>
-            <div class="role-options">
-              <div *ngFor="let role of userRoles" class="role-option">
-                <input 
-                  type="radio" 
-                  [id]="'login-' + role.value" 
-                  [value]="role.value" 
-                  formControlName="role"
-                  [checked]="role.value === 'student'">
-                <label [for]="'login-' + role.value">{{role.label}}</label>
-              </div>
-            </div>
-          </div>
+
             
           <a href="#" class="forgot-password">¿Has olvidado la contraseña?</a>
           <div *ngIf="errorMessage" class="error-message">

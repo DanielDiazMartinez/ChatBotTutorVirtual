@@ -112,7 +112,9 @@ class User(Base):
     teaching_subjects = relationship("Subject", 
                                    secondary='teacher_subject',
                                    back_populates="teachers",
-                                   primaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')")
+                                   primaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')",
+                                   secondaryjoin="Subject.id==teacher_subject.c.subject_id",
+                                   foreign_keys="[teacher_subject.c.teacher_id, teacher_subject.c.subject_id]")
 
     # Relaciones específicas de estudiantes
     student_conversations = relationship("Conversation", 
@@ -124,7 +126,9 @@ class User(Base):
     enrolled_subjects = relationship("Subject", 
                                    secondary='student_subject',
                                    back_populates="students",
-                                   primaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')")
+                                   primaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
+                                   secondaryjoin="Subject.id==student_subject.c.subject_id",
+                                   foreign_keys="[student_subject.c.student_id, student_subject.c.subject_id]")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}')>"
@@ -239,8 +243,22 @@ class Subject(Base):
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    teachers = relationship("User", secondary=teacher_subject, back_populates="teaching_subjects", primaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')")
-    students = relationship("User", secondary=student_subject, back_populates="enrolled_subjects", primaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')")
+    teachers = relationship(
+        "User", 
+        secondary=teacher_subject, 
+        back_populates="teaching_subjects",
+        primaryjoin="Subject.id==teacher_subject.c.subject_id",
+        secondaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')",
+        foreign_keys=[teacher_subject.c.subject_id, teacher_subject.c.teacher_id]
+    )
+    students = relationship(
+        "User", 
+        secondary=student_subject, 
+        back_populates="enrolled_subjects",
+        primaryjoin="Subject.id==student_subject.c.subject_id",
+        secondaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
+        foreign_keys=[student_subject.c.subject_id, student_subject.c.student_id]
+    )
     documents = relationship("Document", back_populates="subject")
     topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")
 

@@ -15,7 +15,7 @@ def test_verificar_profesores_en_base_de_datos(client, db_session_test, admin_au
     )
 
     assert create_response.status_code == status.HTTP_201_CREATED
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
     
     # Crear un nuevo profesor para la prueba
     user_data = {
@@ -29,7 +29,7 @@ def test_verificar_profesores_en_base_de_datos(client, db_session_test, admin_au
         json=user_data,
         headers=admin_auth_headers
     )
-    teacher_id = create_response.json()["id"]
+    teacher_id = create_response.json()["data"]["id"]
 
     # Añadir el profesor a la asignatura
     add_response = client.post(
@@ -60,7 +60,7 @@ def test_verificar_estudiantes_en_base_de_datos(client, db_session_test, admin_a
         headers=admin_auth_headers
     )
     assert create_response.status_code == status.HTTP_201_CREATED
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
     
     # Crear un nuevo estudiante para la prueba
     user_data = {
@@ -74,7 +74,7 @@ def test_verificar_estudiantes_en_base_de_datos(client, db_session_test, admin_a
         json=user_data,
         headers=admin_auth_headers
     )
-    student_id = create_response.json()["id"]
+    student_id = create_response.json()["data"]["id"]
     
     # Añadir el estudiante a la asignatura
     add_response = client.post(

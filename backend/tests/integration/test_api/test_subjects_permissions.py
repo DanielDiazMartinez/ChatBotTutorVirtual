@@ -49,7 +49,7 @@ def test_modificar_asignatura_permisos(client, db_session_test, admin_auth_heade
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
     
     update_data = {
         "name": "Física Modificada",
@@ -64,7 +64,7 @@ def test_modificar_asignatura_permisos(client, db_session_test, admin_auth_heade
         headers=admin_auth_headers
     )
     assert admin_response.status_code == status.HTTP_200_OK
-    assert admin_response.json()["name"] == "Física Modificada"
+    assert admin_response.json()["data"]["name"] == "Física Modificada"
     
     # Profesor no debería poder modificar una asignatura
     teacher_response = client.put(
@@ -95,7 +95,7 @@ def test_eliminar_asignatura_permisos(client, db_session_test, admin_auth_header
         json=subject_data_admin,
         headers=admin_auth_headers
     )
-    subject_id_admin = admin_create.json()["id"]
+    subject_id_admin = admin_create.json()["data"]["id"]
     
     subject_data_teacher = {
         "name": "Asignatura para intent por profesor",
@@ -107,7 +107,7 @@ def test_eliminar_asignatura_permisos(client, db_session_test, admin_auth_header
         json=subject_data_teacher,
         headers=admin_auth_headers
     )
-    subject_id_teacher = teacher_create.json()["id"]
+    subject_id_teacher = teacher_create.json()["data"]["id"]
     
     subject_data_student = {
         "name": "Asignatura para intent por estudiante",
@@ -119,7 +119,7 @@ def test_eliminar_asignatura_permisos(client, db_session_test, admin_auth_header
         json=subject_data_student,
         headers=admin_auth_headers
     )
-    subject_id_student = student_create.json()["id"]
+    subject_id_student = student_create.json()["data"]["id"]
     
     # Admin debería poder eliminar
     admin_response = client.delete(

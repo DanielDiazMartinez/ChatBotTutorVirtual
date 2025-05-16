@@ -13,7 +13,7 @@ def test_crear_asignatura_como_admin(client, db_session_test, admin_auth_headers
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == subject_data["name"]
     assert data["code"] == subject_data["code"]
     assert data["description"] == subject_data["description"]
@@ -43,12 +43,12 @@ def test_obtener_asignatura_por_id(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
 
     # Obtener la asignatura creada
     response = client.get(f"/api/v1/subjects/{subject_id}", headers=admin_auth_headers)
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == subject_data["name"]
 
 def test_actualizar_asignatura(client, db_session_test, admin_auth_headers):
@@ -63,7 +63,7 @@ def test_actualizar_asignatura(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
 
     # Actualizar la asignatura
     update_data = {
@@ -81,7 +81,7 @@ def test_actualizar_asignatura(client, db_session_test, admin_auth_headers):
     print("Response body:", response.text)
     
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == update_data["name"]
     assert data["code"] == update_data["code"]
     assert data["description"] == update_data["description"]
@@ -98,7 +98,7 @@ def test_eliminar_asignatura(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = create_response.json()["id"]
+    subject_id = create_response.json()["data"]["id"]
 
     # Eliminar la asignatura
     response = client.delete(f"/api/v1/subjects/{subject_id}", headers=admin_auth_headers)

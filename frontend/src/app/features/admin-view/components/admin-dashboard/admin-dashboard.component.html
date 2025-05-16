@@ -1,0 +1,46 @@
+<div class="dashboard-container">
+  <div class="section-header">
+    <h1>Dashboard de Administrador</h1>
+  </div>
+  <div class="stats-overview">
+    <div class="stats-card">
+      <div class="stats-icon users-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stats-content">
+        <h3>Usuarios Totales</h3>
+        <p class="stats-value">{{ totalUsuarios }}</p>
+        <div class="stats-breakdown">
+          <span class="stats-badge estudiantes">{{ totalEstudiantes }} Estudiantes</span>
+          <span class="stats-badge profesores">{{ totalProfesores }} Profesores</span>
+        </div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-icon subjects-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 4h2v5l-1-.75L9 9V4zm9 16H6V4h1v9l3-2.25L13 13V4h5v16z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stats-content">
+        <h3>Asignaturas Activas</h3>
+        <p class="stats-value">{{ totalAsignaturas }}</p>
+        <!-- Para hacerlo dinámico, reemplaza totalAsignaturas por la variable dinámica -->
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-icon documents-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stats-content">
+        <h3>Documentos</h3>
+        <p class="stats-value">{{ totalDocumentos }}</p>
+        <!-- Para hacerlo dinámico, reemplaza totalDocumentos por la variable dinámica -->
+      </div>
+    </div>
+  </div>
+</div> 

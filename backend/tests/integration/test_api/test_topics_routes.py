@@ -12,7 +12,7 @@ def test_crear_tema_como_admin(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = subject_response.json()["id"]["data"]
+    subject_id = subject_response.json()["data"]["id"]
 
     topic_data = {
         "name": "Álgebra Lineal",
@@ -51,7 +51,7 @@ def test_obtener_tema_por_id(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = subject_response.json()["id"]
+    subject_id = subject_response.json()["data"]["id"]
 
     topic_data = {
         "name": "Mecánica Clásica",
@@ -63,12 +63,12 @@ def test_obtener_tema_por_id(client, db_session_test, admin_auth_headers):
         json=topic_data,
         headers=admin_auth_headers
     )
-    topic_id = create_response.json()["id"]
+    topic_id = create_response.json()["data"]["id"]
 
     # Obtener el tema creado
     response = client.get(f"/api/v1/topics/{topic_id}", headers=admin_auth_headers)
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == topic_data["name"]
 
 def test_actualizar_tema(client, db_session_test, admin_auth_headers):
@@ -83,7 +83,7 @@ def test_actualizar_tema(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = subject_response.json()["id"]
+    subject_id = subject_response.json()["data"]["id"]
 
     topic_data = {
         "name": "Química Orgánica",
@@ -95,7 +95,7 @@ def test_actualizar_tema(client, db_session_test, admin_auth_headers):
         json=topic_data,
         headers=admin_auth_headers
     )
-    topic_id = create_response.json()["id"]
+    topic_id = create_response.json()["data"]["id"]
 
     # Actualizar el tema
     update_data = {
@@ -108,7 +108,7 @@ def test_actualizar_tema(client, db_session_test, admin_auth_headers):
         headers=admin_auth_headers
     )
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data = response.json()["data"]
     assert data["name"] == update_data["name"]
     assert data["description"] == update_data["description"]
 
@@ -124,7 +124,7 @@ def test_eliminar_tema(client, db_session_test, admin_auth_headers):
         json=subject_data,
         headers=admin_auth_headers
     )
-    subject_id = subject_response.json()["id"]
+    subject_id = subject_response.json()["data"]["id"]
 
     topic_data = {
         "name": "Genética",
@@ -136,7 +136,7 @@ def test_eliminar_tema(client, db_session_test, admin_auth_headers):
         json=topic_data,
         headers=admin_auth_headers
     )
-    topic_id = create_response.json()["id"]
+    topic_id = create_response.json()["data"]["id"]
 
     # Eliminar el tema
     response = client.delete(f"/api/v1/topics/{topic_id}", headers=admin_auth_headers)

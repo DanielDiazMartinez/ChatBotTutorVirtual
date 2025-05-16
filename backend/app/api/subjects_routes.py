@@ -25,6 +25,14 @@ def create_new_subject(
 ):
     """Crea una nueva asignatura (solo administradores)"""
     subject_created = create_subject(db=db, subject=subject)
+    
+    # Verificar si hay error en la respuesta
+    if "error" in subject_created:
+        raise HTTPException(
+            status_code=subject_created["status"], 
+            detail=subject_created["error"]
+        )
+        
     return {
         "data": subject_created,
         "message": "Asignatura creada correctamente",
@@ -100,12 +108,8 @@ def add_user_to_subject_route(
     _: dict = Depends(require_role(["admin"]))
 ):
     """Agrega un profesor o estudiante a una asignatura (solo administradores)"""
-    # Buscar al usuario para determinar su rol
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    if not add_user_to_subject(db=db, subject_id=subject_id, user_id=user_id, role=user.role):
+
+    if not add_user_to_subject(db=db, subject_id=subject_id, user_id=user_id):
         raise HTTPException(status_code=400, detail="No se pudo agregar el usuario a la asignatura")
     
     return {

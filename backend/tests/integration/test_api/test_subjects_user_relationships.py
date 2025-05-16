@@ -18,18 +18,21 @@ def test_agregar_profesor_a_asignatura(client, db_session_test, admin_auth_heade
     assert create_response.status_code == status.HTTP_201_CREATED
     subject_id = create_response.json()["data"]["id"]
     
-    # Obtener ID de un profesor - sabemos que el profesor de prueba existe
-    user_response = client.get("/api/v1/users", headers=admin_auth_headers)
-    users = user_response.json()["data"]
-    
-    # Buscar usuario con rol 'teacher'
-    teacher_id = None
-    for user in users:
-        if user["role"] == "teacher":
-            teacher_id = user["id"]
-            break
-    
-    assert teacher_id is not None, "No se encontró un usuario con rol 'teacher'"
+    # Crear un nuevo profesor para la prueba
+    teacher_data = {
+        "email": "profesor_historia@example.com",
+        "password": "password123",
+        "full_name": "Profesor Historia",
+        "role": "teacher"
+    }
+    create_teacher_response = client.post(
+        "/api/v1/users/register",
+        json=teacher_data,
+        headers=admin_auth_headers
+    )
+
+    assert create_teacher_response.status_code == status.HTTP_201_CREATED
+    teacher_id = create_teacher_response.json()["data"]["id"]
     
     # Añadir el profesor a la asignatura
     teacher_add_response = client.post(
@@ -57,18 +60,20 @@ def test_agregar_estudiante_a_asignatura(client, db_session_test, admin_auth_hea
     assert create_response.status_code == status.HTTP_201_CREATED
     subject_id = create_response.json()["data"]["id"]
     
-    # Obtener ID de un estudiante
-    user_response = client.get("/api/v1/users", headers=admin_auth_headers)
-    users = user_response.json()["data"]
-    
-    # Buscar usuario con rol 'student'
-    student_id = None
-    for user in users:
-        if user["role"] == "student":
-            student_id = user["id"]
-            break
-    
-    assert student_id is not None, "No se encontró un usuario con rol 'student'"
+    # Crear un nuevo estudiante para la prueba
+    student_data = {
+        "email": "estudiante_biologia@example.com",
+        "password": "password123",
+        "full_name": "Estudiante Biologia",
+        "role": "student"
+    }
+    create_student_response = client.post(
+        "/api/v1/users/register",
+        json=student_data,
+        headers=admin_auth_headers
+    )
+    assert create_student_response.status_code == status.HTTP_201_CREATED
+    student_id = create_student_response.json()["data"]["id"]
     
     # Añadir el estudiante a la asignatura
     student_add_response = client.post(
@@ -96,12 +101,20 @@ def test_verificar_permisos_para_agregar_usuarios(client, db_session_test, admin
     )
     subject_id = create_response.json()["data"]["id"]
     
-    # Obtener usuarios para las pruebas
-    users_response = client.get("/api/v1/users", headers=admin_auth_headers)
-    users = users_response.json()["data"]
-    
-    # Encontrar un usuario de cada rol
-    user_id = users[0]["id"] if users else 1  # Usar el primer usuario o ID 1 si no hay usuarios
+    # Crear un nuevo profesor para la prueba
+    teacher_data = {
+        "email": "profesor_test@example.com",
+        "password": "password123",
+        "full_name": "Profesor Test",
+        "role": "teacher"
+    }
+    create_teacher_response = client.post(
+        "/api/v1/users/register",
+        json=teacher_data,
+        headers=admin_auth_headers
+    )
+    assert create_teacher_response.status_code == status.HTTP_201_CREATED
+    user_id = create_teacher_response.json()["data"]["id"]
     
     # Profesor intenta agregar un usuario - debería fallar
     teacher_response = client.post(
