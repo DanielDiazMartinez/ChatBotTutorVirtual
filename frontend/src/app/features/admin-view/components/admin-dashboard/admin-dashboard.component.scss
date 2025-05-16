@@ -92,4 +92,25 @@
 .stats-badge.profesores {
   background: transparent;
   color: #666;
+}
+
+.stats-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #e3f0fd;
+  color: #1976d2;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
+}
+
+.stats-link:hover {
+  background: #1976d2;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.12);
 } 

@@ -16,6 +16,7 @@
           <span class="stats-badge estudiantes">{{ totalEstudiantes }} Estudiantes</span>
           <span class="stats-badge profesores">{{ totalProfesores }} Profesores</span>
         </div>
+        <a [routerLink]="['/admin/users']" class="stats-link stats-link-btn">Gestionar usuarios</a>
       </div>
     </div>
     <div class="stats-card">
@@ -27,7 +28,11 @@
       <div class="stats-content">
         <h3>Asignaturas Activas</h3>
         <p class="stats-value">{{ totalAsignaturas }}</p>
-        <!-- Para hacerlo dinámico, reemplaza totalAsignaturas por la variable dinámica -->
+        <div class="stats-breakdown">
+          <span class="stats-badge">12 Con documentos</span>
+          <span class="stats-badge">6 Sin documentos</span>
+        </div>
+        <a [routerLink]="['/admin/subjects']" class="stats-link">Gestionar asignaturas</a>
       </div>
     </div>
     <div class="stats-card">
@@ -39,7 +44,11 @@
       <div class="stats-content">
         <h3>Documentos</h3>
         <p class="stats-value">{{ totalDocumentos }}</p>
-        <!-- Para hacerlo dinámico, reemplaza totalDocumentos por la variable dinámica -->
+        <div class="stats-breakdown">
+          <span class="stats-badge">95% Procesados</span>
+          <span class="stats-badge">5% En cola</span>
+        </div>
+        <a [routerLink]="['/admin/documents']" class="stats-link">Gestionar documentos</a>
       </div>
     </div>
   </div>
