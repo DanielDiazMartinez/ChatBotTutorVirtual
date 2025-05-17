@@ -5,6 +5,7 @@ import { SubjectCardComponent } from './components/subject-card/subject-card.com
 import { SubjectService } from '../../services/subject.service';
 import { Subject } from './interfaces/subject.interface';
 import { HeaderComponent } from '../../shared/components/header/header.component';
+import { AuthService, UserMe } from '../../services/auth.service';
 
 @Component({
   selector: 'app-subject-selection',
@@ -14,34 +15,72 @@ import { HeaderComponent } from '../../shared/components/header/header.component
   imports: [CommonModule, SubjectCardComponent, HeaderComponent]
 })
 export class SubjectSelectionComponent implements OnInit {
-  subjects: Subject[] = [
-    { id: '1', name: 'Matemáticas', icon: '📐', description: 'Álgebra, geometría y cálculo' },
-    { id: '2', name: 'Física', icon: '⚡', description: 'Mecánica, electricidad y termodinámica' },
-    { id: '3', name: 'Química', icon: '🧪', description: 'Química orgánica e inorgánica' },
-    { id: '4', name: 'Biología', icon: '🧬', description: 'Genética, ecología y evolución' },
-    { id: '5', name: 'Historia', icon: '📚', description: 'Historia mundial y local' },
-    { id: '6', name: 'Literatura', icon: '📖', description: 'Análisis literario y escritura' }
-  ];
-
+  subjects: Subject[] = [];
   selectedSubject: Subject | null = null;
+  isLoading = true;
+  error: string | null = null;
 
   constructor(
     private router: Router,
-    private subjectService: SubjectService
+    private subjectService: SubjectService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    // Clear any previous selection when entering this view
     this.subjectService.setSelectedSubjects([]);
+    this.loadSubjectsForCurrentUser();
+  }
+
+  loadSubjectsForCurrentUser(): void {
+    this.isLoading = true;
+    this.error = null;
+    this.authService.getCurrentUserFromBackend().subscribe({
+      next: (user: any) => {
+        const userId = user.data.id;
+        this.subjectService.getSubjectsByUserId(userId).subscribe({
+          next: (subjectsResponse) => {
+            // Asignar iconos predeterminados
+            const iconMap: { [key: string]: string } = {
+              'matemáticas': '📐',
+              'matematicas': '📐',
+              'física': '⚡',
+              'fisica': '⚡',
+              'química': '🧪',
+              'quimica': '🧪',
+              'biología': '🧬',
+              'biologia': '🧬',
+              'historia': '📚',
+              'literatura': '📖',
+              'geología': '🪨',
+              'geologia': '🪨',
+            };
+            this.subjects = (subjectsResponse.data || []).map((subject: any) => {
+              const key = subject.name?.toLowerCase() || '';
+              return {
+                ...subject,
+                icon: iconMap[key] || '🎓'
+              };
+            });
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.error = 'Error al cargar las asignaturas del usuario.';
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.error = 'No se pudo obtener la información del usuario autenticado.';
+        this.isLoading = false;
+      }
+    });
   }
 
   onSubjectSelect(subject: Subject): void {
     if (this.selectedSubject?.id === subject.id) {
-      // Deselect if clicking the same subject
       this.selectedSubject = null;
       this.subjectService.setSelectedSubjects([]);
     } else {
-      // Select new subject and navigate to chat
       this.selectedSubject = subject;
       this.subjectService.setSelectedSubjects([subject.id]);
       this.router.navigate(['/chat']);

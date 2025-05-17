@@ -1,8 +1,17 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { UserProfile } from '../shared/components/header/header.component';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
+
+export interface UserMe {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +22,7 @@ export class AuthService {
   
   constructor(
     private router: Router,
+    private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Intentar recuperar usuario del almacenamiento local solo en el navegador
@@ -144,5 +154,9 @@ export class AuthService {
   isAdmin(): boolean {
     // Verificar si el usuario tiene rol de administrador
     return this.currentUserSubject.value?.role === 'admin';
+  }
+
+  getCurrentUserFromBackend(): Observable<UserMe> {
+    return this.http.get<UserMe>(`${environment.apiUrl}/users/me`);
   }
 }

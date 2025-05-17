@@ -18,6 +18,8 @@ import { Subject } from '../subject-selection/interfaces/subject.interface';
 export class StudentViewComponent implements OnInit { 
   isDocumentsModalVisible = false;
   currentSubject: Subject | null = null;
+  isLoading = true;
+  error: string | null = null;
   
   // Datos del usuario estudiante
   studentProfile: UserProfile = {
@@ -27,28 +29,50 @@ export class StudentViewComponent implements OnInit {
   };
 
   // Lista de asignaturas disponibles
-  availableSubjects: Subject[] = [
-    { id: '1', name: 'Matemáticas', icon: '📐', description: 'Álgebra, geometría y cálculo' },
-    { id: '2', name: 'Física', icon: '⚡', description: 'Mecánica, electricidad y termodinámica' },
-    { id: '3', name: 'Química', icon: '🧪', description: 'Química orgánica e inorgánica' },
-    { id: '4', name: 'Biología', icon: '🧬', description: 'Genética, ecología y evolución' },
-    { id: '5', name: 'Historia', icon: '📚', description: 'Historia mundial y local' },
-    { id: '6', name: 'Literatura', icon: '📖', description: 'Análisis literario y escritura' }
-  ];
+  availableSubjects: Subject[] = [];
   
-  constructor(private subjectService: SubjectService, private router: Router) {}
+  constructor(
+    private subjectService: SubjectService, 
+    private router: Router
+  ) {}
   
   ngOnInit(): void {
-    // Obtener la asignatura seleccionada
-    const selectedSubjectIds = this.subjectService.getSelectedSubjects();
-    if (selectedSubjectIds.length === 0) {
-      // Si no hay asignatura seleccionada, redirigir a la página de selección
-      this.router.navigate(['/subject-selection']);
-      return;
-    }
-    
-    // Buscar la asignatura seleccionada
-    this.currentSubject = this.availableSubjects.find(subject => subject.id === selectedSubjectIds[0]) || null;
+    this.loadSubjects();
+  }
+
+  private loadSubjects(): void {
+    this.isLoading = true;
+    this.error = null;
+
+    this.subjectService.getAllSubjects().subscribe({
+      next: (subjects) => {
+        this.availableSubjects = subjects;
+        this.isLoading = false;
+
+        // Obtener la asignatura seleccionada
+        const selectedSubjectIds = this.subjectService.getSelectedSubjects();
+        
+        if (selectedSubjectIds.length === 0) {
+          // Si no hay asignatura seleccionada, redirigir a la página de selección
+          this.router.navigate(['/subject-selection']);
+          return;
+        }
+        
+        // Buscar la asignatura seleccionada
+        const selectedId = selectedSubjectIds[0];
+        this.currentSubject = this.availableSubjects.find(subject => subject.id === selectedId) || null;
+        
+        if (!this.currentSubject) {
+          // Si no se encuentra la asignatura, redirigir a la selección
+          this.router.navigate(['/subject-selection']);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar las asignaturas:', error);
+        this.error = 'Error al cargar las asignaturas. Por favor, intenta de nuevo.';
+        this.isLoading = false;
+      }
+    });
   }
   
   toggleDocumentsModal(): void {

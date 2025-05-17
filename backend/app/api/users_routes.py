@@ -10,7 +10,8 @@ from app.services.user_service import (
     get_user_by_id,
     get_users_by_role,
     update_user,
-    delete_user
+    delete_user,
+    get_current_user
 )
 from app.models.schemas import APIResponse, SubjectOut, UserCreate, UserUpdate, UserOut
 
@@ -71,6 +72,20 @@ def list_user_all(
         "status": 200
     }
 
+@users_routes.get("/me", response_model=APIResponse)
+def get_me(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin", "teacher", "student"]))
+):
+    """Obtener información del usuario actual basado en el token de autenticación"""
+    user_id = current_user.id
+    user = get_current_user(user_id, db)
+    return {
+        "data": user,
+        "message": "Información del usuario actual obtenida correctamente",
+        "status": 200
+    }
+
 @users_routes.get("/{user_id}", response_model=APIResponse)
 def get_user(
     user_id: int,
@@ -116,7 +131,6 @@ def delete_user_route(
         "message": "Usuario eliminado correctamente",
         "status": 200
     }
-
 
 @users_routes.get("/{user_id}/subjects", response_model=APIResponse)
 def list_subjects_by_user_id(

@@ -5,12 +5,29 @@
     [currentUser]="studentProfile"
     (toggleDocuments)="toggleDocumentsModal()">
   </app-header>
-  <app-sidebar></app-sidebar>
+
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <span>Cargando asignaturas...</span>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ error }}</span>
+  </div>
+
+  <app-sidebar *ngIf="!isLoading && !error"></app-sidebar>
   <app-chat-area 
+    *ngIf="!isLoading && !error"
     [isDocumentsModalVisible]="isDocumentsModalVisible"
     [currentSubject]="currentSubject"
   ></app-chat-area>
   <app-documents-modal 
+    *ngIf="!isLoading && !error"
     [isVisible]="isDocumentsModalVisible"
     [currentSubjectId]="currentSubject?.id"
   ></app-documents-modal>

@@ -8,7 +8,25 @@
         Elige la materia en la que necesitas ayuda para comenzar tu sesión de estudio
       </p>
 
-      <div class="subjects-grid">
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <span>Cargando asignaturas...</span>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+
+      <div *ngIf="!isLoading && !error && subjects.length === 0" class="no-subjects-message">
+        <p>No tienes asignaturas asignadas. Contacta con tu administrador.</p>
+      </div>
+
+      <div class="subjects-grid" *ngIf="!isLoading && !error && subjects.length > 0">
         <app-subject-card
           *ngFor="let subject of subjects"
           [subject]="subject"

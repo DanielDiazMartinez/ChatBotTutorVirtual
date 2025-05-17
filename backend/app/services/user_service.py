@@ -3,7 +3,7 @@ from app.models.models import User
 from app.models.schemas import UserCreate, UserUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
-from typing import List
+from typing import List, Dict, Any
 
 def create_user(user: UserCreate, db: Session):
     """
@@ -136,10 +136,38 @@ def get_user_by_email(email: str, db: Session):
 
 def get_subjects_by_user_id(user_id: int, db: Session):
     """
-    Obtiene los proyectos asociados a un usuario por su ID.
+    Obtiene las asignaturas asociadas a un usuario por su ID.
     """
-    user = get_user_by_id(user_id, None, db)
+    # Obtenemos el objeto User directamente de la base de datos
+    user_db = db.query(User).filter(User.id == user_id).first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    subjects = user_db.student_subjects
+    if not subjects:
+        raise HTTPException(status_code=404, detail="No hay materias asociadas al usuario.")
+    return [
+        {
+            "id": subject.id,
+            "name": subject.name,
+            "code": subject.code,
+            "description": subject.description,
+            "created_at": subject.created_at
+        }
+        
+        for subject in subjects
+    ]
+
+def get_current_user(current_user_id: int, db: Session) -> Dict[str, Any]:
+    """
+    Obtiene la información del usuario actualmente autenticado.
+    """
+    user = db.query(User).filter(User.id == current_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    
-    return user.teaching_subjects
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role,
+        "created_at": user.created_at
+    }

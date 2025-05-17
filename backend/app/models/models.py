@@ -123,7 +123,7 @@ class User(Base):
                                        cascade="all, delete-orphan",
                                        primaryjoin="and_(User.id==Conversation.student_id, User.role=='student')")
     
-    enrolled_subjects = relationship("Subject", 
+    student_subjects = relationship("Subject", 
                                    secondary='student_subject',
                                    back_populates="students",
                                    primaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
@@ -254,7 +254,7 @@ class Subject(Base):
     students = relationship(
         "User", 
         secondary=student_subject, 
-        back_populates="enrolled_subjects",
+        back_populates="student_subjects",
         primaryjoin="Subject.id==student_subject.c.subject_id",
         secondaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
         foreign_keys=[student_subject.c.subject_id, student_subject.c.student_id]
