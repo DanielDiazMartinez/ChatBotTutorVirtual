@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 
 from ..core.database import get_db
 from ..core.auth import require_role
-from ..models.schemas import APIResponse, SubjectCreate, SubjectOut
+from ..models.schemas import APIResponse, SubjectCreate, SubjectOut, UserIdsRequest
 from ..models.models import User
 from ..services.subject_service import (
     add_user_to_subject,
+    add_multiple_users_to_subject,
+    remove_multiple_users_from_subject,
     create_subject,
     get_subject_by_id,
     get_all_subjects,
@@ -115,5 +117,61 @@ def add_user_to_subject_route(
     return {
         "data": None,
         "message": "Usuario agregado a la asignatura correctamente",
+        "status": 200
+    }
+
+@subjects_routes.post("/{subject_id}/users", response_model=APIResponse)
+def add_multiple_users_to_subject_route(
+    subject_id: int,
+    users_request: UserIdsRequest,
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["admin"]))
+):
+    """Agrega múltiples usuarios (profesores o estudiantes) a una asignatura (solo administradores)"""
+    
+    result = add_multiple_users_to_subject(
+        db=db, 
+        subject_id=subject_id, 
+        user_ids=users_request.user_ids
+    )
+    
+    if not result["success"]:
+        status_code = 404 if result.get("error") == "Asignatura no encontrada" else 400
+        raise HTTPException(status_code=status_code, detail=result.get("error", "Error al agregar usuarios"))
+    
+    return {
+        "data": {
+            "added": result["added"],
+            "failed": result["failed"]
+        },
+        "message": f"Se añadieron {len(result['added'])} usuarios a la asignatura. {len(result['failed'])} fallaron.",
+        "status": 200
+    }
+
+@subjects_routes.delete("/{subject_id}/users", response_model=APIResponse)
+def remove_multiple_users_from_subject_route(
+    subject_id: int,
+    users_request: UserIdsRequest,
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["admin"]))
+):
+    """Elimina múltiples usuarios (profesores o estudiantes) de una asignatura (solo administradores)"""
+    
+    result = remove_multiple_users_from_subject(
+        db=db, 
+        subject_id=subject_id, 
+        user_ids=users_request.user_ids
+    )
+    
+    if not result["success"]:
+        status_code = 404 if result.get("error") == "Asignatura no encontrada" else 400
+        raise HTTPException(status_code=status_code, detail=result.get("error", "Error al eliminar usuarios"))
+    
+    return {
+        "data": {
+            "removed": result["removed"],
+            "failed": result["failed"]
+        },
+        "message": f"Se eliminaron {len(result['removed'])} usuarios de la asignatura. {len(result['failed'])} fallaron.",
         "status": 200
     }

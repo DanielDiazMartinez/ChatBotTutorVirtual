@@ -59,6 +59,10 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         for student in db_subject.students
     ] if db_subject.students else []
     
+    # Añadir conteo de estudiantes y profesores
+    teacher_count = len(teachers)
+    student_count = len(students)
+    
     return {
         "id": db_subject.id,
         "name": db_subject.name,
@@ -66,7 +70,9 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         "description": db_subject.description,
         "created_at": db_subject.created_at,
         "teachers": teachers,
-        "students": students
+        "students": students,
+        "teacher_count": teacher_count,
+        "student_count": student_count
     }
 
 def get_all_subjects(db: Session) -> list[dict]:
@@ -96,7 +102,9 @@ def get_all_subjects(db: Session) -> list[dict]:
                     "role": student.role
                 }
                 for student in subject.students
-            ]
+            ],
+            "teacher_count": len(subject.teachers) if subject.teachers else 0,
+            "student_count": len(subject.students) if subject.students else 0
         }
         for subject in subjects
     ]
@@ -136,6 +144,10 @@ def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict
         for student in db_subject.students
     ] if db_subject.students else []
     
+    # Añadir conteo de estudiantes y profesores
+    teacher_count = len(teachers)
+    student_count = len(students)
+    
     return {
         "id": db_subject.id,
         "name": db_subject.name,
@@ -143,7 +155,9 @@ def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict
         "description": db_subject.description,
         "created_at": db_subject.created_at,
         "teachers": teachers,
-        "students": students
+        "students": students,
+        "teacher_count": teacher_count,
+        "student_count": student_count
     }
 
 def delete_subject(db: Session, subject_id: int) -> bool:
@@ -200,3 +214,135 @@ def add_user_to_subject(db: Session, subject_id: int, user_id: int) -> bool:
         print(f"Error al agregar usuario: {str(e)}")
         db.rollback()
         return False
+
+def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[int]) -> dict:
+    """
+    Agrega múltiples usuarios a una asignatura
+    
+    Args:
+        db: Sesión de base de datos
+        subject_id: ID de la asignatura
+        user_ids: Lista de IDs de usuarios a agregar
+        
+    Returns:
+        Un diccionario con los resultados de la operación
+    """
+    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    if not db_subject:
+        return {"success": False, "error": "Asignatura no encontrada", "added": [], "failed": user_ids}
+    
+    results = {
+        "success": False,
+        "added": [],
+        "failed": []
+    }
+    
+    for user_id in user_ids:
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            
+            if not db_user:
+                results["failed"].append({"id": user_id, "reason": "Usuario no encontrado"})
+                continue
+                
+            if db_user.role == "admin":
+                results["failed"].append({"id": user_id, "reason": "Los administradores no pueden ser añadidos a asignaturas"})
+                continue
+                
+            if db_user.role == "teacher":
+                if db_user not in db_subject.teachers:
+                    db_subject.teachers.append(db_user)
+                    results["added"].append({"id": user_id, "role": "teacher"})
+                else:
+                    results["failed"].append({"id": user_id, "reason": "El profesor ya está asignado a esta asignatura"})
+                    
+            elif db_user.role == "student":
+                if db_user not in db_subject.students:
+                    db_subject.students.append(db_user)
+                    results["added"].append({"id": user_id, "role": "student"})
+                else:
+                    results["failed"].append({"id": user_id, "reason": "El estudiante ya está asignado a esta asignatura"})
+                    
+            else:
+                results["failed"].append({"id": user_id, "reason": f"Rol no válido: {db_user.role}"})
+                
+        except Exception as e:
+            results["failed"].append({"id": user_id, "reason": str(e)})
+    
+    if results["added"]:
+        try:
+            db.commit()
+            results["success"] = True
+        except Exception as e:
+            db.rollback()
+            results["success"] = False
+            results["error"] = str(e)
+            results["failed"].extend(results["added"])
+            results["added"] = []
+    else:
+        results["error"] = "No se pudo agregar ningún usuario"
+            
+    return results
+
+def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: list[int]) -> dict:
+    """
+    Elimina múltiples usuarios de una asignatura
+    
+    Args:
+        db: Sesión de base de datos
+        subject_id: ID de la asignatura
+        user_ids: Lista de IDs de usuarios a eliminar
+        
+    Returns:
+        Un diccionario con los resultados de la operación
+    """
+    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    if not db_subject:
+        return {"success": False, "error": "Asignatura no encontrada", "removed": [], "failed": user_ids}
+    
+    results = {
+        "success": False,
+        "removed": [],
+        "failed": []
+    }
+    
+    for user_id in user_ids:
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            
+            if not db_user:
+                results["failed"].append({"id": user_id, "reason": "Usuario no encontrado"})
+                continue
+                
+            removed = False
+            
+            if db_user.role == "teacher" and db_user in db_subject.teachers:
+                db_subject.teachers.remove(db_user)
+                removed = True
+                results["removed"].append({"id": user_id, "role": "teacher"})
+                    
+            elif db_user.role == "student" and db_user in db_subject.students:
+                db_subject.students.remove(db_user)
+                removed = True
+                results["removed"].append({"id": user_id, "role": "student"})
+            
+            if not removed:
+                results["failed"].append({"id": user_id, "reason": "Usuario no asociado a la asignatura o rol incorrecto"})
+                
+        except Exception as e:
+            results["failed"].append({"id": user_id, "reason": str(e)})
+    
+    if results["removed"]:
+        try:
+            db.commit()
+            results["success"] = True
+        except Exception as e:
+            db.rollback()
+            results["success"] = False
+            results["error"] = str(e)
+            results["failed"].extend(results["removed"])
+            results["removed"] = []
+    else:
+        results["error"] = "No se pudo eliminar ningún usuario"
+            
+    return results

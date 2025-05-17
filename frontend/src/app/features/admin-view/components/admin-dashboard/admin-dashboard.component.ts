@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../../../core/services/user.service';
+import { SubjectService } from '../../../../core/services/subject.service';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -13,12 +14,13 @@ export class AdminDashboardComponent implements OnInit {
   totalUsuarios = 0;
   totalProfesores = 0;
   totalEstudiantes = 0;
+  totalAsignaturas = 0;
+  totalDocumentos = 0;
 
-  // Valores fijos por ahora, listos para ser dinámicos
-  totalAsignaturas = 18; // TODO: hacer dinámico en el futuro
-  totalDocumentos = 234; // TODO: hacer dinámico en el futuro
-
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private subjectService: SubjectService
+  ) {}
 
   ngOnInit(): void {
     this.userService.getAllUsers().subscribe({
@@ -33,6 +35,17 @@ export class AdminDashboardComponent implements OnInit {
         this.totalUsuarios = 0;
         this.totalProfesores = 0;
         this.totalEstudiantes = 0;
+      }
+    });
+
+    this.subjectService.getSubjects().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.totalAsignaturas = response.data.length;
+        }
+      },
+      error: () => {
+        this.totalAsignaturas = 0;
       }
     });
   }

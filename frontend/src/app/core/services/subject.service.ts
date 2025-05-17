@@ -1,23 +1,19 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from './api.service';
+import { ApiResponse } from '../models/api-response.model';
+import { User } from '../models/user.model';
+import { map } from 'rxjs/operators';
 
 export interface Subject {
   id: string;
   name: string;
+  code: string;
   description: string;
   teacherCount: number;
   studentCount: number;
-  active: boolean;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'student' | 'teacher' | 'admin';
-  avatar?: string;
+  teachers?: any[];
+  students?: any[];
 }
 
 export interface SubjectUsersResponse {
@@ -29,138 +25,61 @@ export interface SubjectUsersResponse {
   providedIn: 'root'
 })
 export class SubjectService {
-  private apiUrl = environment.apiUrl;
-
-  // Datos mock para pruebas
-  private mockSubjects: Subject[] = [
-    { id: '1', name: 'Matemáticas', description: 'Álgebra, Cálculo y Geometría', teacherCount: 2, studentCount: 35, active: true },
-    { id: '2', name: 'Física', description: 'Mecánica, Electricidad y Termodinámica', teacherCount: 1, studentCount: 28, active: true },
-    { id: '3', name: 'Biología', description: 'Genética, Ecología y Evolución', teacherCount: 2, studentCount: 32, active: true },
-    { id: '4', name: 'Literatura', description: 'Narrativa, Poesía y Teatro', teacherCount: 1, studentCount: 25, active: true },
-    { id: '5', name: 'Historia', description: 'Historia antigua, medieval y moderna', teacherCount: 1, studentCount: 30, active: false }
-  ];
-  
-  private mockUsers: {[key: string]: SubjectUsersResponse} = {
-    '1': {
-      assignedUsers: [
-        { id: '1', name: 'Ana García', email: 'ana@example.com', role: 'student' },
-        { id: '2', name: 'Carlos López', email: 'carlos@example.com', role: 'student' },
-        { id: '3', name: 'Profesor Martínez', email: 'martinez@example.com', role: 'teacher' }
-      ],
-      availableUsers: [
-        { id: '4', name: 'Laura Pérez', email: 'laura@example.com', role: 'student' },
-        { id: '5', name: 'David Sánchez', email: 'david@example.com', role: 'student' },
-        { id: '6', name: 'Profesora Rodríguez', email: 'rodriguez@example.com', role: 'teacher' },
-        { id: '7', name: 'Profesor Gómez', email: 'gomez@example.com', role: 'teacher' }
-      ]
-    }
-  };
-
-  constructor(private http: HttpClient) { }
+  private api = inject(ApiService);
 
   // Métodos para manejo de asignaturas
-
-  getSubjects(): Observable<Subject[]> {
-    // En un entorno real: return this.http.get<Subject[]>(`${this.apiUrl}/subjects`);
-    return of(this.mockSubjects);
+  getSubjects(): Observable<ApiResponse<Subject[]>> {
+    return this.api.get<any>('subjects').pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map((subject: any) => ({
+          ...subject,
+          teacherCount: subject.teacher_count,
+          studentCount: subject.student_count
+        }))
+      }))
+    );
   }
 
-  createSubject(subject: Partial<Subject>): Observable<Subject> {
-    // En un entorno real: return this.http.post<Subject>(`${this.apiUrl}/subjects`, subject);
-    const newSubject: Subject = {
-      id: (this.mockSubjects.length + 1).toString(),
-      name: subject.name || '',
-      description: subject.description || '',
-      teacherCount: 0,
-      studentCount: 0,
-      active: true
-    };
-    
-    this.mockSubjects.push(newSubject);
-    return of(newSubject);
+  getSubject(id: string): Observable<ApiResponse<Subject>> {
+    return this.api.get<any>(`subjects/${id}`).pipe(
+      map(response => ({
+        ...response,
+        data: response.data ? {
+          ...response.data,
+          teacherCount: response.data.teacher_count,
+          studentCount: response.data.student_count
+        } : response.data
+      }))
+    );
   }
 
-  updateSubject(id: string, changes: Partial<Subject>): Observable<Subject> {
-    // En un entorno real: return this.http.put<Subject>(`${this.apiUrl}/subjects/${id}`, changes);
-    const index = this.mockSubjects.findIndex(s => s.id === id);
-    if (index !== -1) {
-      this.mockSubjects[index] = { ...this.mockSubjects[index], ...changes };
-      return of(this.mockSubjects[index]);
-    }
-    throw new Error('Asignatura no encontrada');
+  createSubject(subject: Partial<Subject>): Observable<ApiResponse<Subject>> {
+    return this.api.post<Subject>('subjects', subject);
   }
 
-  deleteSubject(id: string): Observable<void> {
-    // En un entorno real: return this.http.delete<void>(`${this.apiUrl}/subjects/${id}`);
-    this.mockSubjects = this.mockSubjects.filter(s => s.id !== id);
-    return of(void 0);
+  updateSubject(id: string, changes: Partial<Subject>): Observable<ApiResponse<Subject>> {
+    return this.api.put<Subject>(`subjects/${id}`, changes);
   }
 
-  toggleSubjectStatus(id: string): Observable<Subject> {
-    const index = this.mockSubjects.findIndex(s => s.id === id);
-    if (index !== -1) {
-      this.mockSubjects[index].active = !this.mockSubjects[index].active;
-      return of(this.mockSubjects[index]);
-    }
-    throw new Error('Asignatura no encontrada');
+  deleteSubject(id: string): Observable<ApiResponse<void>> {
+    return this.api.delete<void>(`subjects/${id}`);
   }
 
   // Métodos para manejo de usuarios en asignaturas
-
-  getSubjectUsers(subjectId: string): Observable<SubjectUsersResponse> {
-    // En un entorno real: return this.http.get<SubjectUsersResponse>(`${this.apiUrl}/subjects/${subjectId}/users`);
-    if (this.mockUsers[subjectId]) {
-      return of(this.mockUsers[subjectId]);
-    }
-    
-    // Si no existe, crear una entrada vacía para esta asignatura
-    this.mockUsers[subjectId] = {
-      assignedUsers: [],
-      availableUsers: [
-        { id: '4', name: 'Laura Pérez', email: 'laura@example.com', role: 'student' },
-        { id: '5', name: 'David Sánchez', email: 'david@example.com', role: 'student' },
-        { id: '6', name: 'Profesora Rodríguez', email: 'rodriguez@example.com', role: 'teacher' },
-        { id: '7', name: 'Profesor Gómez', email: 'gomez@example.com', role: 'teacher' }
-      ]
-    };
-    
-    return of(this.mockUsers[subjectId]);
+  getSubjectUsers(subjectId: string): Observable<ApiResponse<SubjectUsersResponse>> {
+    return this.api.get<SubjectUsersResponse>(`subjects/${subjectId}/users`);
   }
 
-  updateSubjectUsers(subjectId: string, assignedUsers: User[]): Observable<User[]> {
-    // En un entorno real: return this.http.put<User[]>(`${this.apiUrl}/subjects/${subjectId}/users`, assignedUsers);
-    
-    // Actualizar la lista de usuarios asignados en los datos mock
-    if (this.mockUsers[subjectId]) {
-      this.mockUsers[subjectId].assignedUsers = [...assignedUsers];
-      
-      // Actualizar los contadores de la asignatura
-      const index = this.mockSubjects.findIndex(s => s.id === subjectId);
-      if (index !== -1) {
-        this.mockSubjects[index].teacherCount = assignedUsers.filter(u => u.role === 'teacher').length;
-        this.mockSubjects[index].studentCount = assignedUsers.filter(u => u.role === 'student').length;
-      }
-      
-      return of(assignedUsers);
-    }
-    
-    throw new Error('Asignatura no encontrada');
+  updateSubjectUsers(subjectId: string, assignedUsers: User[]): Observable<ApiResponse<User[]>> {
+    return this.api.put<User[]>(`subjects/${subjectId}/users`, assignedUsers);
   }
 
-  createUser(user: Partial<User>): Observable<User> {
-    // En un entorno real: return this.http.post<User>(`${this.apiUrl}/users`, user);
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: user.name || '',
-      email: user.email || '',
-      role: user.role || 'student'
-    };
-    
-    // Agregar el nuevo usuario a la lista de disponibles para todas las asignaturas
-    Object.keys(this.mockUsers).forEach(subjectId => {
-      this.mockUsers[subjectId].availableUsers.push({ ...newUser });
-    });
-    
-    return of(newUser);
+  createUser(user: Partial<User>): Observable<ApiResponse<User>> {
+    return this.api.post<User>('users', user);
+  }
+
+  addUsersToSubject(subjectId: number, userIds: number[]): Observable<ApiResponse<any>> {
+    return this.api.post<any>(`subjects/${subjectId}/users`, { user_ids: userIds });
   }
 }

@@ -28,10 +28,6 @@
       <div class="stats-content">
         <h3>Asignaturas Activas</h3>
         <p class="stats-value">{{ totalAsignaturas }}</p>
-        <div class="stats-breakdown">
-          <span class="stats-badge">12 Con documentos</span>
-          <span class="stats-badge">6 Sin documentos</span>
-        </div>
         <a [routerLink]="['/admin/subjects']" class="stats-link">Gestionar asignaturas</a>
       </div>
     </div>
@@ -44,10 +40,6 @@
       <div class="stats-content">
         <h3>Documentos</h3>
         <p class="stats-value">{{ totalDocumentos }}</p>
-        <div class="stats-breakdown">
-          <span class="stats-badge">95% Procesados</span>
-          <span class="stats-badge">5% En cola</span>
-        </div>
         <a [routerLink]="['/admin/documents']" class="stats-link">Gestionar documentos</a>
       </div>
     </div>

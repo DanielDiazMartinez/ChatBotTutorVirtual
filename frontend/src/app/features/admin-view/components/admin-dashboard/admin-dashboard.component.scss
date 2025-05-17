@@ -27,6 +27,7 @@
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  height: 100%;
 }
 
 .stats-icon {
@@ -54,63 +55,74 @@
   color: #f39c12;
 }
 
-.stats-content h3 {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #666;
-  margin: 0 0 0.5rem 0;
-}
-
-.stats-value {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-}
-
-.stats-breakdown {
+.stats-content {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
 
-.stats-badge,
-.stats-badge.estudiantes,
-.stats-badge.profesores {
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #666 !important;
-  box-shadow: none !important;
-  border: none !important;
-}
+  h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+    margin: 0 0 0.5rem 0;
+  }
 
-.stats-badge.estudiantes {
-  background: transparent;
-  color: #666;
-}
+  .stats-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+  }
 
-.stats-badge.profesores {
-  background: transparent;
-  color: #666;
-}
+  .stats-breakdown {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
 
-.stats-link {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1.25rem;
-  background: #e3f0fd;
-  color: #1976d2;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
-}
+  .stats-badge,
+  .stats-badge.estudiantes,
+  .stats-badge.profesores {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #666 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
 
-.stats-link:hover {
-  background: #1976d2;
-  color: #fff;
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.12);
+  .stats-badge.estudiantes {
+    background: transparent;
+    color: #666;
+  }
+
+  .stats-badge.profesores {
+    background: transparent;
+    color: #666;
+  }
+
+  .stats-link {
+    display: inline-block;
+    margin-top: auto;
+    padding: 0.5rem 1.25rem;
+    background: #8FBC94 !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    text-decoration: none !important;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s !important;
+    border: 1px solid #8FBC94 !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    width: fit-content !important;
+
+    &:hover {
+      background: #548687 !important;
+      border: 1px solid #548687 !important;
+      color: #fff !important;
+      text-decoration: none !important;
+      box-shadow: none !important;
+    }
+  }
 } 

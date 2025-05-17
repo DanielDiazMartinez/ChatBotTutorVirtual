@@ -34,6 +34,10 @@
       <input type="text" id="subjectName" [(ngModel)]="newSubject.name" placeholder="Nombre de la asignatura">
     </div>
     <div class="form-group">
+      <label for="subjectCode">Código de la asignatura</label>
+      <input type="text" id="subjectCode" [(ngModel)]="newSubject.code" placeholder="Código de la asignatura">
+    </div>
+    <div class="form-group">
       <label for="subjectDescription">Descripción</label>
       <textarea id="subjectDescription" [(ngModel)]="newSubject.description" placeholder="Descripción de la asignatura" rows="3"></textarea>
     </div>
@@ -49,11 +53,6 @@
       <div class="subject-header">
         <h2 class="subject-name">{{ subject.name }}</h2>
         <div class="subject-actions">
-          <button class="action-btn" (click)="toggleSubjectStatus(subject)">
-            <span class="status-badge" [ngClass]="subject.active ? 'active' : 'inactive'">
-              {{ subject.active ? 'Activo' : 'Inactivo' }}
-            </span>
-          </button>
           <button class="action-btn edit-btn" [routerLink]="['/admin/subjects', subject.id]">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 20h9"></path>

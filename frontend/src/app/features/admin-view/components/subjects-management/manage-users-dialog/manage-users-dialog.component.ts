@@ -1,116 +1,144 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { SubjectService, User } from '../../../../../core/services/subject.service';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { SubjectService, Subject } from '../../../../../core/services/subject.service';
+import { UserService } from '../../../../../core/services/user.service';
+import { User as AppUser } from '../../../../../core/models/user.model';
 
 @Component({
   selector: 'app-manage-users-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './manage-users-dialog.component.html',
   styleUrls: ['./manage-users-dialog.component.scss']
 })
 export class ManageUsersDialogComponent implements OnInit {
-  subject: any;
-  assignedUsers: User[] = [];
-  availableUsers: User[] = [];
-  selectedUserId: string = '';
-  searchTerm: string = '';
-  showStudents: boolean = true;
-  showTeachers: boolean = true;
-  
-  userForm: FormGroup;
-
-  private subjectService!: SubjectService;
-  isLoading: boolean = false;
+  subject: Subject;
+  assignedUsers: AppUser[] = [];
+  availableUsers: AppUser[] = [];
+  isLoading = false;
+  searchTerm = '';
+  searchTermAssigned = '';
+  searchTermAvailable = '';
+  selectedUserId: string | null = null;
+  showStudents = true;
+  showTeachers = true;
+  showAssignedStudents = true;
+  showAssignedTeachers = true;
+  showAvailableStudents = true;
+  showAvailableTeachers = true;
+  newUser = {
+    name: '',
+    email: '',
+    role: 'student' as 'student' | 'teacher'
+  };
   
   constructor(
-    private fb: FormBuilder,
     public dialogRef: MatDialogRef<ManageUsersDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: { subject: Subject, subjectService: SubjectService },
+    private userService: UserService
   ) {
-    this.userForm = this.fb.group({
-      name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      role: ['student', [Validators.required]]
-    });
-    
-    if (data && data.subject) {
       this.subject = data.subject;
-    }
-    
-    if (data && data.subjectService) {
-      this.subjectService = data.subjectService;
-    }
   }
 
   ngOnInit(): void {
     this.loadSubjectUsers();
+    this.loadAvailableUsers();
   }
   
   loadSubjectUsers(): void {
-    if (this.subject && this.subjectService) {
       this.isLoading = true;
-      this.subjectService.getSubjectUsers(this.subject.id).subscribe({
+    this.data.subjectService.getSubject(this.subject.id).subscribe({
         next: (response) => {
-          this.assignedUsers = response.assignedUsers;
-          this.availableUsers = response.availableUsers;
+        if (response.data) {
+          const data: any = response.data;
+          const teachers = (data.teachers || []).map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            full_name: u.full_name,
+            role: 'teacher' as 'teacher'
+          }));
+          const students = (data.students || []).map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            full_name: u.full_name,
+            role: 'student' as 'student'
+          }));
+          this.assignedUsers = [...teachers, ...students];
+        }
           this.isLoading = false;
+        this.loadAvailableUsers();
         },
         error: (error) => {
           console.error('Error al cargar usuarios:', error);
           this.isLoading = false;
         }
       });
-    } else {
-      console.error('No se pudo cargar los usuarios: falta la asignatura o el servicio.');
-    }
   }
 
-  getFilteredAvailableUsers(): User[] {
-    return this.availableUsers.filter(user => {
-      const nameMatch = user.name.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
-                       user.email.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const roleMatch = (this.showStudents && user.role === 'student') || 
-                       (this.showTeachers && user.role === 'teacher');
-      return nameMatch && roleMatch;
+  loadAvailableUsers(): void {
+    this.userService.getAllUsers().subscribe({
+      next: (response) => {
+        if (response.data) {
+          const assignedIds = this.assignedUsers.map(u => u.id);
+          this.availableUsers = response.data.filter(u => !assignedIds.includes(u.id));
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar usuarios disponibles:', error);
+      }
     });
   }
 
-  addUser(): void {
-    const selectedUser = this.availableUsers.find(u => u.id === this.selectedUserId);
-    if (selectedUser) {
-      this.assignedUsers.push(selectedUser);
-      this.availableUsers = this.availableUsers.filter(u => u.id !== this.selectedUserId);
-      this.selectedUserId = '';
-    }
+  getFilteredAssignedUsers(): AppUser[] {
+    return this.assignedUsers.filter(user => {
+      const matchesSearch = !this.searchTermAssigned || 
+        user.full_name.toLowerCase().includes(this.searchTermAssigned.toLowerCase()) ||
+        user.email.toLowerCase().includes(this.searchTermAssigned.toLowerCase());
+      const matchesRole = (user.role === 'student' && this.showAssignedStudents) ||
+                         (user.role === 'teacher' && this.showAssignedTeachers);
+      return matchesSearch && matchesRole;
+    });
+  }
+
+  getFilteredAvailableUsers(): AppUser[] {
+    return this.availableUsers.filter(user => {
+      const matchesSearch = !this.searchTermAvailable || 
+        user.full_name.toLowerCase().includes(this.searchTermAvailable.toLowerCase()) ||
+        user.email.toLowerCase().includes(this.searchTermAvailable.toLowerCase());
+      const matchesRole = (user.role === 'student' && this.showAvailableStudents) ||
+                         (user.role === 'teacher' && this.showAvailableTeachers);
+      return matchesSearch && matchesRole;
+    });
   }
   
-  removeUser(userId: string): void {
+  removeUser(userId: number): void {
     const user = this.assignedUsers.find(u => u.id === userId);
     if (user) {
-      this.availableUsers.push(user);
       this.assignedUsers = this.assignedUsers.filter(u => u.id !== userId);
+      this.availableUsers.push(user);
+    }
+  }
+
+  addUser(userId: number): void {
+    const user = this.availableUsers.find(u => u.id === userId);
+    if (user) {
+      this.assignedUsers.push(user);
+      this.availableUsers = this.availableUsers.filter(u => u.id !== userId);
     }
   }
   
   createNewUser(): void {
-    if (this.userForm.valid) {
+    if (!this.newUser.name || !this.newUser.email) return;
+
       this.isLoading = true;
-      
-      const userData: Partial<User> = {
-        name: this.userForm.value.name,
-        email: this.userForm.value.email,
-        role: this.userForm.value.role
-      };
-      
-      this.subjectService.createUser(userData).subscribe({
-        next: (newUser) => {
-          // Añadir el nuevo usuario directamente a los usuarios asignados
-          this.assignedUsers.push(newUser);
-          this.userForm.reset({role: 'student'});
+    this.data.subjectService.createUser(this.newUser).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.assignedUsers.push(response.data);
+          this.newUser = { name: '', email: '', role: 'student' };
+        }
           this.isLoading = false;
         },
         error: (error) => {
@@ -119,32 +147,23 @@ export class ManageUsersDialogComponent implements OnInit {
         }
       });
     }
+
+  cancel(): void {
+    this.dialogRef.close();
   }
   
   saveChanges(): void {
     this.isLoading = true;
-    
-    if (this.subject && this.subjectService) {
-      this.subjectService.updateSubjectUsers(this.subject.id, this.assignedUsers).subscribe({
-        next: (updatedUsers) => {
-          console.log('Usuarios asignados guardados correctamente:', updatedUsers);
-          this.isLoading = false;
-          this.dialogRef.close(updatedUsers);
+    const subjectId = typeof this.subject.id === 'string' ? parseInt(this.subject.id, 10) : this.subject.id;
+    const userIds = this.assignedUsers.map(u => u.id);
+    this.data.subjectService.addUsersToSubject(subjectId, userIds).subscribe({
+      next: () => {
+        this.dialogRef.close(this.assignedUsers);
         },
         error: (error) => {
-          console.error('Error al guardar usuarios asignados:', error);
+        console.error('Error al guardar cambios:', error);
           this.isLoading = false;
-          // Cerrar el diálogo con los datos actuales para actualizar la UI
-          this.dialogRef.close(this.assignedUsers);
         }
       });
-    } else {
-      console.error('No se pudo guardar: falta la asignatura o el servicio.');
-      this.dialogRef.close(this.assignedUsers);
-    }
-  }
-  
-  cancel(): void {
-    this.dialogRef.close();
   }
 }

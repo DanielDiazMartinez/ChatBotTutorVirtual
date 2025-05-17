@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
-import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-dialog.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { RouterModule } from '@angular/router';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { SubjectService, Subject } from '../../../../core/services/subject.service';
+import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-dialog.component';
 
 @Component({
   selector: 'app-subjects-management',
@@ -15,22 +15,18 @@ import { SubjectService, Subject } from '../../../../core/services/subject.servi
 })
 export class SubjectsManagementComponent implements OnInit {
   subjects: Subject[] = [];
-  searchTerm: string = '';
-  showNewSubjectForm: boolean = false;
-
+  isLoading = false;
+  searchTerm = '';
+  showNewSubjectForm = false;
   newSubject = {
     name: '',
+    code: '',
     description: ''
   };
-  
-  selectedSubject: Subject | null = null;
-  showManageUsersDialog: boolean = false;
-  isLoading: boolean = false;
 
   constructor(
-    private dialog: MatDialog,
     private subjectService: SubjectService,
-    private router: Router
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -40,8 +36,10 @@ export class SubjectsManagementComponent implements OnInit {
   loadSubjects(): void {
     this.isLoading = true;
     this.subjectService.getSubjects().subscribe({
-      next: (subjects) => {
-        this.subjects = subjects;
+      next: (response) => {
+        if (response.data) {
+          this.subjects = response.data;
+        }
         this.isLoading = false;
       },
       error: (error) => {
@@ -52,24 +50,23 @@ export class SubjectsManagementComponent implements OnInit {
   }
 
   getFilteredSubjects(): Subject[] {
+    if (!this.searchTerm) return this.subjects;
+    const searchLower = this.searchTerm.toLowerCase();
     return this.subjects.filter(subject => 
-      subject.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      subject.description.toLowerCase().includes(this.searchTerm.toLowerCase())
+      subject.name.toLowerCase().includes(searchLower) ||
+      subject.description.toLowerCase().includes(searchLower)
     );
   }
 
   toggleNewSubjectForm(): void {
     this.showNewSubjectForm = !this.showNewSubjectForm;
     if (!this.showNewSubjectForm) {
-      this.resetNewSubjectForm();
+      this.newSubject = { name: '', code: '', description: '' };
     }
   }
 
-  resetNewSubjectForm(): void {
-    this.newSubject = {
-      name: '',
-      description: ''
-    };
+  validateNewSubject(): boolean {
+    return this.newSubject.name.trim().length > 0 && this.newSubject.code.trim().length > 0;
   }
 
   addNewSubject(): void {
@@ -77,11 +74,14 @@ export class SubjectsManagementComponent implements OnInit {
       this.isLoading = true;
       this.subjectService.createSubject({
         name: this.newSubject.name,
+        code: this.newSubject.code,
         description: this.newSubject.description
       }).subscribe({
-        next: (newSubject) => {
-          this.subjects.push(newSubject);
+        next: (response) => {
+          if (response.data) {
+            this.subjects.push(response.data);
           this.toggleNewSubjectForm();
+          }
           this.isLoading = false;
         },
         error: (error) => {
@@ -90,39 +90,6 @@ export class SubjectsManagementComponent implements OnInit {
         }
       });
     }
-  }
-
-  validateNewSubject(): boolean {
-    return (
-      this.newSubject.name.length > 0 &&
-      this.newSubject.description.length > 0
-    );
-  }
-
-  toggleSubjectStatus(subject: Subject): void {
-    this.isLoading = true;
-    this.subjectService.toggleSubjectStatus(subject.id).subscribe({
-      next: (updatedSubject) => {
-        const index = this.subjects.findIndex(s => s.id === updatedSubject.id);
-        if (index !== -1) {
-          this.subjects[index] = updatedSubject;
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error al cambiar el estado de la asignatura:', error);
-        // Revertir el cambio en la interfaz
-        subject.active = !subject.active;
-        this.isLoading = false;
-      }
-    });
-  }
-
-  editSubject(subjectId: string): void {
-    // Ahora navegamos a la vista de edición
-    // El botón de edición en el HTML ya tiene el RouterLink configurado,
-    // pero mantenemos este método por si se quiere llamar programáticamente
-    this.router.navigate(['/admin/subjects', subjectId]);
   }
 
   deleteSubject(subjectId: string): void {
@@ -142,7 +109,6 @@ export class SubjectsManagementComponent implements OnInit {
   }
   
   openManageUsersDialog(subject: Subject): void {
-    this.selectedSubject = subject;
     const dialogRef = this.dialog.open(ManageUsersDialogComponent, {
       width: '900px',
       data: { subject: subject, subjectService: this.subjectService }
@@ -150,15 +116,8 @@ export class SubjectsManagementComponent implements OnInit {
     
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Actualizar la asignatura con los datos recibidos del diálogo
-        console.log('Usuarios actualizados:', result);
-        
-        // Actualizar los contadores en la interfaz
-        const index = this.subjects.findIndex(s => s.id === subject.id);
-        if (index !== -1) {
-          this.subjects[index].teacherCount = result.filter((u: any) => u.role === 'teacher').length;
-          this.subjects[index].studentCount = result.filter((u: any) => u.role === 'student').length;
-        }
+        // Recargar la lista de asignaturas para obtener los contadores actualizados del backend
+        this.loadSubjects();
       }
     });
   }

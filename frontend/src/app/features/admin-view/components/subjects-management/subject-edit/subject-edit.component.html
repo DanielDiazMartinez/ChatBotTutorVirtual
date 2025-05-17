@@ -39,17 +39,16 @@
     </div>
 
     <div class="form-group">
+      <label for="subjectCode">Código de la asignatura</label>
+      <input type="text" id="subjectCode" [(ngModel)]="subject.code" placeholder="Código de la asignatura">
+    </div>
+
+    <div class="form-group">
       <label for="subjectDescription">Descripción</label>
       <textarea id="subjectDescription" [(ngModel)]="subject.description" placeholder="Descripción de la asignatura" rows="3"></textarea>
     </div>
 
     <div class="form-actions">
-      <button class="toggle-status-btn" (click)="toggleStatus()">
-        <span [ngClass]="subject.active ? 'active' : 'inactive'">
-          {{ subject.active ? 'Activo' : 'Inactivo' }}
-        </span>
-      </button>
-
       <button class="cancel-btn" (click)="goBack()">Cancelar</button>
       <button class="save-btn" (click)="saveChanges()">Guardar cambios</button>
     </div>

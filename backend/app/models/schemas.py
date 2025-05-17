@@ -195,11 +195,13 @@ class SubjectCreate(SubjectBase):
 class SubjectOut(SubjectBase):
     """
     Modelo de respuesta para asignaturas.
-    Incluye ID y listas de profesores y estudiantes.
+    Incluye ID, listas de profesores y estudiantes, y conteo de ambos.
     """
     id: int
     teachers: List[UserOut] = []
     students: List[UserOut] = []
+    teacher_count: int = 0
+    student_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -239,6 +241,15 @@ class TopicOut(TopicBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# ----------------------------------------
+# SCHEMA PARA RELACIONES ENTRE ENTIDADES
+# ----------------------------------------
+
+class UserIdsRequest(BaseModel):
+    """
+    Modelo para solicitar la adición de múltiples usuarios a una asignatura.
+    """
+    user_ids: List[int] = Field(..., example=[1, 2, 3])
 
 class APIResponse(BaseModel):
     data: Any
