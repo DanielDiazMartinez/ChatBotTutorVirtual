@@ -10,6 +10,10 @@ import { ApiResponse } from '../models/api-response.model';
 export class DocumentService {
   private api = inject(ApiService);
 
+  getDocuments(): Observable<ApiResponse<Document[]>> {
+    return this.api.get<Document[]>('documents/list');
+  }
+
   getDocumentById(documentId: number): Observable<ApiResponse<Document>> {
     return this.api.get<Document>(`documents/${documentId}`);
   }

@@ -14,6 +14,8 @@ documents_routes = APIRouter()
 async def upload_document(
     title: str = Form(...),  
     description: str = Form(None),
+    subject_id: int = Form(...),  # Ahora es obligatorio
+    topic_id: int = Form(None),  # Opcional
     pdf_file: UploadFile = File(...), 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -22,8 +24,15 @@ async def upload_document(
     """
     Sube un documento PDF, guarda los metadatos en PostgreSQL.
     Accesible para profesores y administradores.
+    Requiere subject_id (obligatorio) y opcionalmente topic_id.
     """
-    document_data = DocumentCreate(title=title, description=description, user_id=current_user.id)
+    document_data = DocumentCreate(
+        title=title, 
+        description=description, 
+        user_id=current_user.id,
+        subject_id=subject_id,  # Campo obligatorio
+        topic_id=topic_id  # Campo opcional
+    )
     document = save_document(db, pdf_file, document_data)
     return {
         "data": {"document_id": document.id},

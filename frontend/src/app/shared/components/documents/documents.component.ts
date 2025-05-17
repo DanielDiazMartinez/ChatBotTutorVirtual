@@ -1,16 +1,10 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface Document {
-  id: string;
-  title: string;
-  subject: string;
-  type: 'pdf' | 'image';
-  size: string;
-  uploadDate: Date;
-  status: 'Procesado' | 'Procesando' | 'Error';
-}
+import { DocumentService } from '../../../core/services/document.service';
+import { Document } from '../../../core/models/document.model';
+import { SubjectService } from '../../../core/services/subject.service';
+import { Subject } from '../../../core/services/subject.service';
 
 @Component({
   selector: 'app-documents',
@@ -19,84 +13,78 @@ export interface Document {
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss']
 })
-export class DocumentsComponent {
+export class DocumentsComponent implements OnInit {
   @Input() isAdminView = false;
   
   searchQuery: string = '';
   selectedSubject: string = 'Todas';
+  documents: Document[] = [];
+  isLoading = false;
+  error: string | null = null;
 
-  documents: Document[] = [
-    {
-      id: '1',
-      title: 'Guía de Álgebra',
-      subject: 'Matemáticas',
-      type: 'pdf',
-      size: '2.4 MB',
-      uploadDate: new Date('2025-05-10'),
-      status: 'Procesado'
-    },
-    {
-      id: '2',
-      title: 'Presentación de Circuitos',
-      subject: 'Física',
-      type: 'pdf',
-      size: '4.7 MB',
-      uploadDate: new Date('2025-05-11'),
-      status: 'Procesado'
-    },
-    {
-      id: '3',
-      title: 'Ejercicios resueltos de derivadas',
-      subject: 'Matemáticas',
-      type: 'pdf',
-      size: '1.2 MB',
-      uploadDate: new Date('2025-05-12'),
-      status: 'Procesado'
-    },
-    {
-      id: '4',
-      title: 'Esquemas de química orgánica',
-      subject: 'Química',
-      type: 'image',
-      size: '0.8 MB',
-      uploadDate: new Date('2025-05-14'),
-      status: 'Procesando'
-    },
-    {
-      id: '5',
-      title: 'Diagrama del sistema circulatorio',
-      subject: 'Biología',
-      type: 'image',
-      size: '3.5 MB',
-      uploadDate: new Date('2025-05-15'),
-      status: 'Error'
-    }
-  ];
+  subjects: Subject[] = [];
 
-  subjects = ['Todas', 'Matemáticas', 'Física', 'Química', 'Biología', 'Literatura'];
-  
-  getIconForType(type: string): string {
-    switch(type) {
-      case 'pdf': return 'description';
-      case 'docx': return 'article';
-      case 'ppt': return 'slideshow';
-      case 'xlsx': return 'table_chart';
-      case 'image': return 'image';
-      default: return 'insert_drive_file';
-    }
+  constructor(
+    private documentService: DocumentService,
+    private subjectService: SubjectService
+  ) {}
+
+  ngOnInit() {
+    this.loadSubjects();
+    this.loadDocuments();
+  }
+
+  loadDocuments() {
+    this.isLoading = true;
+    this.error = null;
+
+    this.documentService.getDocuments().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.documents = response.data.map(doc => ({
+            ...doc,
+            type: doc.type ? doc.type : 'pdf',
+            uploadDate: doc.created_at ? new Date(doc.created_at) : new Date(),
+          }));
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.error = 'Error al cargar los documentos. Por favor, intente nuevamente.';
+        this.isLoading = false;
+        console.error('Error loading documents:', error);
+      }
+    });
+  }
+
+  loadSubjects() {
+    this.subjectService.getSubjects().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.subjects = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading subjects:', error);
+      }
+    });
+  }
+
+  getFileExtension(type: string | null | undefined): string {
+    return type ? type.toUpperCase() : '';
   }
 
   getStatusClass(status: string): string {
-    switch(status) {
-      case 'Procesado': return 'processed';
-      case 'Procesando': return 'processing';
-      case 'Error': return 'error';
-      default: return '';
+    switch(status.toLowerCase()) {
+      case 'procesado':
+        return 'status-processed';
+      case 'procesando':
+        return 'status-processing';
+      case 'error':
+        return 'status-error';
+      default:
+        return '';
     }
-  }
-
-  getFileExtension(type: string): string {
-    return `.${type}`;
   }
 
   uploadDocument(): void {
@@ -104,14 +92,24 @@ export class DocumentsComponent {
     // Aquí se implementaría la lógica para subir un documento
   }
 
-  deleteDocument(id: string): void {
-    this.documents = this.documents.filter(doc => doc.id !== id);
+  deleteDocument(id: number): void {
+    if (confirm('¿Está seguro de que desea eliminar este documento?')) {
+      this.documentService.deleteDocument(id).subscribe({
+        next: () => {
+          this.documents = this.documents.filter(doc => doc.id !== id);
+        },
+        error: (error) => {
+          this.error = 'Error al eliminar el documento. Por favor, intente nuevamente.';
+          console.error('Error deleting document:', error);
+        }
+      });
+    }
   }
 
   getFilteredDocuments(): Document[] {
     return this.documents.filter(doc => {
       // Filtro por asignatura
-      const matchesSubject = this.selectedSubject === 'Todas' || doc.subject === this.selectedSubject;
+      const matchesSubject = this.selectedSubject === 'Todas' || this.getSubjectNameById(doc.subject_id) === this.selectedSubject;
       
       // Filtro por búsqueda (título o asignatura)
       const matchesSearch = this.searchQuery === '' || 
@@ -120,5 +118,10 @@ export class DocumentsComponent {
       
       return matchesSubject && matchesSearch;
     });
+  }
+
+  getSubjectNameById(subjectId: number | string): string {
+    const subject = this.subjects.find(s => s.id == subjectId);
+    return subject ? subject.name : '—';
   }
 }

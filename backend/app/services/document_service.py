@@ -29,11 +29,16 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     with open(file_path, "wb") as buffer:
         buffer.write(pdf_file.file.read())
     
+    # Si topic_id es 0, establecerlo como None para evitar violación de clave foránea
+    topic_id = None if document.topic_id == 0 else document.topic_id
+    
     new_document = Document(
         title=document.title,
         file_path=file_path,
         description=document.description,
-        teacher_id=document.user_id
+        teacher_id=document.user_id,
+        subject_id=document.subject_id,  # Campo obligatorio
+        topic_id=topic_id  # Campo opcional
     )
     
     db.add(new_document)
@@ -66,7 +71,6 @@ def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False)
         query = query.filter(Document.teacher_id == user_id)
     
     documents = query.all()
-    
     return [
         {
             "id": doc.id,

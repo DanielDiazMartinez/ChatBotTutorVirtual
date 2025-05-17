@@ -87,8 +87,8 @@ class DocumentBase(BaseModel):
 
 class DocumentCreate(DocumentBase):    
     user_id: int
-    subject_id: Optional[int] = None
-    topic_id: Optional[int] = None  
+    subject_id: int  # Campo obligatorio
+    topic_id: Optional[int] = None  # Campo opcional
 
     model_config = ConfigDict(from_attributes=True)
 
