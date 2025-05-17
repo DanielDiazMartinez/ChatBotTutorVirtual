@@ -5,7 +5,7 @@ from typing import List
 from app.models.models import User
 from ..core.database import get_db
 from ..core.auth import get_current_user, require_role
-from ..services.document_service import save_document, list_documents
+from ..services.document_service import save_document, list_documents, list_all_documents, delete_document
 from ..models.schemas import APIResponse, DocumentOut, DocumentCreate
 
 documents_routes = APIRouter()
@@ -31,6 +31,26 @@ async def upload_document(
         "status": 200
     }
 
+@documents_routes.get("/list", response_model=APIResponse)
+def list_all_documents_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+):
+    """
+    Lista todos los documentos.
+    Para profesores: muestra solo sus propios documentos.
+    Para administradores: muestra todos los documentos.
+    Para estudiantes: muestra solo los documentos a los que tienen acceso.
+    """
+    is_admin = current_user.role == "admin"
+    documents = list_all_documents(db, current_user.id, is_admin)
+    return {
+        "data": documents,
+        "message": "Documentos listados correctamente",
+        "status": 200
+    }
+
 @documents_routes.get("/{document_id}", response_model=APIResponse)
 def get_documents(
     document_id: int,
@@ -46,6 +66,25 @@ def get_documents(
     return {
         "data": documents,
         "message": "Documentos obtenidos correctamente",
+        "status": 200
+    }
+
+@documents_routes.delete("/{document_id}", response_model=APIResponse)
+def remove_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "admin"]))
+):
+    """
+    Elimina un documento, sus chunks asociados y el archivo físico.
+    Accesible para profesores (solo sus propios documentos) y administradores (cualquier documento).
+    """
+    is_admin = current_user.role == "admin"
+    result = delete_document(db, document_id, current_user.id, is_admin)
+    return {
+        "data": result,
+        "message": "Documento y archivos asociados eliminados correctamente",
         "status": 200
     }
 

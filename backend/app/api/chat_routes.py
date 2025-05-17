@@ -4,7 +4,7 @@ from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
 from ..models.models import DocumentChunk, User
-from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_user_role
+from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_user_role, get_current_user_conversations
 from ..core.database import get_db
 from ..core.auth import require_role, get_current_user
 from ..services.vector_service import (
@@ -48,6 +48,20 @@ async def create_conversation(
         },
         "message": "Conversación creada correctamente",
         "status": 200 
+    }
+
+@chat_routes.get("/me/conversations", response_model=APIResponse)
+async def get_my_conversations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener todas las conversaciones del usuario actualmente autenticado"""
+    conversations = get_current_user_conversations(current_user.id, current_user.role, db)
+    
+    return {
+        "data": conversations,
+        "message": "Conversaciones obtenidas correctamente",
+        "status": 200
     }
 
 @chat_routes.get("/conversations/{user_id}", response_model=APIResponse)

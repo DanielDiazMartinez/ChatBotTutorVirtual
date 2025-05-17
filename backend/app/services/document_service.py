@@ -1,4 +1,3 @@
-
 import os
 from sqlalchemy.orm import Session
 from app.models.models import  Document
@@ -55,5 +54,60 @@ def list_documents(db: Session, document_id: int):
     Obtiene los documentos de un profesor.
     """
     return db.query(Document).filter(Document.id == document_id).all()
+
+def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False):
+    """
+    Lista todos los documentos.
+    Si el usuario no es administrador y se proporciona user_id, sólo devuelve sus documentos.
+    """
+    query = db.query(Document)
+    
+    if user_id is not None and not is_admin:
+        query = query.filter(Document.teacher_id == user_id)
+    
+    documents = query.all()
+    
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "description": doc.description,
+            "file_path": doc.file_path,
+            "teacher_id": doc.teacher_id,
+            "subject_id": doc.subject_id,
+            "topic_id": doc.topic_id,
+            "created_at": doc.created_at
+        }
+        for doc in documents
+    ]
+
+def delete_document(db: Session, document_id: int, user_id: int = None, is_admin: bool = False):
+    """
+    Elimina un documento, sus chunks asociados y el archivo físico.
+    Si se proporciona user_id y no es admin, se verifica que sea el propietario del documento.
+    """
+    # Buscar el documento
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado.")
+    
+    # Verificar propiedad si no es administrador
+    if user_id is not None and not is_admin:
+        if document.teacher_id != user_id:
+            raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este documento.")
+    
+    # Eliminar el archivo físico si existe
+    if document.file_path and os.path.exists(document.file_path):
+        try:
+            os.remove(document.file_path)
+        except OSError as e:
+            # Continuar con la eliminación de la BD aunque falle la eliminación del archivo
+            logger.error(f"Error al eliminar el archivo: {e}")
+    
+    # Eliminar el documento de la base de datos (los chunks se eliminarán automáticamente por cascade)
+    db.delete(document)
+    db.commit()
+    
+    return {"id": document_id}
 
 

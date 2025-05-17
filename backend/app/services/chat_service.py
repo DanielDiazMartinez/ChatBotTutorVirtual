@@ -83,3 +83,35 @@ def delete_conversation(conversation_id: int, db: Session) -> None:
     
     db.delete(conversation)  # Esto eliminará también los mensajes por la relación cascade
     db.commit()
+
+def get_current_user_conversations(user_id: int, role: str, db: Session) -> List[dict]:
+    """
+    Obtiene todas las conversaciones del usuario actualmente autenticado y las formatea como diccionarios.
+    """
+    conversations = get_conversations_by_user_role(user_id, role, db)
+    
+    result = []
+    for conv in conversations:
+        # Obtener el último mensaje de la conversación si existe
+        last_message = db.query(Message).filter(
+            Message.conversation_id == conv.id
+        ).order_by(Message.created_at.desc()).first()
+        
+        # Construir el objeto de respuesta
+        conv_dict = {
+            "id": conv.id,
+            "document_id": conv.document_id,
+            "student_id": conv.student_id,
+            "teacher_id": conv.teacher_id,
+            "topic_id": conv.topic_id,
+            "created_at": conv.created_at,
+            "document_title": conv.document.title if conv.document else None,
+            "last_message": {
+                "text": last_message.text if last_message else "",
+                "is_bot": last_message.is_bot if last_message else False,
+                "created_at": last_message.created_at if last_message else None
+            } if last_message else None
+        }
+        result.append(conv_dict)
+    
+    return result
