@@ -14,6 +14,7 @@ from app.services.user_service import (
     get_current_user
 )
 from app.models.schemas import APIResponse, SubjectOut, UserCreate, UserUpdate, UserOut
+from app.services.current_user_service import get_current_user_subjects
 
 users_routes = APIRouter()
 
@@ -83,6 +84,21 @@ def get_me(
     return {
         "data": user,
         "message": "Información del usuario actual obtenida correctamente",
+        "status": 200
+    }
+
+@users_routes.get("/me/subjects", response_model=APIResponse)
+def list_current_user_subjects(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin", "teacher", "student"]))
+):
+    """Obtener las materias del usuario actual"""
+
+    user_id = current_user.id
+    subjects = get_current_user_subjects(user_id, db)
+    return {
+        "data": subjects,
+        "message": "Materias obtenidas correctamente",
         "status": 200
     }
 

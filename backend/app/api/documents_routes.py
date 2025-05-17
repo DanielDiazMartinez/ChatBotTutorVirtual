@@ -60,6 +60,26 @@ def list_all_documents_endpoint(
         "status": 200
     }
 
+@documents_routes.get("/me", response_model=APIResponse)
+def list_current_user_documents(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Obtener todos los documentos del usuario actual.
+    Para profesores: devuelve los documentos que ha subido.
+    Para estudiantes: devuelve los documentos a los que tiene acceso.
+    """
+    from app.services.current_user_service import get_current_user_documents
+    user_id = current_user.id
+    documents = get_current_user_documents(user_id, db)
+    
+    return {
+        "data": documents,
+        "message": "Documentos del usuario obtenidos correctamente",
+        "status": 200
+    }
+
 @documents_routes.get("/{document_id}", response_model=APIResponse)
 def get_documents(
     document_id: int,
