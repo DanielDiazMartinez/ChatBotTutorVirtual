@@ -55,4 +55,8 @@ export class ChatService {
   getSubjectDocuments(subjectId: number): Observable<ApiResponse<Document[]>> {
     return this.api.get<Document[]>(`subjects/${subjectId}/documents`);
   }
+  
+  getTeacherDocuments(): Observable<ApiResponse<Document[]>> {
+    return this.api.get<Document[]>('documents/list');
+  }
 }

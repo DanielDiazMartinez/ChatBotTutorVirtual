@@ -5,6 +5,7 @@ import { DocumentService } from '../../../core/services/document.service';
 import { Document } from '../../../core/models/document.model';
 import { SubjectService } from '../../../core/services/subject.service';
 import { Subject } from '../../../core/services/subject.service';
+import { ChatService } from '../../../core/services/chat.service';
 
 @Component({
   selector: 'app-documents',
@@ -26,7 +27,8 @@ export class DocumentsComponent implements OnInit {
 
   constructor(
     private documentService: DocumentService,
-    private subjectService: SubjectService
+    private subjectService: SubjectService,
+    private chatService: ChatService
   ) {}
 
   ngOnInit() {
@@ -38,6 +40,7 @@ export class DocumentsComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
+    // Usamos directamente el DocumentService ya que apunta al endpoint correcto
     this.documentService.getDocuments().subscribe({
       next: (response) => {
         if (response.data) {
@@ -45,6 +48,9 @@ export class DocumentsComponent implements OnInit {
             ...doc,
             type: doc.type ? doc.type : 'pdf',
             uploadDate: doc.created_at ? new Date(doc.created_at) : new Date(),
+            subject: this.getSubjectNameById(doc.subject_id),
+            size: '1.2 MB', // Por defecto si no viene del API
+            status: 'Procesado' // Por defecto si no viene del API
           }));
         }
         this.isLoading = false;

@@ -171,28 +171,21 @@
     font-size: 0.9rem;
     
     &.title {
-      min-width: 200px;
-      width: 25%;
+      min-width: 300px;
+      width: 40%;
     }
     
     &.subject {
-      width: 20%;
+      width: 30%;
     }
     
     &.date {
-      width: 15%;
-    }
-    
-    &.size {
-      width: 10%;
-    }
-    
-    &.status {
-      width: 15%;
+      width: 20%;
     }
     
     &.actions {
       margin-left: auto;
+      width: 10%;
     }
   }
 }
@@ -249,8 +242,8 @@
   font-weight: 500;
   color: #3f6464;
   font-size: 1.05rem;
-  min-width: 200px;
-  width: 25%;
+  min-width: 300px;
+  width: 40%;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -278,7 +271,7 @@
   justify-content: flex-start;
   margin-left: 0;
   margin-right: 0;
-  width: 20%;
+  width: 30%;
 
   .badge {
     background-color: #e6f2ef;
@@ -301,8 +294,8 @@
   font-size: 0.85rem;
   color: #888;
   min-width: 120px;
-  max-width: 160px;
-  width: 100%;
+  max-width: 200px;
+  width: 20%;
   white-space: nowrap;
 }
 

@@ -15,10 +15,8 @@ const routes: Routes = [
   imports: [
     CommonModule,
     FormsModule,
-    RouterModule.forChild(routes)
-  ],
-  declarations: [
-    // The component is standalone, so no need to declare it here
+    RouterModule.forChild(routes),
+    DocumentsComponent // Importar el componente standalone
   ]
 })
 export class DocumentsModule { }

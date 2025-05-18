@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DocumentsComponent as SharedDocumentsComponent } from '../../../../shared/components/documents/documents.component';
 
 @Component({
-  selector: 'app-documents',
+  selector: 'app-teacher-documents',
   standalone: true,
   imports: [CommonModule, SharedDocumentsComponent],
   template: '<app-documents [isAdminView]="false"></app-documents>'
