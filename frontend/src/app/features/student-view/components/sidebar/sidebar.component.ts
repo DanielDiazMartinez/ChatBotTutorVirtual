@@ -80,23 +80,43 @@ export class SidebarComponent implements OnInit {
   }
 
   onNewConversation(): void {
-    // Esta funcionalidad se mantendrá en el componente padre ya que requiere
-    // información del documento y la asignatura
-    const newConversation: Conversation = {
-      id: Date.now(),
-      user_id: 0, // Esto se llenará en el backend
-      document_id: 0, // Esto se llenará cuando se seleccione un documento
-      created_at: new Date().toISOString(),
-      title: 'Nueva Conversación',
-      last_message: {
-        text: 'Nueva conversación iniciada',
-        is_bot: false,
-        created_at: new Date().toISOString()
+    // Usando documento y asignatura fijos como solicitado en el endpoint
+    const documentId = 4;  // ID del documento fijo según lo solicitado
+    const subjectId = 3;   // ID de la asignatura fijo según lo solicitado
+    
+    // Mostrar un indicador de carga
+    this.isLoading = true;
+    
+    this.chatService.createConversation(documentId, subjectId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          // Crear la conversación con los datos devueltos por el backend
+          const newConversation: Conversation = {
+            ...response.data.conversation,
+            title: 'Nueva Conversación',
+            pinned: false,
+            last_message: {
+              text: response.data.bot_response || 'Conversación iniciada',
+              is_bot: true,
+              created_at: new Date().toISOString()
+            }
+          };
+          
+          // Agregar la nueva conversación al inicio de la lista
+          this.conversations.unshift(newConversation);
+          this.sortConversations();
+          
+          // Seleccionar la nueva conversación
+          this.selectConversation(String(newConversation.id));
+        }
+        this.isLoading = false;
       },
-      pinned: false
-    };
-    this.conversations.unshift(newConversation);
-    this.selectConversation(String(newConversation.id));
+      error: (error) => {
+        console.error('Error al crear la conversación:', error);
+        this.error = 'Error al crear la conversación';
+        this.isLoading = false;
+      }
+    });
   }
 
   selectConversation(conversationId: string): void {
@@ -116,15 +136,32 @@ export class SidebarComponent implements OnInit {
 
   onDeleteConversation(conversationId: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.conversations = this.conversations.filter(c => String(c.id) !== conversationId);
     
-    if (this.activeConversationId === conversationId) {
-      this.activeConversationId = this.conversations.length > 0 ? String(this.conversations[0].id) : null;
-      if (this.activeConversationId) {
-        this.conversationSelected.emit(Number(this.activeConversationId));
+    // Mostrar indicador de carga
+    this.isLoading = true;
+    
+    // Llamar al endpoint para eliminar la conversación
+    this.chatService.deleteConversation(Number(conversationId)).subscribe({
+      next: () => {
+        // Eliminar la conversación de la lista local
+        this.conversations = this.conversations.filter(c => String(c.id) !== conversationId);
+        
+        // Si la conversación eliminada era la activa, seleccionar otra
+        if (this.activeConversationId === conversationId) {
+          this.activeConversationId = this.conversations.length > 0 ? String(this.conversations[0].id) : null;
+          if (this.activeConversationId) {
+            this.conversationSelected.emit(Number(this.activeConversationId));
+          }
+        }
+        
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error al eliminar la conversación:', error);
+        this.error = 'Error al eliminar la conversación';
+        this.isLoading = false;
       }
-    }
-    // Aquí se podría implementar una eliminación en el backend
+    });
   }
 
   private sortConversations(): void {
