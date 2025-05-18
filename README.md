@@ -141,5 +141,5 @@ Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para má
 Para consultas o sugerencias sobre este proyecto, puedes contactarme en:
 
 - Email: diazmartinezdaniel30@gmail.com
-- LinkedIn: (www.linkedin.com/in/daniel-diaz-martinez)
-- GitHub: (https://github.com/DanielDiazMartinez)
+- LinkedIn: www.linkedin.com/in/daniel-diaz-martinez
+- GitHub: https://github.com/DanielDiazMartinez
