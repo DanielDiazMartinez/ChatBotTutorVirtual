@@ -12,7 +12,7 @@
   <div class="messages-container" #messagesContainer [class.drawer-open]="isDocumentsModalVisible">
     <div class="chat-content">
       <app-chat-message
-        *ngFor="let message of messages"
+        *ngFor="let message of displayMessages"
         [message]="message"
       ></app-chat-message>
     </div>

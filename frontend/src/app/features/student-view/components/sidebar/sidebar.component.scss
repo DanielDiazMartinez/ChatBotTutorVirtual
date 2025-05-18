@@ -11,6 +11,53 @@
   border-right: 1px solid #e0e0e0;
 }
 
+.loading-state, .error-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #666;
+  
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(143, 188, 148, 0.3);
+    border-radius: 50%;
+    border-top-color: #8FBC94;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  svg {
+    margin-bottom: 0.5rem;
+    color: #d97878;
+  }
+  
+  span {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .retry-btn {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #e0e0e0;
+    }
+  }
+}
+
 .sidebar-header {
   display: flex;
   justify-content: space-between;

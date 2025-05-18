@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -7,6 +7,8 @@ import { HeaderComponent, UserProfile } from '../../shared/components/header/hea
 import { DocumentsModalComponent } from './components/documents-modal/documents-modal.component';
 import { SubjectService } from '../../services/subject.service';
 import { Subject } from '../subject-selection/interfaces/subject.interface';
+import { ChatService } from '../../core/services/chat.service';
+import { Conversation, Message } from '../../core/models/chat.model';
 
 @Component({
   selector: 'app-student-view',
@@ -16,6 +18,8 @@ import { Subject } from '../subject-selection/interfaces/subject.interface';
   styleUrls: ['./student-view.component.scss']
 })
 export class StudentViewComponent implements OnInit { 
+  @ViewChild(SidebarComponent) sidebarComponent!: SidebarComponent;
+  
   isDocumentsModalVisible = false;
   currentSubject: Subject | null = null;
   isLoading = true;
@@ -28,11 +32,16 @@ export class StudentViewComponent implements OnInit {
     avatar: 'assets/images/student-avatar.svg'
   };
 
+  // Conversación activa
+  activeConversation: Conversation | null = null;
+  conversationMessages: Message[] = [];
+
   // Lista de asignaturas disponibles
   availableSubjects: Subject[] = [];
   
   constructor(
-    private subjectService: SubjectService, 
+    private subjectService: SubjectService,
+    private chatService: ChatService,
     private router: Router
   ) {}
   
@@ -77,5 +86,60 @@ export class StudentViewComponent implements OnInit {
   
   toggleDocumentsModal(): void {
     this.isDocumentsModalVisible = !this.isDocumentsModalVisible;
+  }
+
+  onConversationSelected(conversationId: number): void {
+    if (!conversationId) return;
+    
+    this.chatService.getConversationById(conversationId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.activeConversation = response.data;
+          this.loadConversationMessages(conversationId);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar la conversación:', error);
+      }
+    });
+  }
+
+  private loadConversationMessages(conversationId: number): void {
+    this.chatService.getConversationMessages(conversationId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.conversationMessages = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar los mensajes:', error);
+      }
+    });
+  }
+
+  onSendNewMessage(data: {conversationId: number, text: string}): void {
+    if (!data.conversationId || !data.text) return;
+    
+    this.chatService.sendMessage(data.conversationId, data.text).subscribe({
+      next: (response) => {
+        if (response.data) {
+          // Añadir el nuevo mensaje a la lista de mensajes
+          this.conversationMessages.push(response.data);
+          
+          // Actualizar el último mensaje en la barra lateral
+          if (this.sidebarComponent) {
+            this.sidebarComponent.updateConversationLastMessage(data.conversationId, data.text);
+          }
+          
+          // Simular la respuesta del bot (en un entorno real, esto vendría del websocket o de polling)
+          setTimeout(() => {
+            this.loadConversationMessages(data.conversationId);
+          }, 1000);
+        }
+      },
+      error: (error) => {
+        console.error('Error al enviar mensaje:', error);
+      }
+    });
   }
 }

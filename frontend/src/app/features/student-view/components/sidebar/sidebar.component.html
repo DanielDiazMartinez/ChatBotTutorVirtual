@@ -2,14 +2,34 @@
   <div class="sidebar-header">
     <button class="new-conversation-btn" (click)="onNewConversation()">Nueva Conversación</button>
   </div>
+  
   <div class="conversation-list-container">
     <h3>Conversaciones</h3>
-    <ul class="conversation-list">
+    
+    <!-- Indicador de carga -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <span>Cargando conversaciones...</span>
+    </div>
+    
+    <!-- Mensaje de error -->
+    <div class="error-state" *ngIf="error">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ error }}</span>
+      <button class="retry-btn" (click)="loadConversations()">Reintentar</button>
+    </div>
+    
+    <!-- Lista de conversaciones -->
+    <ul class="conversation-list" *ngIf="!isLoading && !error">
       <li *ngFor="let conversation of conversations" 
-          [class.active]="conversation.id === activeConversationId"
+          [class.active]="conversation.id.toString() === activeConversationId"
           [class.pinned]="conversation.pinned"
           class="conversation-item">
-        <div class="conversation-content" (click)="selectConversation(conversation.id)">
+        <div class="conversation-content" (click)="selectConversation(conversation.id.toString())">
           <span class="conversation-title">{{conversation.title}}</span>
         </div>
         <button class="options-btn" (click)="showOptionsModal(conversation, $event)">
@@ -19,6 +39,12 @@
             <circle cx="12" cy="18" r="2" fill="currentColor"/>
           </svg>
         </button>
+      </li>
+      
+      <!-- Estado vacío -->
+      <li *ngIf="conversations.length === 0" class="empty-state">
+        <span>No tienes conversaciones</span>
+        <p>Inicia una nueva conversación para comenzar a chatear</p>
       </li>
     </ul>
   </div>

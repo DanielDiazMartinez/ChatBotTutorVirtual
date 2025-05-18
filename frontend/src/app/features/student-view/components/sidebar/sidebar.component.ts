@@ -1,11 +1,7 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
-
-interface Conversation {
-  id: string;
-  title: string;
-  pinned: boolean;
-}
+import { ChatService } from '../../../../core/services/chat.service';
+import { Conversation } from '../../../../core/models/chat.model';
 
 @Component({
   selector: 'app-sidebar',
@@ -16,57 +12,141 @@ interface Conversation {
   encapsulation: ViewEncapsulation.None
 })
 export class SidebarComponent implements OnInit {
-  conversations: Conversation[] = [
-    { id: '1', title: 'Introducción a Angular', pinned: false },
-    { id: '2', title: 'Componentes y Módulos', pinned: true },
-    { id: '3', title: 'Servicios e Inyección de Dependencias', pinned: false },
-  ];
+  @Output() conversationSelected = new EventEmitter<number>();
+  
+  conversations: Conversation[] = [];
   activeConversationId: string | null = null;
+  isLoading = false;
+  error: string | null = null;
 
-  constructor() { }
+  constructor(private chatService: ChatService) { }
 
   ngOnInit(): void {
-    if (this.conversations.length > 0) {
-      this.activeConversationId = this.conversations[0].id;
+    this.loadConversations();
+  }
+
+  loadConversations(): void {
+    this.isLoading = true;
+    this.chatService.getUserConversations().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.conversations = response.data.map(conv => ({
+            ...conv,
+            title: this.formatConversationTitle(conv),
+            pinned: conv.pinned || false
+          }));
+          this.sortConversations();
+          if (this.conversations.length > 0 && !this.activeConversationId) {
+            this.selectConversation(String(this.conversations[0].id));
+          }
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar conversaciones:', err);
+        this.error = 'Error al cargar las conversaciones';
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  /**
+   * Formatea el título de la conversación usando el último mensaje o un título predeterminado
+   */
+  formatConversationTitle(conversation: Conversation): string {
+    if (conversation.last_message) {
+      // Extraer el texto del mensaje dependiendo de si es string u objeto
+      let message: string;
+      if (typeof conversation.last_message === 'string') {
+        message = conversation.last_message;
+      } else if (typeof conversation.last_message === 'object' && 'text' in conversation.last_message) {
+        message = conversation.last_message.text;
+      } else {
+        message = 'Nuevo mensaje';
+      }
+      
+      // Truncar el último mensaje si es más largo de 50 caracteres
+      return message.length > 50 
+        ? `${message.substring(0, 47)}...` 
+        : message;
     }
+    
+    return conversation.title || `Conversación ${conversation.id}`;
   }
 
   onNewConversation(): void {
+    // Esta funcionalidad se mantendrá en el componente padre ya que requiere
+    // información del documento y la asignatura
     const newConversation: Conversation = {
-      id: Date.now().toString(),
+      id: Date.now(),
+      student_id: 0, // Esto se llenará en el backend
+      document_id: 0, // Esto se llenará cuando se seleccione un documento
+      created_at: new Date().toISOString(),
       title: 'Nueva Conversación',
+      last_message: {
+        text: 'Nueva conversación iniciada',
+        is_bot: false,
+        created_at: new Date().toISOString()
+      },
       pinned: false
     };
     this.conversations.unshift(newConversation);
-    this.activeConversationId = newConversation.id;
+    this.selectConversation(String(newConversation.id));
   }
 
   selectConversation(conversationId: string): void {
     this.activeConversationId = conversationId;
+    this.conversationSelected.emit(Number(conversationId));
   }
 
   onPinConversation(conversationId: string, event: MouseEvent): void {
     event.stopPropagation();
-    const conversation = this.conversations.find(c => c.id === conversationId);
+    const conversation = this.conversations.find(c => String(c.id) === conversationId);
     if (conversation) {
       conversation.pinned = !conversation.pinned;
       this.sortConversations();
+      // Aquí se podría implementar una actualización en el backend
     }
   }
 
   onDeleteConversation(conversationId: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.conversations = this.conversations.filter(c => c.id !== conversationId);
+    this.conversations = this.conversations.filter(c => String(c.id) !== conversationId);
     
     if (this.activeConversationId === conversationId) {
-      this.activeConversationId = this.conversations.length > 0 ? this.conversations[0].id : null;
+      this.activeConversationId = this.conversations.length > 0 ? String(this.conversations[0].id) : null;
+      if (this.activeConversationId) {
+        this.conversationSelected.emit(Number(this.activeConversationId));
+      }
     }
+    // Aquí se podría implementar una eliminación en el backend
   }
 
   private sortConversations(): void {
     this.conversations.sort((a, b) => {
+      if (a.pinned === b.pinned) {
+        // Si ambas están fijadas o ambas no están fijadas, ordenar por fecha de creación (más reciente primero)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
       return a.pinned ? -1 : 1;
     });
+  }
+
+  /**
+   * Actualiza el último mensaje de una conversación específica
+   * Este método debería ser llamado cuando se reciben nuevos mensajes
+   */
+  updateConversationLastMessage(conversationId: number, lastMessage: string): void {
+    const conversation = this.conversations.find(c => c.id === conversationId);
+    if (conversation) {
+      // Crear un objeto LastMessage con el texto actualizado
+      conversation.last_message = {
+        text: lastMessage,
+        is_bot: false,
+        created_at: new Date().toISOString()
+      };
+      conversation.title = this.formatConversationTitle(conversation);
+    }
   }
 
   showOptionsModal(conversation: Conversation, event: MouseEvent): void {
@@ -89,7 +169,7 @@ export class SidebarComponent implements OnInit {
     `;
     pinButton.onclick = () => {
       modalDiv.remove();
-      this.onPinConversation(conversation.id, event);
+      this.onPinConversation(String(conversation.id), event);
     };
 
     const deleteButton = document.createElement('button');
@@ -102,7 +182,7 @@ export class SidebarComponent implements OnInit {
     `;
     deleteButton.onclick = () => {
       modalDiv.remove();
-      this.onDeleteConversation(conversation.id, event);
+      this.onDeleteConversation(String(conversation.id), event);
     };
 
     modalDiv.appendChild(pinButton);

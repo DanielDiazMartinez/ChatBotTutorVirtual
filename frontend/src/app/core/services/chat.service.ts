@@ -30,4 +30,8 @@ export class ChatService {
   getConversationMessages(conversationId: number): Observable<ApiResponse<Message[]>> {
     return this.api.get<Message[]>(`conversation/${conversationId}/messages`);
   }
+
+  getUserConversations(): Observable<ApiResponse<Conversation[]>> {
+    return this.api.get<Conversation[]>('chat/me/conversations');
+  }
 }

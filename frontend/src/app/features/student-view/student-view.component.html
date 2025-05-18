@@ -20,15 +20,23 @@
     <span>{{ error }}</span>
   </div>
 
-  <app-sidebar *ngIf="!isLoading && !error"></app-sidebar>
+  <app-sidebar 
+    *ngIf="!isLoading && !error"
+    (conversationSelected)="onConversationSelected($event)">
+  </app-sidebar>
+  
   <app-chat-area 
     *ngIf="!isLoading && !error"
     [isDocumentsModalVisible]="isDocumentsModalVisible"
     [currentSubject]="currentSubject"
-  ></app-chat-area>
+    [activeConversation]="activeConversation"
+    [apiMessages]="conversationMessages"
+    (sendMessage)="onSendNewMessage($event)">
+  </app-chat-area>
+  
   <app-documents-modal 
     *ngIf="!isLoading && !error"
     [isVisible]="isDocumentsModalVisible"
-    [currentSubjectId]="currentSubject?.id"
-  ></app-documents-modal>
+    [currentSubjectId]="currentSubject?.id">
+  </app-documents-modal>
 </div>
