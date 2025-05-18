@@ -155,11 +155,13 @@ class MessageBase(BaseModel):
     text: str
     is_bot: bool  
 
-class MessageCreate(MessageBase):
+class MessageCreate(BaseModel):
     """
     Modelo para crear un nuevo mensaje.
+    Solo incluye el texto, ya que is_bot y created_at
+    se gestionan en el backend.
     """
-    created_at: Optional[datetime] = None
+    text: str
 
 class MessageOut(MessageBase):
     id: int

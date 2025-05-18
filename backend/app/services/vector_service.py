@@ -194,9 +194,7 @@ def add_message_and_generate_response(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
-    if user_type == "student" and conversation.student_id != user_id:
-        raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
-    elif user_type == "teacher" and conversation.teacher_id != user_id:
+    if conversation.user_id != user_id or conversation.user_role != user_type:
         raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
 
     user_msg_obj = Message(

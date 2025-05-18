@@ -22,7 +22,7 @@ export class ChatService {
   }
 
   sendMessage(conversationId: number, text: string): Observable<ApiResponse<Message>> {
-    return this.api.post<Message>(`conversation/${conversationId}/message`, {
+    return this.api.post<Message>(`chat/c/${conversationId}`, {
       text
     });
   }

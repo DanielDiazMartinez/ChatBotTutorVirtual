@@ -163,10 +163,15 @@ async def add_message_to_conversation(
             user_type=current_user.role,
             message_text=message_data.text
         )
+        
+        # Convertir modelos ORM a modelos Pydantic para serialización
+        user_message_out = MessageOut.model_validate(user_msg_obj)
+        bot_message_out = MessageOut.model_validate(bot_msg_obj)
+        
         return {
             "data": {
-                "user_message": user_msg_obj,
-                "bot_message": bot_msg_obj
+                "user_message": user_message_out,
+                "bot_message": bot_message_out
             },
             "message": "Mensaje añadido correctamente",
             "status": 200
