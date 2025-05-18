@@ -28,7 +28,6 @@ ChatBotTutorVirtual es una plataforma educativa integral que permite a los profe
 ### Infraestructura
 - **Contenedores**: Docker y Docker Compose
 - **Almacenamiento**: Volúmenes Docker para persistencia
-- **Herramientas**: pgAdmin para gestión de base de datos
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -91,7 +90,6 @@ El sistema está estructurado alrededor de estos modelos principales:
 4. **Acceder a las interfaces**
    - API y documentación: http://localhost:8000/docs
    - Aplicación web: http://localhost:4200
-   - pgAdmin: http://localhost:5050
 
 
 
@@ -142,6 +140,6 @@ Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para má
 
 Para consultas o sugerencias sobre este proyecto, puedes contactarme en:
 
-- Email: tu.email@ejemplo.com
-- LinkedIn: [Tu perfil de LinkedIn](https://www.linkedin.com/in/tu-perfil/)
-- GitHub: [Tu perfil de GitHub](https://github.com/tu-usuario)
+- Email: diazmartinezdaniel30@gmail.com
+- LinkedIn: [Tu perfil de LinkedIn](www.linkedin.com/in/daniel-diaz-martinez)
+- GitHub: [Tu perfil de GitHub](https://github.com/DanielDiazMartinez)
