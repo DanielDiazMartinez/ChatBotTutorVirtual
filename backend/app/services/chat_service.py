@@ -117,3 +117,13 @@ def get_current_user_conversations(user_id: int, role: str, db: Session) -> List
         result.append(conv_dict)
     
     return result
+
+def get_conversation_messages(conversation_id: int, db: Session) -> List[Message]:
+    """
+    Obtiene todos los mensajes de una conversación específica, ordenados por fecha de creación.
+    """
+    messages = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at.asc()).all()
+    
+    return messages

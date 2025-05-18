@@ -21,10 +21,8 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
   @Input() currentSubject: Subject | null = null;
   @Input() activeConversation: Conversation | null = null;
   @Input() set apiMessages(value: Message[]) {
-    if (value && value.length > 0) {
-      this._apiMessages = value;
-      this.updateDisplayMessages();
-    }
+    this._apiMessages = value || [];
+    this.updateDisplayMessages();
   }
   
   get apiMessages(): Message[] {
@@ -86,7 +84,21 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
         isUser: !apiMsg.is_bot,
         timestamp: new Date(apiMsg.created_at)
       }));
+    } else if (this.activeConversation) {
+      // Si hay una conversación activa pero no hay mensajes, mostrar un estado vacío
+      this.displayMessages = [];
+    } else {
+      // Si no hay conversación activa ni mensajes, mostramos el mensaje de bienvenida
+      this.displayMessages = [{
+        id: '1',
+        content: this.welcomeMessage,
+        isUser: false,
+        timestamp: new Date()
+      }];
     }
+    
+    // Asegurar que después de actualizar los mensajes, hacemos scroll al final
+    setTimeout(() => this.scrollToBottom(), 100);
   }
 
   private scrollToBottom(): void {

@@ -51,9 +51,14 @@ export class SidebarComponent implements OnInit {
   }
   
   /**
-   * Formatea el título de la conversación usando el último mensaje o un título predeterminado
+   * Formatea el título de la conversación usando el documento o el último mensaje
    */
   formatConversationTitle(conversation: Conversation): string {
+    // Si tenemos un título de documento, lo usamos como primera opción
+    if (conversation.document_title) {
+      return conversation.document_title;
+    }
+    
     if (conversation.last_message) {
       // Extraer el texto del mensaje dependiendo de si es string u objeto
       let message: string;
@@ -79,7 +84,7 @@ export class SidebarComponent implements OnInit {
     // información del documento y la asignatura
     const newConversation: Conversation = {
       id: Date.now(),
-      student_id: 0, // Esto se llenará en el backend
+      user_id: 0, // Esto se llenará en el backend
       document_id: 0, // Esto se llenará cuando se seleccione un documento
       created_at: new Date().toISOString(),
       title: 'Nueva Conversación',

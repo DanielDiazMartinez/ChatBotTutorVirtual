@@ -91,28 +91,49 @@ export class StudentViewComponent implements OnInit {
   onConversationSelected(conversationId: number): void {
     if (!conversationId) return;
     
-    this.chatService.getConversationById(conversationId).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.activeConversation = response.data;
-          this.loadConversationMessages(conversationId);
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar la conversación:', error);
-      }
-    });
+    // Establecer la conversación activa
+    // Creamos un objeto de conversación básico con el ID
+    this.activeConversation = {
+      id: conversationId,
+      document_id: 0,
+      created_at: new Date().toISOString()
+    };
+    
+    // Limpiamos los mensajes anteriores
+    this.conversationMessages = [];
+    
+    // Cargamos directamente los mensajes de esta conversación
+    this.loadConversationMessages(conversationId);
   }
 
   private loadConversationMessages(conversationId: number): void {
+    // Indicamos que estamos cargando
+    const temporalLoadingElement = document.querySelector('.chat-messages-container');
+    if (temporalLoadingElement) {
+      temporalLoadingElement.classList.add('loading');
+    }
+    
     this.chatService.getConversationMessages(conversationId).subscribe({
       next: (response) => {
-        if (response.data) {
+        if (response.data && response.data.length > 0) {
+          console.log('Mensajes cargados:', response.data);
           this.conversationMessages = response.data;
+        } else {
+          this.conversationMessages = [];
+          console.warn('No se encontraron mensajes para la conversación');
+        }
+        
+        if (temporalLoadingElement) {
+          temporalLoadingElement.classList.remove('loading');
         }
       },
       error: (error) => {
         console.error('Error al cargar los mensajes:', error);
+        this.conversationMessages = [];
+        
+        if (temporalLoadingElement) {
+          temporalLoadingElement.classList.remove('loading');
+        }
       }
     });
   }
@@ -120,25 +141,35 @@ export class StudentViewComponent implements OnInit {
   onSendNewMessage(data: {conversationId: number, text: string}): void {
     if (!data.conversationId || !data.text) return;
     
+    // Agregamos directamente el mensaje del usuario para mostrar feedback inmediato (optimistic update)
+    const userMessage: Message = {
+      id: Date.now(), // ID temporal, será reemplazado con la respuesta del servidor
+      conversation_id: data.conversationId,
+      text: data.text,
+      is_bot: false,
+      created_at: new Date().toISOString()
+    };
+    
+    this.conversationMessages.push(userMessage);
+    
+    // Actualizamos la barra lateral
+    if (this.sidebarComponent) {
+      this.sidebarComponent.updateConversationLastMessage(data.conversationId, data.text);
+    }
+    
+    // Enviamos el mensaje al servidor
     this.chatService.sendMessage(data.conversationId, data.text).subscribe({
       next: (response) => {
         if (response.data) {
-          // Añadir el nuevo mensaje a la lista de mensajes
-          this.conversationMessages.push(response.data);
-          
-          // Actualizar el último mensaje en la barra lateral
-          if (this.sidebarComponent) {
-            this.sidebarComponent.updateConversationLastMessage(data.conversationId, data.text);
-          }
-          
-          // Simular la respuesta del bot (en un entorno real, esto vendría del websocket o de polling)
-          setTimeout(() => {
-            this.loadConversationMessages(data.conversationId);
-          }, 1000);
+          // Reemplazamos el mensaje temporal con el real (si es necesario)
+          // O simplemente recargamos todos los mensajes
+          this.loadConversationMessages(data.conversationId);
         }
       },
       error: (error) => {
         console.error('Error al enviar mensaje:', error);
+        // Opcional: Mostrar un mensaje de error en la UI
+        // O marcar el mensaje como no enviado
       }
     });
   }

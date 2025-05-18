@@ -4,7 +4,7 @@ from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
 from ..models.models import DocumentChunk, User
-from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversations_by_user_role, get_current_user_conversations
+from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversation_messages, get_conversations_by_user_role, get_current_user_conversations
 from ..core.database import get_db
 from ..core.auth import require_role, get_current_user
 from ..services.vector_service import (
@@ -200,5 +200,35 @@ async def get_context_for_question(
     return {
         "data": context_out,
         "message": "Contexto obtenido correctamente",
+        "status": 200
+    }
+
+@chat_routes.get("/conversation/{conversation_id}/messages", response_model=APIResponse)
+async def get_conversation_message_history(
+    conversation_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener todos los mensajes de una conversación específica"""
+    conversation = get_conversation_by_id(conversation_id, db)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+        
+    # Verificar que el usuario actual puede acceder a esta conversación
+    if current_user.role == "student" and not (conversation.user_id == current_user.id and conversation.user_role == "student"):
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
+    elif current_user.role == "teacher":
+        # Los profesores pueden ver las conversaciones de las asignaturas que imparten
+        if not ((conversation.user_id == current_user.id and conversation.user_role == "teacher") or 
+                (conversation.subject_id and conversation.subject_id in 
+                 [s.id for s in current_user.teaching_subjects])):
+            raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
+    
+    messages = get_conversation_messages(conversation_id, db)
+    message_out_list = [MessageOut.model_validate(msg) for msg in messages]
+    
+    return {
+        "data": message_out_list,
+        "message": "Mensajes obtenidos correctamente",
         "status": 200
     }
