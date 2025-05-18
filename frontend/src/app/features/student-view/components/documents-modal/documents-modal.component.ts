@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Document, DocumentTopic } from '../../interfaces/document.interface';
+import { DocumentTopic, DocumentUI, DocumentAdapter } from '../../interfaces/document.interface';
+import { ChatService } from '../../../../core/services/chat.service';
 
 @Component({
   selector: 'app-documents-modal',
@@ -213,16 +214,76 @@ import { Document, DocumentTopic } from '../../interfaces/document.interface';
     }
   `]
 })
-export class DocumentsModalComponent implements OnChanges {
+export class DocumentsModalComponent implements OnChanges, OnInit {
   @Input() isVisible = false;
   @Input() currentSubjectId: string | undefined;
   
+  private chatService = inject(ChatService);
+  
   // Documentos filtrados según la asignatura actual
   filteredTopics: DocumentTopic[] = [];
+  documentTopics: DocumentTopic[] = [];
+  loading = false;
+  error: string | null = null;
+
+  ngOnInit(): void {
+    // Cargar todos los documentos al inicio
+    this.loadAllDocuments();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Filtrar documentos cuando cambia la asignatura seleccionada
+    // Si cambia el subject_id y está definido, cargar documentos específicos
+    if (changes['currentSubjectId'] && this.currentSubjectId) {
+      this.loadSubjectDocuments(Number(this.currentSubjectId));
+    } else {
+      // Si no hay ID de asignatura, filtrar con los datos existentes
+      this.filterDocuments();
+    }
+  }
+
+  // Método para cargar todos los documentos al inicio
+  private loadAllDocuments(): void {
+    // Por ahora, si no tenemos una forma de obtener todos los documentos,
+    // podemos usar los datos de ejemplo hasta que se seleccione una asignatura
+    this.documentTopics = this.getExampleDocuments();
     this.filterDocuments();
+  }
+
+  // Método para cargar documentos de una asignatura específica
+  loadSubjectDocuments(subjectId: number): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.chatService.getSubjectDocuments(subjectId).subscribe({
+      next: (response) => {
+        if (response.data && Array.isArray(response.data)) {
+          // Convertir los documentos de la API al formato de la UI
+          const documents = response.data.map(doc => DocumentAdapter.toDocumentUI(doc));
+          
+          // Agrupar por asignatura
+          const subjectName = documents.length > 0 ? documents[0].topic : 'Sin asignatura';
+          
+          // Crear un único tema con todos los documentos de la asignatura
+          this.documentTopics = [{
+            name: subjectName,
+            documents: documents
+          }];
+          
+          this.filteredTopics = [...this.documentTopics];
+        } else {
+          this.documentTopics = [];
+          this.filteredTopics = [];
+        }
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar documentos:', error);
+        this.error = 'Error al cargar los documentos';
+        this.loading = false;
+        this.filteredTopics = [];
+      }
+    });
   }
 
   // Método para filtrar documentos según la asignatura actual
@@ -233,91 +294,38 @@ export class DocumentsModalComponent implements OnChanges {
       return;
     }
 
-    // Mapear asignaturas al nombre
-    const subjectNames: {[key: string]: string} = {
-      '1': 'Matemáticas',
-      '2': 'Física',
-      '3': 'Química',
-      '4': 'Biología',
-      '5': 'Historia',
-      '6': 'Literatura'
-    };
-
-    const currentSubjectName = subjectNames[this.currentSubjectId];
+    const subjectId = Number(this.currentSubjectId);
     
-    if (currentSubjectName) {
-      // Filtrar solo los temas de la asignatura actual
-      this.filteredTopics = this.documentTopics.filter(
-        topic => topic.name === currentSubjectName
-      );
-      
-      // Si no hay temas para esta asignatura, mostrar arreglo vacío
-      if (this.filteredTopics.length === 0) {
-        console.log(`No hay documentos para la asignatura: ${currentSubjectName}`);
+    // En lugar de filtrar localmente, cargamos desde el servidor
+    this.loadSubjectDocuments(subjectId);
+  }
+
+  // Datos de ejemplo para mostrar antes de cargar desde la API
+  private getExampleDocuments(): DocumentTopic[] {
+    return [
+      {
+        name: 'Documentos',
+        documents: [
+          {
+            id: '1',
+            title: 'Selecciona una asignatura para ver sus documentos',
+            topic: 'Instrucciones',
+            type: 'pdf',
+            url: '',
+            uploadDate: new Date()
+          }
+        ]
       }
+    ];
+  }
+
+  downloadDocument(doc: DocumentUI): void {
+    // Si el documento tiene una URL, abrirla
+    if (doc.url) {
+      console.log('Descargando documento:', doc.title);
+      window.open(doc.url, '_blank');
     } else {
-      // Si no se puede mapear el ID a un nombre, mostrar todos los documentos
-      console.log(`ID de asignatura no reconocido: ${this.currentSubjectId}`);
-      this.filteredTopics = [...this.documentTopics];
+      console.log('El documento no tiene URL para descargar:', doc.title);
     }
-  }
-
-  // Datos de ejemplo - Esto debería venir de un servicio
-  documentTopics: DocumentTopic[] = [
-    {
-      name: 'Matemáticas',
-      documents: [
-        {
-          id: '1',
-          title: 'Álgebra Básica',
-          topic: 'Matemáticas',
-          type: 'pdf',
-          url: '/docs/algebra.pdf',
-          uploadDate: new Date('2025-05-10')
-        },
-        {
-          id: '2',
-          title: 'Ejercicios de Geometría',
-          topic: 'Matemáticas',
-          type: 'image',
-          url: '/docs/geometria.jpg',
-          uploadDate: new Date('2025-05-11')
-        }
-      ]
-    },
-    {
-      name: 'Física',
-      documents: [
-        {
-          id: '3',
-          title: 'Fórmulas de Mecánica',
-          topic: 'Física',
-          type: 'pdf',
-          url: '/docs/mecanica.pdf',
-          uploadDate: new Date('2025-05-12')
-        },
-        {
-          id: '4',
-          title: 'Diagrama de Fuerzas',
-          topic: 'Física',
-          type: 'image',
-          url: '/docs/fuerzas.png',
-          uploadDate: new Date('2025-05-12')
-        }
-      ]
-    }
-  ];
-
-  close() {
-    this.isVisible = false;
-  }
-
-  downloadDocument(doc: Document) {
-    // Aquí iría la lógica de descarga
-    // Por ahora solo simularemos la descarga con un console.log
-    console.log('Descargando documento:', doc.title);
-    
-    // En una implementación real, podrías usar window.open o fetch para descargar el archivo
-    window.open(doc.url, '_blank');
   }
 }

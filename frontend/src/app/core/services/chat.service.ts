@@ -3,6 +3,7 @@ import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
 import { Conversation, Message } from '../models/chat.model';
+import { Document } from '../models/document.model';
 
 // Interface para la respuesta específica de creación de conversación
 interface ConversationWithResponse {
@@ -49,5 +50,9 @@ export class ChatService {
   
   deleteConversation(conversationId: number): Observable<ApiResponse<void>> {
     return this.api.delete<void>(`chat/conversation/${conversationId}`);
+  }
+
+  getSubjectDocuments(subjectId: number): Observable<ApiResponse<Document[]>> {
+    return this.api.get<Document[]>(`subjects/${subjectId}/documents`);
   }
 }
