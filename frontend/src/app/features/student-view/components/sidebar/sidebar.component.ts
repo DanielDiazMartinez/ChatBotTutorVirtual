@@ -1,7 +1,8 @@
-import { Component, OnInit, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { ChatService } from '../../../../core/services/chat.service';
 import { Conversation } from '../../../../core/models/chat.model';
+import { Subject } from '../../../subject-selection/interfaces/subject.interface';
 
 @Component({
   selector: 'app-sidebar',
@@ -11,8 +12,9 @@ import { Conversation } from '../../../../core/models/chat.model';
   styleUrls: ['./sidebar.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnChanges {
   @Output() conversationSelected = new EventEmitter<number>();
+  @Input() currentSubject: Subject | null = null;
   
   conversations: Conversation[] = [];
   activeConversationId: string | null = null;
@@ -24,10 +26,18 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.loadConversations();
   }
+  
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['currentSubject']) {
+      this.loadConversations();
+    }
+  }
 
   loadConversations(): void {
     this.isLoading = true;
-    this.chatService.getUserConversations().subscribe({
+    const subjectId = this.currentSubject ? Number(this.currentSubject.id) : undefined;
+    
+    this.chatService.getUserConversations(subjectId).subscribe({
       next: (response) => {
         if (response.data) {
           this.conversations = response.data.map(conv => ({
@@ -80,9 +90,9 @@ export class SidebarComponent implements OnInit {
   }
 
   onNewConversation(): void {
-    // Usando documento y asignatura fijos como solicitado en el endpoint
+    // Usar un documento fijo pero la asignatura actual
     const documentId = 4;  // ID del documento fijo según lo solicitado
-    const subjectId = 3;   // ID de la asignatura fijo según lo solicitado
+    const subjectId = this.currentSubject ? Number(this.currentSubject.id) : 3;
     
     // Mostrar un indicador de carga
     this.isLoading = true;

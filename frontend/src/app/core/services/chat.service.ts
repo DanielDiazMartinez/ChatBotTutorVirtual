@@ -40,8 +40,11 @@ export class ChatService {
     return this.api.get<Message[]>(`chat/conversation/${conversationId}/messages`);
   }
 
-  getUserConversations(): Observable<ApiResponse<Conversation[]>> {
-    return this.api.get<Conversation[]>('chat/me/conversations');
+  getUserConversations(subjectId?: number): Observable<ApiResponse<Conversation[]>> {
+    const url = subjectId 
+      ? `chat/me/conversations?subject_id=${subjectId}` 
+      : 'chat/me/conversations';
+    return this.api.get<Conversation[]>(url);
   }
   
   deleteConversation(conversationId: number): Observable<ApiResponse<void>> {
