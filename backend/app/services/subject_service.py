@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from ..models.models import Subject, User, teacher_subject, student_subject
+from ..models.models import Subject, User, teacher_subject, student_subject, Document
 from ..models.schemas import SubjectCreate
 
 def create_subject(db: Session, subject: SubjectCreate) -> dict:
@@ -346,3 +346,12 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
         results["error"] = "No se pudo eliminar ningún usuario"
             
     return results
+
+def get_subject_documents(db: Session, subject_id: int):
+    """Obtiene todos los documentos asociados a una asignatura"""
+    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    if not subject:
+        return None
+        
+    documents = db.query(Document).filter(Document.subject_id == subject_id).all()
+    return documents

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
@@ -59,11 +59,12 @@ async def create_conversation(
 
 @chat_routes.get("/me/conversations", response_model=APIResponse)
 async def get_my_conversations(
+    subject_id: Optional[int] = Query(None, description="ID de la asignatura para filtrar"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Obtener todas las conversaciones del usuario actualmente autenticado"""
-    conversations = get_current_user_conversations(current_user.id, current_user.role, db)
+    """Obtener todas las conversaciones del usuario actualmente autenticado, opcionalmente filtradas por asignatura"""
+    conversations = get_current_user_conversations(current_user.id, current_user.role, db, subject_id)
     
     return {
         "data": conversations,

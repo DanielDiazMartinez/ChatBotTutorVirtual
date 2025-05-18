@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from ..core.database import get_db
 from ..core.auth import require_role
-from ..models.schemas import APIResponse, SubjectCreate, SubjectOut, UserIdsRequest
-from ..models.models import User
+from ..models.schemas import APIResponse, SubjectCreate, SubjectOut, UserIdsRequest, DocumentOut
+from ..models.models import User, Document
 from ..services.subject_service import (
     add_user_to_subject,
     add_multiple_users_to_subject,
@@ -15,6 +15,7 @@ from ..services.subject_service import (
     get_all_subjects,
     update_subject,
     delete_subject,
+    get_subject_documents,
 )
 
 subjects_routes = APIRouter()
@@ -145,6 +146,25 @@ def add_multiple_users_to_subject_route(
             "failed": result["failed"]
         },
         "message": f"Se añadieron {len(result['added'])} usuarios a la asignatura. {len(result['failed'])} fallaron.",
+        "status": 200
+    }
+
+@subjects_routes.get("/{subject_id}/documents", response_model=APIResponse)
+def get_subject_documents_route(
+    subject_id: int,
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+):
+    """Obtiene todos los documentos asociados a una asignatura"""
+    documents = get_subject_documents(db=db, subject_id=subject_id)
+    if documents is None:
+        raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+    
+    # Convertir los documentos al esquema DocumentOut para serialización
+    document_outs = [DocumentOut.model_validate(doc) for doc in documents]
+    return {
+        "data": document_outs,
+        "message": "Documentos de la asignatura obtenidos correctamente",
         "status": 200
     }
 

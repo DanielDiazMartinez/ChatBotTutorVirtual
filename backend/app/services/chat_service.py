@@ -86,11 +86,16 @@ def delete_conversation(conversation_id: int, db: Session) -> None:
     db.delete(conversation)  # Esto eliminará también los mensajes por la relación cascade
     db.commit()
 
-def get_current_user_conversations(user_id: int, role: str, db: Session) -> List[dict]:
+def get_current_user_conversations(user_id: int, role: str, db: Session, subject_id: Optional[int] = None) -> List[dict]:
     """
     Obtiene todas las conversaciones del usuario actualmente autenticado y las formatea como diccionarios.
+    Si se proporciona subject_id, filtra las conversaciones por esa asignatura.
     """
     conversations = get_conversations_by_user_role(user_id, role, db)
+    
+    # Filtrar por asignatura si se proporciona subject_id
+    if subject_id is not None:
+        conversations = [conv for conv in conversations if conv.subject_id == subject_id]
     
     result = []
     for conv in conversations:
