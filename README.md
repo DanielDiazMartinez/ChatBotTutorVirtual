@@ -1,95 +1,147 @@
-ChatBotTutorVirtual 🤖
-Un asistente virtual educativo que permite a los profesores cargar documentos y a los estudiantes interactuar con un chatbot que responde preguntas basadas en esos documentos, utilizando procesamiento de lenguaje natural y búsqueda vectorial para proporcionar respuestas precisas.
-📋 Descripción
-ChatBotTutorVirtual es una aplicación que conecta profesores y estudiantes a través de un sistema de chat inteligente que analiza documentos educativos. Los profesores pueden subir materiales de estudio, mientras que los estudiantes pueden hacer preguntas sobre los contenidos y recibir respuestas contextualizadas gracias a la búsqueda vectorial con pgvector.
-🛠️ Tecnologías
+# ChatBotTutorVirtual 🤖
 
-Backend: FastAPI, SQLAlchemy, Alembic, pgvector
-Base de datos: PostgreSQL
-Almacenamiento vectorial: pgvector (búsqueda semántica)
-Contenedores: Docker, Docker Compose
-Herramientas adicionales: pgAdmin
+Un sistema avanzado de tutoría virtual basado en Inteligencia Artificial que conecta profesores y estudiantes a través de un chatbot inteligente.
 
-## 🏗️ Arquitectura
+## 📋 Descripción del Proyecto
 
-backend/
-├── alembic/              # Migraciones de base de datos
-├── app/
-│   ├── api/              # Endpoints de la API
-│   ├── core/             # Configuración central
-│   └── models/           # Modelos de datos
-├── Dockerfile
-├── .env
-└── init.sql              # Script inicial para PostgreSQL
+ChatBotTutorVirtual es una plataforma educativa integral que permite a los profesores gestionar asignaturas y cargar materiales de estudio, mientras que los estudiantes pueden interactuar con un chatbot especializado que responde preguntas basadas en esos contenidos. El sistema utiliza procesamiento de lenguaje natural y búsqueda semántica vectorial para proporcionar respuestas precisas y contextualizadas.
 
+## 🛠️ Stack Tecnológico
 
-📊 Modelos de datos
-El sistema utiliza los siguientes modelos principales:
+### Backend
+- **Framework principal**: FastAPI (Python)
+- **ORM**: SQLAlchemy
+- **Migraciones**: Alembic
+- **Autenticación**: JWT
+- **Procesamiento LLM**: Groq API
+- **Vectorización**: PineconeDB
 
-Teacher: Gestiona profesores y sus documentos
-Student: Información de estudiantes
-Document: Documentos subidos por profesores
-DocumentChunk: Fragmentos de documentos con embeddings vectoriales
-Conversation: Conversaciones entre estudiantes y el chatbot
-Message: Mensajes individuales en las conversaciones
+### Base de datos
+- **Motor principal**: PostgreSQL
+- **Búsqueda vectorial**: pgvector (índices vectoriales para búsqueda semántica)
 
-🚀 Instalación y configuración
-Requisitos previos
+### Frontend
+- **Framework**: Angular 17+ (standalone components)
+- **Estilos**: SCSS personalizado
+- **Componentes UI**: Material Design
 
-Docker y Docker Compose
-Git
+### Infraestructura
+- **Contenedores**: Docker y Docker Compose
+- **Almacenamiento**: Volúmenes Docker para persistencia
+- **Herramientas**: pgAdmin para gestión de base de datos
 
-Pasos para instalar
+## 🏗️ Arquitectura del Proyecto
 
-Clona el repositorio
-bashCopiargit clone https://github.com/tu-usuario/ChatBotTutorVirtual.git
-cd ChatBotTutorVirtual
-
-Configura las variables de entorno
-bashCopiarcp backend/.env.example backend/.env
-# Edita .env con tus valores
-
-Inicia los servicios con Docker Compose
-bashCopiardocker-compose up -d
-
-Accede a la aplicación
-
-API: http://localhost:8000
-Documentación API: http://localhost:8000/docs
-pgAdmin: http://localhost:5050
+```
+ChatBotTutorVirtual/
+├── backend/                # API y lógica de servidor
+│   ├── app/
+│   │   ├── api/            # Endpoints REST
+│   │   ├── core/           # Configuración y utilidades
+│   │   ├── models/         # Modelos de datos y schemas
+│   │   └── services/       # Lógica de negocio
+│   ├── alembic/            # Migraciones de base de datos
+│   └── tests/              # Tests unitarios e integración
+├── frontend/              # Aplicación Angular
+│   ├── src/
+│   │   ├── app/           # Componentes y servicios
+│   │   └── styles/        # Estilos SCSS
+│   └── public/            # Assets estáticos
+└── docker-compose.yml     # Configuración de servicios
+```
 
 
+## 📊 Modelos de Datos
 
-📄 API Endpoints
-La API proporciona los siguientes endpoints principales:
+El sistema está estructurado alrededor de estos modelos principales:
 
-Autenticación: /api/auth/login, /api/auth/register
-Profesores: /api/teachers/
-Estudiantes: /api/students/
-Documentos: /api/documents/
-Chat: /api/chat/
+- **User**: Base para todos los tipos de usuarios con autenticación
+- **Subject**: Asignaturas con relaciones a profesores y estudiantes
+- **Document**: Materiales de estudio con metadatos
+- **DocumentChunk**: Fragmentos de documentos vectorizados
+- **Conversation**: Hilos de chat entre estudiantes y el sistema
+- **Message**: Mensajes individuales con su contexto
 
-💡 Características principales
+## 🚀 Cómo Ejecutar el Proyecto
 
-Autenticación y autorización para profesores y estudiantes
-Carga y procesamiento de documentos PDF
-Generación automática de embeddings vectoriales
-Conversaciones contextualizadas con búsqueda semántica
-Interfaz administrativa para profesores
+### Requisitos Previos
 
-🔍 Búsqueda vectorial con pgvector
-El sistema utiliza pgvector para:
+- Docker y Docker Compose
+- Git
 
-Convertir fragmentos de texto en vectores de alta dimensionalidad
-Almacenar estos vectores de manera eficiente en PostgreSQL
-Realizar búsquedas semánticas utilizando distancia coseno
-Encontrar contenido relacionado contextualmente a las preguntas
+### Instalación y Configuración
 
-👥 Contribuir
-Las contribuciones son bienvenidas. Para contribuir:
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/ChatBotTutorVirtual.git
+   cd ChatBotTutorVirtual
+   ```
 
-Haz fork del repositorio
-Crea una nueva rama (git checkout -b feature/nueva-caracteristica)
-Haz commit de tus cambios (git commit -m 'Añadir nueva característica')
-Sube tu rama (git push origin feature/nueva-caracteristica)
-Abre un Pull Request
+2. **Configurar variables de entorno**
+   ```bash
+   cp backend/.env.example backend/.env
+   # Editar .env con tus credenciales y configuración
+   ```
+
+3. **Iniciar los servicios**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Acceder a las interfaces**
+   - API y documentación: http://localhost:8000/docs
+   - Aplicación web: http://localhost:4200
+   - pgAdmin: http://localhost:5050
+
+
+
+## 🔍 Funcionalidades Destacadas
+
+- **Gestión de asignaturas** con relaciones profesor-estudiante
+- **Carga y procesamiento** de documentos PDF, DOCX, etc.
+- **Vectorización automática** de contenidos para búsqueda semántica
+- **Autenticación y autorización** basada en roles (admin, profesor, estudiante)
+- **Procesamiento de lenguaje natural** para responder consultas complejas
+- **Historial de conversaciones** persistente con contexto de preguntas anteriores
+- **Interfaz administrativa** para profesores y gestores del sistema
+
+## 💡 Implementación Técnica
+
+### Búsqueda Vectorial
+
+El sistema utiliza embeddings vectoriales para:
+
+1. Convertir fragmentos de texto en vectores de alta dimensionalidad
+2. Almacenar estos vectores de manera eficiente en PostgreSQL con pgvector
+3. Realizar búsquedas por similitud semántica utilizando distancia coseno
+4. Encontrar el contenido más relevante contextualmente a cada pregunta
+
+### Flujo de una Consulta
+
+1. El estudiante realiza una pregunta en el chat
+2. La pregunta se vectoriza y se buscan fragmentos relevantes en la base de datos
+3. Los fragmentos recuperados proporcionan contexto a un LLM
+4. El modelo genera una respuesta precisa basada en los documentos de la asignatura
+5. La interacción se guarda en el historial de conversaciones
+
+## 👨‍💻 Desarrollo y Contribuciones
+
+Este proyecto forma parte de mi portfolio profesional, demostrando habilidades en:
+
+- Desarrollo fullstack con Python (FastAPI) y Angular
+- Diseño e implementación de bases de datos relacionales
+- Integración de modelos de IA y procesamiento de lenguaje natural
+- Arquitectura de sistemas distribuidos con Docker
+- Testing y documentación de APIs
+
+## 📝 Licencia
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+
+## 📬 Contacto
+
+Para consultas o sugerencias sobre este proyecto, puedes contactarme en:
+
+- Email: tu.email@ejemplo.com
+- LinkedIn: [Tu perfil de LinkedIn](https://www.linkedin.com/in/tu-perfil/)
+- GitHub: [Tu perfil de GitHub](https://github.com/tu-usuario)
