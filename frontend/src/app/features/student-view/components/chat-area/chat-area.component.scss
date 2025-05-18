@@ -45,7 +45,7 @@
   }
 
   .messages-container {
-    padding: 2rem 0; // Ajustar padding vertical
+    padding: 2rem 0 0 0;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -53,6 +53,7 @@
     flex-direction: column;
     width: 100%;
     transition: all 0.3s ease;
+    margin-bottom: 80px; // Espacio suficiente para que no se oculten los mensajes detrás del input
 
     &.drawer-open {
       width: 100%; // Mantenemos el ancho completo

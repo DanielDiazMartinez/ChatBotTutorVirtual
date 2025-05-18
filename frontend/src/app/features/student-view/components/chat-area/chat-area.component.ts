@@ -127,6 +127,11 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
       timestamp: new Date()
     });
     
+    // Hacemos scroll inmediatamente y también después de un pequeño retraso
+    // para asegurar que el DOM se ha actualizado
+    this.scrollToBottom();
+    setTimeout(() => this.scrollToBottom(), 100);
+    
     // Simulamos una respuesta si no hay conversación activa (modo desarrollo)
     if (!this.activeConversation) {
       setTimeout(() => {
@@ -136,6 +141,8 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
           isUser: false,
           timestamp: new Date()
         });
+        // Asegurar scroll después de recibir respuesta simulada
+        this.scrollToBottom();
       }, 1000);
     }
   }
