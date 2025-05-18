@@ -90,6 +90,7 @@ def create_conversation(
     document_id: int,
     user_id: int,
     user_type: str,  # "teacher" o "student"
+    subject_id: int
 ) -> Conversation:
     """
     Crea una nueva conversación.
@@ -105,10 +106,10 @@ def create_conversation(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     new_conversation = Conversation(
-        student_id=user_id if user_type == "student" else None,
-        teacher_id=user_id if user_type == "teacher" else None,
+        user_id=user_id,
+        user_role=user_type,
         document_id=document_id,
-        subject_id=document.subject_id
+        subject_id=subject_id
     )
 
     db.add(new_conversation)
@@ -122,7 +123,8 @@ def generate_conversation(
     document_id: int,
     user_id: int,
     user_type: str,
-    initial_message_text: str = None
+    subject_id: int ,
+    initial_message_text: str = None,
 ) -> Tuple[str, Conversation]:
     """
     Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
@@ -131,7 +133,8 @@ def generate_conversation(
         db=db,
         document_id=document_id,
         user_id=user_id,
-        user_type=user_type
+        user_type=user_type,
+        subject_id=subject_id 
     )
 
     bot_msg = None

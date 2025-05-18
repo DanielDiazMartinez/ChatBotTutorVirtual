@@ -43,7 +43,9 @@ def get_conversations_by_user_role(user_id: int, role: str, db: Session) -> List
     query = db.query(Conversation)
     
     if role == "student":
-        query = query.filter(Conversation.student_id == user_id)
+        query = query.filter(
+            and_(Conversation.user_id == user_id, Conversation.user_role == "student")
+        )
     elif role == "teacher":
         # Los profesores pueden ver sus propias conversaciones y las de sus asignaturas
         teacher = db.query(User).filter(
@@ -55,7 +57,7 @@ def get_conversations_by_user_role(user_id: int, role: str, db: Session) -> List
         subject_ids = [subject.id for subject in teacher.teaching_subjects]
         query = query.filter(
             or_(
-                Conversation.teacher_id == user_id,
+                and_(Conversation.user_id == user_id, Conversation.user_role == "teacher"),
                 Conversation.subject_id.in_(subject_ids)
             )
         )
@@ -101,9 +103,9 @@ def get_current_user_conversations(user_id: int, role: str, db: Session) -> List
         conv_dict = {
             "id": conv.id,
             "document_id": conv.document_id,
-            "student_id": conv.student_id,
-            "teacher_id": conv.teacher_id,
-            "topic_id": conv.topic_id,
+            "user_id": conv.user_id,
+            "user_role": conv.user_role,
+            "subject_id": conv.subject_id,
             "created_at": conv.created_at,
             "document_title": conv.document.title if conv.document else None,
             "last_message": {

@@ -33,7 +33,6 @@ def generate_groq_response(user_question: str, context: str,conversation_history
     Returns:
         La respuesta generada por el modelo de Groq.
     """
-   
     if client is None:
         print("--- ERROR: generate_groq_response called but Groq client is not valid! ---")
         return "Lo siento, la configuración del servicio de IA no es correcta."

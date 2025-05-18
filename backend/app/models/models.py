@@ -104,10 +104,8 @@ class User(Base):
                            primaryjoin="and_(User.id==Document.teacher_id, User.role=='teacher')")
     
     teacher_conversations = relationship("Conversation", 
-                                      foreign_keys="[Conversation.teacher_id]",
-                                      back_populates="teacher", 
                                       cascade="all, delete-orphan",
-                                      primaryjoin="and_(User.id==Conversation.teacher_id, User.role=='teacher')")
+                                      primaryjoin="and_(User.id==Conversation.user_id, User.role=='teacher', Conversation.user_role=='teacher')")
     
     teaching_subjects = relationship("Subject", 
                                    secondary='teacher_subject',
@@ -118,10 +116,8 @@ class User(Base):
 
     # Relaciones específicas de estudiantes
     student_conversations = relationship("Conversation", 
-                                       foreign_keys="[Conversation.student_id]",
-                                       back_populates="student", 
                                        cascade="all, delete-orphan",
-                                       primaryjoin="and_(User.id==Conversation.student_id, User.role=='student')")
+                                       primaryjoin="and_(User.id==Conversation.user_id, User.role=='student', Conversation.user_role=='student')")
     
     student_subjects = relationship("Subject", 
                                    secondary='student_subject',
@@ -178,30 +174,24 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_role = Column(String, nullable=False)  # 'teacher', 'student', etc.
     document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
-    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
+    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    student = relationship("User", back_populates="student_conversations", primaryjoin="and_(User.id==Conversation.student_id, User.role=='student')")
-    teacher = relationship("User", back_populates="teacher_conversations", primaryjoin="and_(User.id==Conversation.teacher_id, User.role=='teacher')")
+    user = relationship("User", foreign_keys=[user_id], backref="conversations")
     document = relationship("Document", back_populates="conversations")
-    topic = relationship("Topic", back_populates="conversations")
+    subject = relationship("Subject", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
-    @validates('student_id', 'teacher_id')
-    def validate_owner(self, key, value):
-        if key == 'student_id' and value is not None:
-            assert self.teacher_id is None, "Una conversación no puede pertenecer a un estudiante y un profesor al mismo tiempo."
-        if key == 'teacher_id' and value is not None:
-            assert self.student_id is None, "Una conversación no puede pertenecer a un estudiante y un profesor al mismo tiempo."
+    @validates('user_role')
+    def validate_role(self, key, value):
+        assert value in ['admin', 'teacher', 'student'], "El rol debe ser 'admin', 'teacher' o 'student'"
         return value
 
     def __repr__(self):
-         owner_id = self.student_id or self.teacher_id
-         owner_type = "Student" if self.student_id else "Teacher"
-         return f"<Conversation(id={self.id}, owner_type={owner_type}, owner_id={owner_id}, document_id={self.document_id})>"
+        return f"<Conversation(id={self.id}, user_role={self.user_role}, user_id={self.user_id}, document_id={self.document_id})>"
 
 
 class Message(Base):
@@ -261,6 +251,7 @@ class Subject(Base):
     )
     documents = relationship("Document", back_populates="subject")
     topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="subject", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Subject(id={self.id}, name='{self.name}', code='{self.code}')>"
@@ -276,7 +267,6 @@ class Topic(Base):
 
     subject = relationship("Subject", back_populates="topics")
     documents = relationship("Document", back_populates="topic", cascade="all, delete-orphan")
-    conversations = relationship("Conversation", back_populates="topic", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Topic(id={self.id}, name='{self.name}', subject_id={self.subject_id})>"

@@ -124,17 +124,17 @@ class ConversationCreate(BaseModel):
     """
     document_id: int
     text: Optional[str] = None
-    topic_id: Optional[int] = None
+    subject_id: Optional[int] = None
 
 class ConversationOut(BaseModel):
     """
     Modelo de salida para una conversación.
     """
     id: int
-    student_id: Optional[int] = None
-    teacher_id: Optional[int] = None
+    user_id: int
+    user_role: str
     document_id: int
-    topic_id: Optional[int] = None
+    subject_id: Optional[int] = None
     messages: List["MessageOut"] = []
 
     model_config = ConfigDict(from_attributes=True)

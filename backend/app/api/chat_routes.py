@@ -38,14 +38,21 @@ async def create_conversation(
         document_id=conversation_data.document_id,
         user_id=current_user.id,
         user_type=current_user.role,
+        subject_id=conversation_data.subject_id,
         initial_message_text=conversation_data.text
     )
+    
+    # Convertir el modelo ORM a un modelo Pydantic
+    conversation_data = ConversationOut.model_validate(conversation_obj)
+    
+    # Crear un objeto ConversationWithResponse
+    response_data = {
+        "conversation": conversation_data,
+        "bot_response": bot_response_str
+    }
 
     return {
-        "data": {
-            "conversation": conversation_obj,
-            "bot_response": bot_response_str
-        },
+        "data": response_data,
         "message": "Conversación creada correctamente",
         "status": 200 
     }
@@ -103,11 +110,11 @@ async def get_conversation(
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
     # Verificar que el usuario actual puede acceder a esta conversación
-    if current_user.role == "student" and conversation.student_id != current_user.id:
+    if current_user.role == "student" and not (conversation.user_id == current_user.id and conversation.user_role == "student"):
         raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
     elif current_user.role == "teacher":
         # Los profesores pueden ver las conversaciones de las asignaturas que imparten
-        if not (conversation.teacher_id == current_user.id or 
+        if not ((conversation.user_id == current_user.id and conversation.user_role == "teacher") or 
                 (conversation.subject_id and conversation.subject_id in 
                  [s.id for s in current_user.teaching_subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
@@ -130,12 +137,8 @@ async def delete_conv(
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
     # Verificar que el usuario actual puede eliminar esta conversación
-    if current_user.role == "student":
-        if conversation.student_id != current_user.id:
-            raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
-    elif current_user.role == "teacher":
-        if conversation.teacher_id != current_user.id:
-            raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
+    if conversation.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
             
     delete_conversation(conversation_id, db)
     return {
