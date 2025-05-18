@@ -1,0 +1,97 @@
+<div class="modal-overlay" *ngIf="isVisible">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Subir Documento</h2>
+      <button class="close-btn" (click)="close()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form [formGroup]="uploadForm" (ngSubmit)="submit()">
+        <div class="form-group">
+          <label for="title">Nombre del documento *</label>
+          <input 
+            type="text" 
+            id="title" 
+            formControlName="title" 
+            placeholder="Ingrese el nombre del documento"
+            [class.invalid]="uploadForm.get('title')?.invalid && uploadForm.get('title')?.touched"
+          >
+          <div class="error-message" *ngIf="uploadForm.get('title')?.invalid && uploadForm.get('title')?.touched">
+            El nombre del documento es obligatorio
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="subjectId">Asignatura *</label>
+          <select 
+            id="subjectId" 
+            formControlName="subjectId"
+            [class.invalid]="uploadForm.get('subjectId')?.invalid && uploadForm.get('subjectId')?.touched"
+          >
+            <option value="" disabled selected>Seleccione una asignatura</option>
+            <option *ngFor="let subject of subjects" [value]="subject.id">{{ subject.name }}</option>
+          </select>
+          <div class="error-message" *ngIf="uploadForm.get('subjectId')?.invalid && uploadForm.get('subjectId')?.touched">
+            Debe seleccionar una asignatura
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <textarea 
+            id="description" 
+            formControlName="description" 
+            placeholder="Ingrese una descripción (opcional)"
+            rows="3"
+          ></textarea>
+        </div>
+        
+        <div class="form-group file-upload">
+          <label for="file">Archivo PDF *</label>
+          <div class="file-input-container" [class.has-file]="selectedFile">
+            <input 
+              type="file" 
+              id="file" 
+              accept=".pdf" 
+              (change)="onFileSelected($event)"
+              [class.invalid]="uploadForm.get('file')?.invalid && uploadForm.get('file')?.touched"
+            >
+            <div class="file-input-label">
+              <span *ngIf="!selectedFile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/>
+                </svg>
+                Arrastra y suelta un archivo PDF aquí o haz clic para seleccionarlo
+              </span>
+              <span *ngIf="selectedFile">
+                {{ selectedFile.name }} ({{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB)
+              </span>
+            </div>
+          </div>
+          <div class="error-message" *ngIf="uploadForm.get('file')?.invalid && uploadForm.get('file')?.touched">
+            Debe seleccionar un archivo PDF
+          </div>
+          <div class="error-message" *ngIf="uploadError">
+            {{ uploadError }}
+          </div>
+          <div class="file-info">
+            * Solo archivos PDF. Tamaño máximo: {{ fileMaxSize }}MB
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="cancel-btn" (click)="close()" [disabled]="isLoading">Cancelar</button>
+      <button class="submit-btn" (click)="submit()" [disabled]="isLoading || uploadForm.invalid">
+        <div class="spinner" *ngIf="isLoading"></div>
+        <span *ngIf="!isLoading">Subir Documento</span>
+        <span *ngIf="isLoading">Subiendo...</span>
+      </button>
+    </div>
+  </div>
+</div>

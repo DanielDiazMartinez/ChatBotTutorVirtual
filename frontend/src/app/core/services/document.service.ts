@@ -18,11 +18,12 @@ export class DocumentService {
     return this.api.get<Document>(`documents/${documentId}`);
   }
 
-  uploadDocument(title: string, description: string, file: File): Observable<ApiResponse<Document>> {
+  uploadDocument(title: string, description: string, file: File, subjectId: string): Observable<ApiResponse<Document>> {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
     formData.append('pdf_file', file);
+    formData.append('subject_id', subjectId);
     
     return this.api.upload<Document>('documents/upload', formData);
   }

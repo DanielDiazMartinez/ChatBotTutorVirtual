@@ -23,7 +23,7 @@
         </select>
       </div>
       
-      <button class="upload-btn" (click)="uploadDocument()">
+      <button class="upload-btn" (click)="openUploadModal()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" fill="currentColor"/>
         </svg>
@@ -92,3 +92,6 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para subir documentos -->
+<app-upload-document-modal></app-upload-document-modal>

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DocumentService } from '../../../core/services/document.service';
@@ -6,15 +6,16 @@ import { Document } from '../../../core/models/document.model';
 import { SubjectService } from '../../../core/services/subject.service';
 import { Subject } from '../../../core/services/subject.service';
 import { ChatService } from '../../../core/services/chat.service';
+import { UploadDocumentModalComponent } from '../upload-document-modal/upload-document-modal.component';
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UploadDocumentModalComponent],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss']
 })
-export class DocumentsComponent implements OnInit {
+export class DocumentsComponent implements OnInit, OnDestroy {
   @Input() isAdminView = false;
   
   searchQuery: string = '';
@@ -34,6 +35,19 @@ export class DocumentsComponent implements OnInit {
   ngOnInit() {
     this.loadSubjects();
     this.loadDocuments();
+    
+    // Escuchar evento de documento subido para recargar la lista
+    this.documentUploadedListener = () => {
+      this.loadDocuments();
+    };
+    window.addEventListener('document-uploaded', this.documentUploadedListener);
+  }
+  
+  ngOnDestroy(): void {
+    // Limpiar el event listener al destruir el componente
+    if (this.documentUploadedListener) {
+      window.removeEventListener('document-uploaded', this.documentUploadedListener);
+    }
   }
 
   loadDocuments() {
@@ -93,9 +107,11 @@ export class DocumentsComponent implements OnInit {
     }
   }
 
-  uploadDocument(): void {
-    console.log('Abrir diálogo para subir documento');
-    // Aquí se implementaría la lógica para subir un documento
+  @ViewChild(UploadDocumentModalComponent) uploadModal!: UploadDocumentModalComponent;
+  private documentUploadedListener: any;
+
+  openUploadModal(): void {
+    this.uploadModal.open();
   }
 
   deleteDocument(id: number): void {

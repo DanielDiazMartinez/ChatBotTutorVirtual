@@ -10,4 +10,5 @@ import { DocumentsComponent as SharedDocumentsComponent } from '../../../../shar
 })
 export class DocumentsComponent {
   // Este componente simplemente utiliza el componente compartido de documentos
+  // La funcionalidad de subir documentos está integrada en el componente compartido
 }
