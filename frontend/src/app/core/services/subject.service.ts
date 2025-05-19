@@ -82,4 +82,8 @@ export class SubjectService {
   addUsersToSubject(subjectId: number, userIds: number[]): Observable<ApiResponse<any>> {
     return this.api.post<any>(`subjects/${subjectId}/users`, { user_ids: userIds });
   }
+
+  removeUsersFromSubject(subjectId: number, userIds: number[]): Observable<ApiResponse<any>> {
+    return this.api.delete<any>(`subjects/${subjectId}/users`, { user_ids: userIds });
+  }
 }

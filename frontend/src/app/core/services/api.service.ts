@@ -33,8 +33,9 @@ export class ApiService {
     return this.http.put<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, data);
   }
   
-  delete<T>(endpoint: string): Observable<ApiResponse<T>> {
-    return this.http.delete<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`);
+  delete<T>(endpoint: string, body?: any): Observable<ApiResponse<T>> {
+    const options = body ? { body } : undefined;
+    return this.http.delete<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, options);
   }
   
   upload<T>(endpoint: string, formData: FormData): Observable<ApiResponse<T>> {

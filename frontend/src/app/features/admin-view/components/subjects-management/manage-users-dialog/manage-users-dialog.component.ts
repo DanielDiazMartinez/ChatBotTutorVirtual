@@ -17,6 +17,7 @@ export class ManageUsersDialogComponent implements OnInit {
   subject: Subject;
   assignedUsers: AppUser[] = [];
   availableUsers: AppUser[] = [];
+  usersToRemove: number[] = []; // Lista para almacenar IDs de usuarios a eliminar
   isLoading = false;
   searchTerm = '';
   searchTermAssigned = '';
@@ -118,6 +119,7 @@ export class ManageUsersDialogComponent implements OnInit {
     if (user) {
       this.assignedUsers = this.assignedUsers.filter(u => u.id !== userId);
       this.availableUsers.push(user);
+      this.usersToRemove.push(userId); // Agregar el ID del usuario a la lista de usuarios a eliminar
     }
   }
 
@@ -156,14 +158,61 @@ export class ManageUsersDialogComponent implements OnInit {
     this.isLoading = true;
     const subjectId = typeof this.subject.id === 'string' ? parseInt(this.subject.id, 10) : this.subject.id;
     const userIds = this.assignedUsers.map(u => u.id);
-    this.data.subjectService.addUsersToSubject(subjectId, userIds).subscribe({
-      next: () => {
-        this.dialogRef.close(this.assignedUsers);
+    
+    // Primero eliminamos los usuarios marcados para eliminación
+    if (this.usersToRemove.length > 0) {
+      this.data.subjectService.removeUsersFromSubject(subjectId, this.usersToRemove).subscribe({
+        next: () => {
+          // Después de eliminar usuarios, agregamos los actuales
+          this.addUsersToSubject(subjectId, userIds);
         },
-        error: (error) => {
-        console.error('Error al guardar cambios:', error);
+        error: (error: any) => {
+          console.error('Error al eliminar usuarios:', error);
           this.isLoading = false;
         }
       });
+    } else {
+      // Si no hay usuarios para eliminar, simplemente agregamos los actuales
+      this.addUsersToSubject(subjectId, userIds);
+    }
+  }
+
+  addUsersToSubject(subjectId: number, userIds: number[]): void {
+    // Si no hay usuarios, cerramos el modal directamente
+    if (userIds.length === 0) {
+      const result = {
+        updated: true,
+        teachers: this.assignedUsers.filter(u => u.role === 'teacher').length,
+        students: this.assignedUsers.filter(u => u.role === 'student').length
+      };
+      this.dialogRef.close(result);
+      this.isLoading = false;
+      return;
+    }
+
+    this.data.subjectService.addUsersToSubject(subjectId, userIds).subscribe({
+      next: () => {
+        const result = {
+          updated: true,
+          teachers: this.assignedUsers.filter(u => u.role === 'teacher').length,
+          students: this.assignedUsers.filter(u => u.role === 'student').length
+        };
+        this.dialogRef.close(result);
+      },
+      error: (error: any) => {
+        // Si es error 400 por no tener usuarios, cerramos el modal igualmente
+        if (error.status === 400) {
+          const result = {
+            updated: true,
+            teachers: this.assignedUsers.filter(u => u.role === 'teacher').length,
+            students: this.assignedUsers.filter(u => u.role === 'student').length
+          };
+          this.dialogRef.close(result);
+        } else {
+          console.error('Error al guardar cambios:', error);
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }
