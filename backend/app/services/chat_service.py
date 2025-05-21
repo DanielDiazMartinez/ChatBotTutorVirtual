@@ -5,13 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.models.models import Conversation, Message, User
 from app.services.groq_service import generate_groq_response
-from app.services.vector_service import search_similar_chunks
 from app.utils.document_utils import get_embedding_for_query
-
+from app.services.document_service import document_exists
 def process_message(conversation_id: int, message_text: str, user: User, db: Session) -> str:
     """
     Procesa un mensaje del usuario y genera una respuesta con Groq.
     """
+    from app.services.vector_service import search_similar_chunks
+    
     message_embedding = get_embedding_for_query(message_text)
     context = search_similar_chunks(message_embedding, conversation_id, db) 
     
@@ -132,3 +133,37 @@ def get_conversation_messages(conversation_id: int, db: Session) -> List[Message
     ).order_by(Message.created_at.asc()).all()
     
     return messages
+
+def create_conversation(
+    db: Session,
+    document_id: int,
+    user_id: int,
+    user_type: str,  # "teacher" o "student"
+    subject_id: int
+) -> Conversation:
+    """
+    Crea una nueva conversación.
+    """
+
+    
+    if not document_exists(db, document_id):
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+
+    user = db.query(User).filter(
+        and_(User.id == user_id, User.role == user_type)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    new_conversation = Conversation(
+        user_id=user_id,
+        user_role=user_type,
+        document_id=document_id,
+        subject_id=subject_id
+    )
+
+    db.add(new_conversation)
+    db.commit()
+    db.refresh(new_conversation)
+    
+    return new_conversation

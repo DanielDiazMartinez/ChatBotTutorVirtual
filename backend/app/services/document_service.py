@@ -85,6 +85,12 @@ def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False)
         for doc in documents
     ]
 
+def document_exists(db: Session, document_id: int) -> bool:
+    """
+    Verifica si existe un documento con el ID especificado.
+    """
+    return db.query(db.query(Document).filter(Document.id == document_id).exists()).scalar()
+
 def delete_document(db: Session, document_id: int, user_id: int = None, is_admin: bool = False):
     """
     Elimina un documento, sus chunks asociados y el archivo físico.

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select, literal_column
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Optional
-
+from app.services.document_service import document_exists
 from ..models.models import (
     Document, 
     DocumentChunk,
@@ -18,7 +18,7 @@ from ..utils.document_utils import (
     process_document_and_embed_chunks_semantic
 )
 from ..services.groq_service import generate_groq_response
-
+from app.services.chat_service import create_conversation
 def insert_document_chunks(
     db: Session,
     document_id: int,
@@ -39,9 +39,10 @@ def insert_document_chunks(
         Lista de objetos DocumentChunk creados
     """
     
+    # Obtener el documento para refrescarlo después
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
-        raise ValueError(f"No existe un documento con ID {document_id}")
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
     
     created_chunks = process_document_and_embed_chunks_semantic(
         document_id=document_id,
@@ -85,38 +86,7 @@ def search_similar_chunks(db: Session,
 
     return [(row.DocumentChunk, convert_score(row.distance)) for row in results]
 
-def create_conversation(
-    db: Session,
-    document_id: int,
-    user_id: int,
-    user_type: str,  # "teacher" o "student"
-    subject_id: int
-) -> Conversation:
-    """
-    Crea una nueva conversación.
-    """
-    document = db.query(Document).filter(Document.id == document_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
 
-    user = db.query(User).filter(
-        and_(User.id == user_id, User.role == user_type)
-    ).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    new_conversation = Conversation(
-        user_id=user_id,
-        user_role=user_type,
-        document_id=document_id,
-        subject_id=subject_id
-    )
-
-    db.add(new_conversation)
-    db.commit()
-    db.refresh(new_conversation)
-    
-    return new_conversation
 
 def generate_conversation(
     db: Session,
@@ -129,6 +99,8 @@ def generate_conversation(
     """
     Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
     """
+
+    
     new_conversation = create_conversation(
         db=db,
         document_id=document_id,
