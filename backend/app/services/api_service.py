@@ -1,42 +1,48 @@
-# app/services/groq_service.py
-
+"""
+Servicio de API - Capa superior
+Este servicio maneja las interacciones con APIs externas como Groq.
+Puede depender de cualquier servicio de las capas inferiores.
+"""
 import os
-from groq import Groq, GroqError  # Asegúrate de importar GroqError
+from groq import Groq, GroqError
 from app.core.config import settings
+import logging
 
+# Configuración de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Inicialización del cliente Groq
 api_key = settings.GROQ_API_KEY
-
-
-client: Groq | None = None # Inicializa client a None
+client = None
 
 if not api_key:
-    print("--- FATAL ERROR: GROQ_API_KEY is missing or empty. Cannot create Groq client. ---")
-    
+    logger.error("FATAL ERROR: GROQ_API_KEY is missing or empty. Cannot create Groq client.")
 else:
     try:
-        print("--- Debug Info: Attempting to create Groq client ---")
+        logger.info("Attempting to create Groq client")
         client = Groq(api_key=api_key)
-        print("--- Debug Info: Groq client CREATED successfully ---")
+        logger.info("Groq client CREATED successfully")
     except Exception as e:
-        print(f"--- FATAL ERROR: Failed to create Groq client: {type(e).__name__} - {e} ---")
-        client = None 
+        logger.error(f"FATAL ERROR: Failed to create Groq client: {type(e).__name__} - {e}")
+        client = None
 
-
-def generate_groq_response(user_question: str, context: str,conversation_history: str) -> str:
+def generate_ai_response(user_question: str, context: str, conversation_history: str = "") -> str:
     """
     Genera una respuesta utilizando la API de Groq basada en la pregunta del usuario y el contexto proporcionado.
 
     Args:
         user_question: La pregunta realizada por el usuario.
         context: El contexto extraído de los documentos relevantes.
+        conversation_history: El historial de la conversación (opcional).
 
     Returns:
         La respuesta generada por el modelo de Groq.
     """
     if client is None:
-        print("--- ERROR: generate_groq_response called but Groq client is not valid! ---")
+        logger.error("ERROR: generate_ai_response called but Groq client is not valid!")
         return "Lo siento, la configuración del servicio de IA no es correcta."
-    # ---------------
+
     prompt = f"""
     ### Instrucciones:
     Eres un asistente útil y preciso. Tu objetivo es responder a las preguntas del estudiante de la manera más completa y concisa posible, utilizando la información proporcionada en el contexto. Mantén un tono profesional y objetivo.
@@ -55,13 +61,10 @@ def generate_groq_response(user_question: str, context: str,conversation_history
     ### Respuesta:
     """
 
-    print(f"--- Debug Info: Preparing to call Groq API (client seems valid) ---")
- 
-    print(f"Model Used: {settings.GROQ_MODEL_NAME}")
-    print(f"Prompt (first 500 chars): {prompt[:500]}") 
- 
+    logger.info(f"Preparing to call Groq API using model: {settings.GROQ_MODEL_NAME}")
+    
     try:
-        print("--- Debug Info: Executing client.chat.completions.create(...) ---") 
+        logger.info("Executing Groq API call")
         completion = client.chat.completions.create(
             model=settings.GROQ_MODEL_NAME, 
             messages=[
@@ -76,38 +79,24 @@ def generate_groq_response(user_question: str, context: str,conversation_history
             stream=False,    
             stop=None,       
         )
-        print("--- Debug Info: client.chat.completions.create(...) FINISHED ---") # Justo después
+        logger.info("Groq API call completed successfully")
         
-    
-        print(f"--- Debug Info: Groq API Raw Completion Object ---")
-        print(completion)
-        # ---------------
-
         if completion.choices:
             response_content = completion.choices[0].message.content
-            print(f"--- Debug Info: Groq Response Content ---")
-            print(response_content)
+            logger.info("Successfully extracted response content from Groq API")
             return response_content.strip() 
         else:
-          
-            print("--- WARNING: Groq response tuvo 0 choices. ---")
-           
+            logger.warning("WARNING: Groq response had 0 choices.")
             if hasattr(completion, 'usage') and completion.usage:
-                 print(f"Usage info: {completion.usage}")
+                logger.info(f"Usage info: {completion.usage}")
             return "Lo siento, no recibí una respuesta válida del modelo de IA."
 
     except GroqError as e:
-        
-        print(f"--- ERROR: Groq API Error (call was attempted) ---")
-        print(f"Status Code: {e.status_code}")
-       
-        if hasattr(e, 'type'): print(f"Error Type: {e.type}")
-        if hasattr(e, 'code'): print(f"Error Code: {e.code}")
-        print(f"Error Message: {e.message}")
-       
+        logger.error(f"Groq API Error - Status Code: {e.status_code}")
+        if hasattr(e, 'type'): logger.error(f"Error Type: {e.type}")
+        if hasattr(e, 'code'): logger.error(f"Error Code: {e.code}")
+        logger.error(f"Error Message: {e.message}")
         return f"Lo siento, hubo un error con la API de Groq ({e.status_code}): {e.message}"
     except Exception as e:
-       
-        print(f"--- ERROR: Unexpected error DURING Groq call: {type(e).__name__} - {e} ---")
-      
+        logger.error(f"Unexpected error during Groq call: {type(e).__name__} - {e}")
         return "Lo siento, ocurrió un error inesperado al procesar la solicitud de IA."

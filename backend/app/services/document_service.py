@@ -1,11 +1,11 @@
 import os
 from sqlalchemy.orm import Session
-from app.models.models import  Document
-from app.models.schemas import   DocumentCreate
-from fastapi import  HTTPException, UploadFile, logger
+from app.models.models import Document
+from app.models.schemas import DocumentCreate
+from fastapi import HTTPException, UploadFile, logger
 from app.core.config import settings
 
-from app.services.vector_service import insert_document_chunks
+from app.services.embedding_service import create_document_chunks
 from ..utils.document_utils import extract_text_from_pdf
 
 
@@ -50,7 +50,7 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     if not content:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
     
-    insert_document_chunks(db, new_document.id, content)
+    create_document_chunks(db, new_document.id, content)
         
     return new_document
 

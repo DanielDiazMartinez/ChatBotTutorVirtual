@@ -4,13 +4,20 @@ from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
 from ..models.models import DocumentChunk, User
-from ..services.chat_service import delete_conversation, get_conversation_by_id, get_conversation_messages, get_conversations_by_user_role, get_current_user_conversations
+from ..services.chat_service import (
+    delete_conversation, 
+    get_conversation_by_id, 
+    get_conversation_messages, 
+    get_conversations_by_user_role, 
+    get_current_user_conversations,
+    add_message_and_generate_response,
+    generate_conversation,
+    process_message
+)
 from ..core.database import get_db
 from ..core.auth import require_role, get_current_user
 from ..services.vector_service import (
-    add_message_and_generate_response, 
-    generate_conversation, 
-    get_context, 
+    get_conversation_context,
     search_similar_chunks
 )
 from ..models.schemas import (
@@ -64,7 +71,7 @@ async def get_my_conversations(
     current_user: User = Depends(get_current_user)
 ):
     """Obtener todas las conversaciones del usuario actualmente autenticado, opcionalmente filtradas por asignatura"""
-    conversations = get_current_user_conversations(current_user.id, current_user.role, db, subject_id)
+    conversations = get_current_user_conversations(db, current_user.id, current_user.role, subject_id)
     
     return {
         "data": conversations,
@@ -193,10 +200,15 @@ async def get_context_for_question(
     if message_data is None or message_data.text is None:
         raise HTTPException(status_code=400, detail="Message text is required")
 
-    similar_chunks: List[Tuple[DocumentChunk, float]] = get_context(
+    # Obtener el embedding para la consulta
+    from ..services.embedding_service import get_embedding_for_query
+    query_embedding = get_embedding_for_query(message_data.text)
+    
+    # Buscar chunks similares
+    similar_chunks = search_similar_chunks(
         db=db,
-        document_id=document_id,
-        message_text=message_data.text
+        query_embedding=query_embedding,
+        document_id=document_id
     )
 
     context_out = [
@@ -216,7 +228,7 @@ async def get_conversation_message_history(
     current_user: User = Depends(get_current_user)
 ):
     """Obtener todos los mensajes de una conversación específica"""
-    conversation = get_conversation_by_id(conversation_id, db)
+    conversation = get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
@@ -230,7 +242,7 @@ async def get_conversation_message_history(
                  [s.id for s in current_user.teaching_subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
     
-    messages = get_conversation_messages(conversation_id, db)
+    messages = get_conversation_messages(db, conversation_id)
     message_out_list = [MessageOut.model_validate(msg) for msg in messages]
     
     return {
