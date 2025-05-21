@@ -108,16 +108,16 @@ def test_get_conversation_messages_unauthorized(client, db_session_test, student
     """
     Test para verificar que un usuario no puede acceder a los mensajes de una conversación que no le pertenece
     """
-    # Obtener el usuario de prueba (estudiante)
-    student_email = "student_test@example.com"
-    student = db_session_test.query(User).filter(User.email == student_email).first()
-    
+
+    teacher_email = "teacher_test@example.com"
+    teacher = db_session_test.query(User).filter(User.email == teacher_email).first()
+
     # Crear un documento de prueba
     test_document = Document(
         title="Test Document for Unauthorized",
         file_path="/fake/path/test_unauth_doc.pdf",
         description="Test Document for Unauthorized Access",
-        teacher_id=1
+        teacher_id=teacher.id
     )
     
     db_session_test.add(test_document)

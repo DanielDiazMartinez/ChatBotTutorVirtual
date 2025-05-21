@@ -4,17 +4,11 @@ from sqlalchemy.orm import Session
 from app.models.models import User, Document
 from app.core.security import create_access_token
 
-def test_list_documents_admin(db_session_test: Session, client: TestClient):
+def test_list_documents_admin(db_session_test: Session, client: TestClient, admin_auth_headers):
     """
     Test para verificar que un administrador puede ver todos los documentos
     """
-    # Crear usuarios para la prueba
-    admin_user = User(
-        email="admin_test@example.com",
-        full_name="Admin Test",
-        hashed_password="hashed_password",
-        role="admin"
-    )
+    # Crear usuario profesor para la prueba
     teacher_user = User(
         email="teacher_test@example.com",
         full_name="Teacher Test",
@@ -22,10 +16,8 @@ def test_list_documents_admin(db_session_test: Session, client: TestClient):
         role="teacher"
     )
     
-    db_session_test.add(admin_user)
     db_session_test.add(teacher_user)
     db_session_test.commit()
-    db_session_test.refresh(admin_user)
     db_session_test.refresh(teacher_user)
     
     # Crear documentos de prueba
@@ -48,13 +40,10 @@ def test_list_documents_admin(db_session_test: Session, client: TestClient):
     db_session_test.refresh(doc1)
     db_session_test.refresh(doc2)
     
-    # Crear token de acceso para el administrador
-    admin_token = create_access_token({"sub": admin_user.id, "role": admin_user.role})
-    
-    # Realizar petición con el token de administrador
+    # Realizar petición con el token de administrador utilizando el fixture
     response = client.get(
         "/api/v1/documents/list",
-        headers={"Authorization": f"Bearer {admin_token}"}
+        headers=admin_auth_headers
     )
     
     # Verificar que la respuesta es correcta
@@ -75,20 +64,19 @@ def test_list_documents_admin(db_session_test: Session, client: TestClient):
     db_session_test.delete(doc1)
     db_session_test.delete(doc2)
     db_session_test.delete(teacher_user)
-    db_session_test.delete(admin_user)
     db_session_test.commit()
 
-def test_list_documents_teacher(db_session_test: Session, client: TestClient):
+def test_list_documents_teacher(db_session_test: Session, client: TestClient, teacher_auth_headers):
     """
     Test para verificar que un profesor solo puede ver sus propios documentos
     """
-    # Crear usuarios profesor para la prueba
-    teacher1 = User(
-        email="teacher1@example.com",
-        full_name="Teacher 1",
-        hashed_password="hashed_password",
-        role="teacher"
-    )
+    # Primero necesitamos encontrar el ID del profesor que está en el token
+    # Hacemos una petición al endpoint /me para obtener el ID
+    me_response = client.get("/api/v1/users/me", headers=teacher_auth_headers)
+    assert me_response.status_code == 200
+    teacher_id = me_response.json()["data"]["id"]
+    
+    # Crear otro profesor para la prueba
     teacher2 = User(
         email="teacher2@example.com",
         full_name="Teacher 2",
@@ -96,10 +84,8 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient):
         role="teacher"
     )
     
-    db_session_test.add(teacher1)
     db_session_test.add(teacher2)
     db_session_test.commit()
-    db_session_test.refresh(teacher1)
     db_session_test.refresh(teacher2)
     
     # Crear documentos de prueba para cada profesor
@@ -107,7 +93,7 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient):
         title="Document Teacher 1",
         file_path="/fake/path/doc_t1.pdf",
         description="Document for Teacher 1",
-        teacher_id=teacher1.id
+        teacher_id=teacher_id
     )
     doc_teacher2 = Document(
         title="Document Teacher 2",
@@ -122,13 +108,10 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient):
     db_session_test.refresh(doc_teacher1)
     db_session_test.refresh(doc_teacher2)
     
-    # Crear token de acceso para el profesor 1
-    teacher1_token = create_access_token({"sub": teacher1.id, "role": teacher1.role})
-    
-    # Realizar petición con el token del profesor 1
+    # Realizar petición con el token del profesor del fixture
     response = client.get(
         "/api/v1/documents/list",
-        headers={"Authorization": f"Bearer {teacher1_token}"}
+        headers=teacher_auth_headers
     )
     
     # Verificar que la respuesta es correcta
@@ -149,6 +132,5 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient):
     # Limpiar
     db_session_test.delete(doc_teacher1)
     db_session_test.delete(doc_teacher2)
-    db_session_test.delete(teacher1)
     db_session_test.delete(teacher2)
     db_session_test.commit()

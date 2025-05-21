@@ -81,12 +81,14 @@ def test_eliminar_multiples_usuarios_asignatura(client, db_session_test, admin_a
         "user_ids": users
     }
     
-    remove_response = client.delete(
+    # Utilizamos el método request con la opción json
+    remove_response = client.request(
+        "DELETE",
         f"/api/v1/subjects/{subject_id}/users",
-        content=json.dumps(remove_users_request).encode('utf-8'),
-        headers={**admin_auth_headers, 'Content-Type': 'application/json'}
+        headers=admin_auth_headers,
+        json=remove_users_request
     )
-    
+
     assert remove_response.status_code == status.HTTP_200_OK
     response_data = remove_response.json()["data"]
     
@@ -132,12 +134,13 @@ def test_eliminar_usuarios_asignatura_inexistente(client, db_session_test, admin
         "user_ids": [user_id]
     }
     
-    remove_response = client.delete(
+    # Utilizamos el método request con la opción json
+    remove_response = client.request(
+        "DELETE",
         f"/api/v1/subjects/{subject_id}/users",
-        content=json.dumps(remove_users_request).encode('utf-8'),
-        headers={**admin_auth_headers, 'Content-Type': 'application/json'}
+        headers=admin_auth_headers,
+        json=remove_users_request
     )
-    
     # Verificar que se maneja correctamente el error
     assert remove_response.status_code == status.HTTP_404_NOT_FOUND
     assert "Asignatura no encontrada" in remove_response.text
@@ -177,25 +180,27 @@ def test_verificar_permisos_eliminar_usuarios_masivo(client, db_session_test, ad
     }
     
     # Profesor intenta eliminar usuarios - debería fallar
-    teacher_response = client.delete(
+    teacher_response = client.request(
+        "DELETE",
         f"/api/v1/subjects/{subject_id}/users",
-        content=json.dumps(remove_users_request).encode('utf-8'),
-        headers={**teacher_auth_headers, 'Content-Type': 'application/json'}
+        headers=teacher_auth_headers,
+        json=remove_users_request
     )
     assert teacher_response.status_code == status.HTTP_403_FORBIDDEN
     
     # Estudiante intenta eliminar usuarios - debería fallar
-    student_response = client.delete(
+    student_response = client.request(
+        "DELETE",
         f"/api/v1/subjects/{subject_id}/users",
-        content=json.dumps(remove_users_request).encode('utf-8'),
-        headers={**student_auth_headers, 'Content-Type': 'application/json'}
+        headers=student_auth_headers,
+        json=remove_users_request
     )
     assert student_response.status_code == status.HTTP_403_FORBIDDEN
     
     # Sin autenticación - debería fallar
-    unauth_response = client.delete(
+    unauth_response = client.request(
+        "DELETE",
         f"/api/v1/subjects/{subject_id}/users",
-        content=json.dumps(remove_users_request).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}
+        json=remove_users_request
     )
     assert unauth_response.status_code == status.HTTP_401_UNAUTHORIZED

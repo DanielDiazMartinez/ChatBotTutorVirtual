@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app.main import app
 from app.models.models import User, Subject, Document
 from app.core.security import create_access_token
-from tests.conftest import client
 
 def create_test_user_with_subject_and_document(db_session: Session):
     """Crear un usuario de prueba con asignatura y documento para los tests"""
@@ -29,8 +28,8 @@ def create_test_user_with_subject_and_document(db_session: Session):
     db_session.commit()
     db_session.refresh(test_subject)
     
-    # Asociar usuario con asignatura
-    test_user.subjects.append(test_subject)
+    # Asociar usuario con asignatura (profesor con teaching_subjects)
+    test_user.teaching_subjects.append(test_subject)
     db_session.commit()
     
     # Crear documento
@@ -47,13 +46,13 @@ def create_test_user_with_subject_and_document(db_session: Session):
     
     return test_user, test_subject, test_document
 
-def test_get_me_subjects_endpoint(db_session_test: Session):
+def test_get_me_subjects_endpoint(db_session_test: Session, client: TestClient):
     """Test para verificar el funcionamiento del endpoint /me/subjects"""
     # Crear usuario de prueba con asignatura
     test_user, test_subject, _ = create_test_user_with_subject_and_document(db_session_test)
     
     # Crear token de acceso para ese usuario
-    token = create_access_token({"sub": test_user.id, "role": test_user.role})
+    token = create_access_token({"sub": str(test_user.id), "role": test_user.role})
     
     # Realizar petición con el token
     response = client.get(
@@ -73,19 +72,19 @@ def test_get_me_subjects_endpoint(db_session_test: Session):
     db_session_test.delete(test_user)
     db_session_test.commit()
 
-def test_get_me_subjects_unauthorized():
+def test_get_me_subjects_unauthorized(client: TestClient):
     """Test para verificar que se requiere autenticación para /me/subjects"""
     # Realizar petición sin token
     response = client.get("/api/v1/users/me/subjects")
     assert response.status_code == 401
 
-def test_get_documents_me_endpoint(db_session_test: Session):
+def test_get_documents_me_endpoint(db_session_test: Session, client: TestClient):
     """Test para verificar el funcionamiento del endpoint /documents/me"""
     # Crear usuario de prueba con documento
     test_user, _, test_document = create_test_user_with_subject_and_document(db_session_test)
     
     # Crear token de acceso para ese usuario
-    token = create_access_token({"sub": test_user.id, "role": test_user.role})
+    token = create_access_token({"sub": str(test_user.id), "role": test_user.role})
     
     # Realizar petición con el token
     response = client.get(
@@ -106,7 +105,7 @@ def test_get_documents_me_endpoint(db_session_test: Session):
     db_session_test.delete(test_user)
     db_session_test.commit()
 
-def test_get_documents_me_unauthorized():
+def test_get_documents_me_unauthorized(client: TestClient):
     """Test para verificar que se requiere autenticación para /documents/me"""
     # Realizar petición sin token
     response = client.get("/api/v1/documents/me")

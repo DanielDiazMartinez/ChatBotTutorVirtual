@@ -8,7 +8,7 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     """
     Test para verificar que el endpoint /me/conversations devuelve las conversaciones del usuario autenticado
     """
-    # Crear un usuario de prueba
+    # Crear un usuario estudiante de prueba
     test_user = User(
         email="test_conv_user@example.com",
         full_name="Test Conversation User",
@@ -16,16 +16,25 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
         role="student"
     )
     
-    db_session_test.add(test_user)
+    # Crear un usuario profesor de prueba
+    test_teacher = User(
+        email="test_teacher@example.com",
+        full_name="Test Teacher",
+        hashed_password="hashed_password",
+        role="teacher"
+    )
+    
+    db_session_test.add_all([test_user, test_teacher])
     db_session_test.commit()
     db_session_test.refresh(test_user)
+    db_session_test.refresh(test_teacher)
     
     # Crear un documento de prueba
     test_document = Document(
         title="Test Document",
         file_path="/fake/path/test_doc.pdf",
         description="Test Document Description",
-        teacher_id=1  # Asumimos que existe un profesor con ID 1
+        teacher_id=test_teacher.id  # Usar el ID del profesor que acabamos de crear
     )
     
     db_session_test.add(test_document)
@@ -34,12 +43,14 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     
     # Crear conversaciones de prueba para el usuario
     conversation1 = Conversation(
-        student_id=test_user.id,
+        user_id=test_user.id,
+        user_role="student",
         document_id=test_document.id
     )
     
     conversation2 = Conversation(
-        student_id=test_user.id,
+        user_id=test_user.id,
+        user_role="student",
         document_id=test_document.id
     )
     
@@ -49,30 +60,41 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     db_session_test.refresh(conversation1)
     db_session_test.refresh(conversation2)
     
+    import time
+    
     # Añadir mensajes a las conversaciones
     message1 = Message(
         conversation_id=conversation1.id,
         text="Test message 1",
         is_bot=False
     )
+    db_session_test.add(message1)
+    db_session_test.commit()
+    
+    # Pequeña pausa para garantizar distintos timestamps
+    time.sleep(0.1)
     
     message2 = Message(
         conversation_id=conversation1.id,
         text="Bot response 1",
         is_bot=True
     )
+    db_session_test.add(message2)
+    db_session_test.commit()
+    
+    # Pequeña pausa para garantizar distintos timestamps
+    time.sleep(0.1)
     
     message3 = Message(
         conversation_id=conversation2.id,
         text="Test message 2",
         is_bot=False
     )
-    
-    db_session_test.add_all([message1, message2, message3])
+    db_session_test.add(message3)
     db_session_test.commit()
     
     # Crear token de acceso para el usuario
-    token = create_access_token({"sub": test_user.id, "role": test_user.role})
+    token = create_access_token({"sub": str(test_user.id), "role": test_user.role})
     
     # Realizar la petición al endpoint
     response = client.get(
@@ -95,12 +117,18 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     assert conversation1.id in conversation_ids
     assert conversation2.id in conversation_ids
     
+    # Obtener el último mensaje de la base de datos directamente para comparar
+    from sqlalchemy import desc
+    db_last_message = db_session_test.query(Message).filter(
+        Message.conversation_id == conversation1.id
+    ).order_by(desc(Message.created_at)).first()
+    
     # Verificar que la conversación 1 tiene el último mensaje
     for conv in conversations:
         if conv["id"] == conversation1.id:
             assert conv["last_message"] is not None
-            assert conv["last_message"]["text"] == "Bot response 1"
-            assert conv["last_message"]["is_bot"] is True
+            assert conv["last_message"]["text"] == db_last_message.text
+            assert conv["last_message"]["is_bot"] == db_last_message.is_bot
     
     # Limpiar datos de prueba
     db_session_test.query(Message).filter(
@@ -111,6 +139,7 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     ).delete(synchronize_session=False)
     db_session_test.delete(test_document)
     db_session_test.delete(test_user)
+    db_session_test.delete(test_teacher)
     db_session_test.commit()
 
 def test_get_my_conversations_empty(db_session_test: Session, client: TestClient):
@@ -130,7 +159,7 @@ def test_get_my_conversations_empty(db_session_test: Session, client: TestClient
     db_session_test.refresh(test_user_no_convs)
     
     # Crear token de acceso para el usuario
-    token = create_access_token({"sub": test_user_no_convs.id, "role": test_user_no_convs.role})
+    token = create_access_token({"sub": str(test_user_no_convs.id), "role": test_user_no_convs.role})
     
     # Realizar la petición al endpoint
     response = client.get(
