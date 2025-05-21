@@ -43,7 +43,7 @@ class TestIntegrationAfterRestructuring:
         conv.user_id = 1
         conv.user_role = "student"
         return conv
-     @patch('app.services.document_service.document_exists')
+    @patch('app.services.document_service.document_exists')
     @patch('app.services.embedding_service.get_embedding_for_query')
     @patch('app.services.vector_service.search_similar_chunks')
     def test_document_to_vector_integration(self, mock_search, mock_embedding, mock_doc_exists,
