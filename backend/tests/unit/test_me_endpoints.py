@@ -28,8 +28,8 @@ def create_test_user_with_subject_and_document(db_session: Session):
     db_session.commit()
     db_session.refresh(test_subject)
     
-    # Asociar usuario con asignatura (profesor con teaching_subjects)
-    test_user.teaching_subjects.append(test_subject)
+    # Asociar usuario con asignatura
+    test_user.subjects.append(test_subject)
     db_session.commit()
     
     # Crear documento
@@ -37,7 +37,7 @@ def create_test_user_with_subject_and_document(db_session: Session):
         title="Documento de prueba",
         description="Descripción de prueba",
         file_path="/path/to/file.pdf",
-        teacher_id=test_user.id,
+        user_id=test_user.id,
         subject_id=test_subject.id
     )
     db_session.add(test_document)
@@ -99,7 +99,7 @@ def test_get_documents_me_endpoint(db_session_test: Session, client: TestClient)
     assert "data" in data
     assert len(data["data"]) > 0
     assert data["data"][0]["title"] == test_document.title
-    assert data["data"][0]["teacher_id"] == test_user.id
+    assert data["data"][0]["user_id"] == test_user.id
     
     # Limpiar
     db_session_test.delete(test_user)

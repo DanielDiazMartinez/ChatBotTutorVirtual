@@ -42,14 +42,14 @@ def test_get_subject_documents(client, db_session_test, admin_auth_headers, teac
     doc1 = Document(
         title="Introducción a la Física",
         description="Conceptos básicos de física",
-        teacher_id=teacher.id,
+        user_id=teacher.id,
         subject_id=subject_id
     )
     
     doc2 = Document(
         title="Dinámica de partículas",
         description="Estudio del movimiento",
-        teacher_id=teacher.id,
+        user_id=teacher.id,
         subject_id=subject_id
     )
     

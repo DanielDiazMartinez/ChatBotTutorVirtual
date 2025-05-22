@@ -20,7 +20,8 @@ export class ChatService {
   createConversation(documentId: number, subjectId: number): Observable<ApiResponse<ConversationWithResponse>> {
     const payload: any = {
       document_id: documentId,
-      subject_id: subjectId
+      subject_id: subjectId,
+      text: null
     };
     
     

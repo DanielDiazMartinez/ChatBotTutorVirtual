@@ -18,15 +18,14 @@ def get_current_user_subjects(user_id: int, db: Session):
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     
-    # Dependiendo del rol del usuario, obtenemos sus asignaturas
-    if user_db.role == 'student':
-        subjects = user_db.student_subjects
-    elif user_db.role == 'teacher':
-        subjects = user_db.teaching_subjects
-    else:  # admin
+    # Para todos los roles, obtenemos las asignaturas asociadas
+    if user_db.role == 'admin':
         # Para administradores, mostramos todas las asignaturas
         from app.models.models import Subject
         subjects = db.query(Subject).all()
+    else:
+        # Para profesores y estudiantes, mostramos sus asignaturas específicas
+        subjects = user_db.subjects
     
     # Si no hay asignaturas, devolvemos lista vacía en lugar de error
     if not subjects:
@@ -64,11 +63,11 @@ def get_current_user_documents(user_id: int, db: Session):
     
     if user_db.role == 'teacher':
         # Profesores ven sus propios documentos
-        query = query.filter(Document.teacher_id == user_id)
+        query = query.filter(Document.user_id == user_id)
     elif user_db.role == 'student':
         # Estudiantes ven documentos de las asignaturas en las que están matriculados
         from sqlalchemy import or_
-        subject_ids = [subject.id for subject in user_db.student_subjects]
+        subject_ids = [subject.id for subject in user_db.subjects]
         query = query.filter(Document.subject_id.in_(subject_ids))
     # Administradores ven todos los documentos (no necesita filtro)
     
@@ -80,7 +79,7 @@ def get_current_user_documents(user_id: int, db: Session):
             "title": doc.title,
             "description": doc.description,
             "file_path": doc.file_path,
-            "teacher_id": doc.teacher_id,
+            "user_id": doc.user_id,
             "subject_id": doc.subject_id,
             "topic_id": doc.topic_id,
             "created_at": doc.created_at

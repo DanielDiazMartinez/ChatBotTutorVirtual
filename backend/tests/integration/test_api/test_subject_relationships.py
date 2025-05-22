@@ -42,9 +42,9 @@ def test_verificar_profesores_asignados(client, db_session_test, admin_auth_head
     from app.models.models import Subject
     db_subject = db_session_test.query(Subject).filter(Subject.id == subject_id).first()
     
-    # Verifica que el profesor esté en la lista de profesores de la asignatura
-    teacher_ids = [teacher.id for teacher in db_subject.teachers]
-    assert teacher_id in teacher_ids, "El profesor no está asignado a la asignatura"
+    # Verifica que el profesor esté en la lista de usuarios de la asignatura
+    user_ids = [user.id for user in db_subject.users if user.role == "teacher"]
+    assert teacher_id in user_ids, "El profesor no está asignado a la asignatura"
 
 def test_verificar_estudiantes_asignados(client, db_session_test, admin_auth_headers):
     """Test para verificar que se pueden consultar los estudiantes asignados a una asignatura"""

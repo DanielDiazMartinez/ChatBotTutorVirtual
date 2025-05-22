@@ -36,7 +36,7 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
         title=document.title,
         file_path=file_path,
         description=document.description,
-        teacher_id=document.user_id,
+        user_id=document.user_id,
         subject_id=document.subject_id,  # Campo obligatorio
         topic_id=topic_id  # Campo opcional
     )
@@ -68,7 +68,7 @@ def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False)
     query = db.query(Document)
     
     if user_id is not None and not is_admin:
-        query = query.filter(Document.teacher_id == user_id)
+        query = query.filter(Document.user_id == user_id)
     
     documents = query.all()
     return [
@@ -77,7 +77,7 @@ def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False)
             "title": doc.title,
             "description": doc.description,
             "file_path": doc.file_path,
-            "teacher_id": doc.teacher_id,
+            "user_id": doc.user_id,
             "subject_id": doc.subject_id,
             "topic_id": doc.topic_id,
             "created_at": doc.created_at
@@ -103,7 +103,7 @@ def delete_document(db: Session, document_id: int, user_id: int = None, is_admin
     
     # Verificar propiedad si no es administrador
     if user_id is not None and not is_admin:
-        if document.teacher_id != user_id:
+        if document.user_id != user_id:
             raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este documento.")
     
     # Eliminar el archivo físico si existe

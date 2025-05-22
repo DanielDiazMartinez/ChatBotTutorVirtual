@@ -97,34 +97,14 @@ class User(Base):
     role = Column(String, nullable=False)  # 'admin', 'teacher', 'student'
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relaciones específicas de profesores
     documents = relationship("Document", 
-                           back_populates="teacher", 
-                           cascade="all, delete-orphan",
-                           primaryjoin="and_(User.id==Document.teacher_id, User.role=='teacher')")
+                          back_populates="user", 
+                          cascade="all, delete-orphan")
     
-    teacher_conversations = relationship("Conversation", 
-                                      cascade="all, delete-orphan",
-                                      primaryjoin="and_(User.id==Conversation.user_id, User.role=='teacher', Conversation.user_role=='teacher')")
-    
-    teaching_subjects = relationship("Subject", 
-                                   secondary='teacher_subject',
-                                   back_populates="teachers",
-                                   primaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')",
-                                   secondaryjoin="Subject.id==teacher_subject.c.subject_id",
-                                   foreign_keys="[teacher_subject.c.teacher_id, teacher_subject.c.subject_id]")
-
-    # Relaciones específicas de estudiantes
-    student_conversations = relationship("Conversation", 
-                                       cascade="all, delete-orphan",
-                                       primaryjoin="and_(User.id==Conversation.user_id, User.role=='student', Conversation.user_role=='student')")
-    
-    student_subjects = relationship("Subject", 
-                                   secondary='student_subject',
-                                   back_populates="students",
-                                   primaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
-                                   secondaryjoin="Subject.id==student_subject.c.subject_id",
-                                   foreign_keys="[student_subject.c.student_id, student_subject.c.subject_id]")
+    subjects = relationship("Subject", 
+                          secondary='user_subject',
+                          back_populates="users",
+                          foreign_keys="[user_subject.c.user_id, user_subject.c.subject_id]")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}')>"
@@ -138,12 +118,12 @@ class Document(Base):
     title = Column(String, nullable=False)
     file_path = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
     topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    teacher = relationship("User", back_populates="documents", primaryjoin="and_(User.id==Document.teacher_id, User.role=='teacher')")
+    user = relationship("User", back_populates="documents")
     subject = relationship("Subject", back_populates="documents")
     topic = relationship("Topic", back_populates="documents")
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
@@ -212,14 +192,8 @@ class Message(Base):
 
 # --- Modelos de Asignaturas y Tablas Intermedias ---
 
-teacher_subject = Table('teacher_subject', Base.metadata,
-    Column('teacher_id', Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True),
-    Column('subject_id', Integer, ForeignKey('subjects.id', ondelete="CASCADE"), primary_key=True),
-    Column('created_at', DateTime(timezone=True), server_default=func.now())
-)
-
-student_subject = Table('student_subject', Base.metadata,
-    Column('student_id', Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True),
+user_subject = Table('user_subject', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True),
     Column('subject_id', Integer, ForeignKey('subjects.id', ondelete="CASCADE"), primary_key=True),
     Column('created_at', DateTime(timezone=True), server_default=func.now())
 )
@@ -233,21 +207,11 @@ class Subject(Base):
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    teachers = relationship(
+    users = relationship(
         "User", 
-        secondary=teacher_subject, 
-        back_populates="teaching_subjects",
-        primaryjoin="Subject.id==teacher_subject.c.subject_id",
-        secondaryjoin="and_(User.id==teacher_subject.c.teacher_id, User.role=='teacher')",
-        foreign_keys=[teacher_subject.c.subject_id, teacher_subject.c.teacher_id]
-    )
-    students = relationship(
-        "User", 
-        secondary=student_subject, 
-        back_populates="student_subjects",
-        primaryjoin="Subject.id==student_subject.c.subject_id",
-        secondaryjoin="and_(User.id==student_subject.c.student_id, User.role=='student')",
-        foreign_keys=[student_subject.c.subject_id, student_subject.c.student_id]
+        secondary=user_subject, 
+        back_populates="subjects",
+        foreign_keys=[user_subject.c.subject_id, user_subject.c.user_id]
     )
     documents = relationship("Document", back_populates="subject")
     topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")

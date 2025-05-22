@@ -18,7 +18,7 @@ def test_get_conversation_messages(client, db_session_test, student_auth_headers
         title="Test Document for Messages",
         file_path="/fake/path/test_messages_doc.pdf",
         description="Test Document for Messages API",
-        teacher_id=1
+        user_id=1
     )
     
     db_session_test.add(test_document)
@@ -117,7 +117,7 @@ def test_get_conversation_messages_unauthorized(client, db_session_test, student
         title="Test Document for Unauthorized",
         file_path="/fake/path/test_unauth_doc.pdf",
         description="Test Document for Unauthorized Access",
-        teacher_id=teacher.id
+        user_id=teacher.id
     )
     
     db_session_test.add(test_document)

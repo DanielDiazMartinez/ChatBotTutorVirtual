@@ -142,7 +142,7 @@ def get_subjects_by_user_id(user_id: int, db: Session):
     user_db = db.query(User).filter(User.id == user_id).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    subjects = user_db.student_subjects
+    subjects = user_db.subjects
     if not subjects:
         raise HTTPException(status_code=404, detail="No hay materias asociadas al usuario.")
     return [

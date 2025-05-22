@@ -25,13 +25,13 @@ def test_list_documents_admin(db_session_test: Session, client: TestClient, admi
         title="Test Document 1",
         file_path="/fake/path/doc1.pdf",
         description="Test Description 1",
-        teacher_id=teacher_user.id
+        user_id=teacher_user.id  # Cambiado de teacher_id a user_id
     )
     doc2 = Document(
         title="Test Document 2",
         file_path="/fake/path/doc2.pdf",
         description="Test Description 2",
-        teacher_id=teacher_user.id
+        user_id=teacher_user.id  # Cambiado de teacher_id a user_id
     )
     
     db_session_test.add(doc1)
@@ -93,13 +93,13 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient, te
         title="Document Teacher 1",
         file_path="/fake/path/doc_t1.pdf",
         description="Document for Teacher 1",
-        teacher_id=teacher_id
+        user_id=teacher_id
     )
     doc_teacher2 = Document(
         title="Document Teacher 2",
         file_path="/fake/path/doc_t2.pdf",
         description="Document for Teacher 2",
-        teacher_id=teacher2.id
+        user_id=teacher2.id
     )
     
     db_session_test.add(doc_teacher1)

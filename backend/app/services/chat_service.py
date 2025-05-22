@@ -61,7 +61,7 @@ def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List
         if not teacher:
             raise HTTPException(status_code=404, detail="Profesor no encontrado")
             
-        subject_ids = [subject.id for subject in teacher.teaching_subjects]
+        subject_ids = [subject.id for subject in teacher.subjects]
         query = query.filter(
             or_(
                 and_(Conversation.user_id == user_id, Conversation.user_role == "teacher"),
@@ -150,7 +150,7 @@ def generate_conversation(db: Session, document_id: int, user_id: int, user_type
     """
     Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
     """
-    # Crear la conversación
+   
     new_conversation = create_conversation(db, document_id, user_id, user_type, subject_id)
     
     # Si no hay mensaje inicial, devolver conversación vacía

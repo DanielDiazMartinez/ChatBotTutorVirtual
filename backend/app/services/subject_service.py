@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-
-from ..models.models import Subject, User, teacher_subject, student_subject, Document
+from ..models.models import Subject, User, user_subject, Document
 from ..models.schemas import SubjectCreate
 
 def create_subject(db: Session, subject: SubjectCreate) -> dict:
@@ -38,26 +37,20 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
     if not db_subject:
         return None
     
-    # Obtener listas de profesores y estudiantes
-    teachers = [
+    # Obtener lista de usuarios
+    users = [
         {
-            "id": teacher.id,
-            "email": teacher.email,
-            "full_name": teacher.full_name,
-            "role": teacher.role
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role
         }
-        for teacher in db_subject.teachers
-    ] if db_subject.teachers else []
+        for user in db_subject.users
+    ] if db_subject.users else []
     
-    students = [
-        {
-            "id": student.id,
-            "email": student.email,
-            "full_name": student.full_name,
-            "role": student.role
-        }
-        for student in db_subject.students
-    ] if db_subject.students else []
+    # Separar usuarios por rol
+    teachers = [user for user in users if user["role"] == "teacher"]
+    students = [user for user in users if user["role"] == "student"]
     
     # Añadir conteo de estudiantes y profesores
     teacher_count = len(teachers)
@@ -74,7 +67,7 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         "teacher_count": teacher_count,
         "student_count": student_count
     }
-
+    
 def get_all_subjects(db: Session) -> list[dict]:
     """Obtiene todas las asignaturas"""
     subjects = db.query(Subject).all()
@@ -87,24 +80,24 @@ def get_all_subjects(db: Session) -> list[dict]:
             "created_at": subject.created_at,
             "teachers": [
                 {
-                    "id": teacher.id,
-                    "email": teacher.email,
-                    "full_name": teacher.full_name,
-                    "role": teacher.role
+                    "id": user.id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "role": user.role
                 }
-                for teacher in subject.teachers
+                for user in subject.users if user.role == "teacher"
             ],
             "students": [
                 {
-                    "id": student.id,
-                    "email": student.email,
-                    "full_name": student.full_name,
-                    "role": student.role
+                    "id": user.id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "role": user.role
                 }
-                for student in subject.students
+                for user in subject.users if user.role == "student"
             ],
-            "teacher_count": len(subject.teachers) if subject.teachers else 0,
-            "student_count": len(subject.students) if subject.students else 0
+            "teacher_count": len([user for user in subject.users if user.role == "teacher"]) if subject.users else 0,
+            "student_count": len([user for user in subject.users if user.role == "student"]) if subject.users else 0
         }
         for subject in subjects
     ]
@@ -124,25 +117,19 @@ def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict
     db.refresh(db_subject)
     
     # Preparamos la respuesta
-    teachers = [
+    users = [
         {
-            "id": teacher.id,
-            "email": teacher.email,
-            "full_name": teacher.full_name,
-            "role": teacher.role
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role
         }
-        for teacher in db_subject.teachers
-    ] if db_subject.teachers else []
+        for user in db_subject.users
+    ] if db_subject.users else []
     
-    students = [
-        {
-            "id": student.id,
-            "email": student.email,
-            "full_name": student.full_name,
-            "role": student.role
-        }
-        for student in db_subject.students
-    ] if db_subject.students else []
+    # Separar usuarios por rol
+    teachers = [user for user in users if user["role"] == "teacher"]
+    students = [user for user in users if user["role"] == "student"]
     
     # Añadir conteo de estudiantes y profesores
     teacher_count = len(teachers)
@@ -190,21 +177,11 @@ def add_user_to_subject(db: Session, subject_id: int, user_id: int) -> bool:
         return False
     
     try:
-        if db_user.role == "teacher":
-            print("Intentando agregar profesor")
-            print(f"Ya está en teachers: {db_user in db_subject.teachers}")
-            if db_user not in db_subject.teachers:
-                db_subject.teachers.append(db_user)
-                print("Profesor agregado correctamente")
-                
-        elif db_user.role == "student":
-            print("Intentando agregar estudiante")
-            print(f"Ya está en students: {db_user in db_subject.students}")
-            if db_user not in db_subject.students:
-                db_subject.students.append(db_user)
-                print("Estudiante agregado correctamente")
+        if db_user not in db_subject.users:
+            db_subject.users.append(db_user)
+            print(f"Usuario ({db_user.role}) agregado correctamente")
         else:
-            print(f"Rol no reconocido: {db_user.role}")
+            print(f"El usuario ya está en la asignatura")
             return False
         
         db.commit()
@@ -218,14 +195,6 @@ def add_user_to_subject(db: Session, subject_id: int, user_id: int) -> bool:
 def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[int]) -> dict:
     """
     Agrega múltiples usuarios a una asignatura
-    
-    Args:
-        db: Sesión de base de datos
-        subject_id: ID de la asignatura
-        user_ids: Lista de IDs de usuarios a agregar
-        
-    Returns:
-        Un diccionario con los resultados de la operación
     """
     db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
     if not db_subject:
@@ -249,22 +218,11 @@ def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[i
                 results["failed"].append({"id": user_id, "reason": "Los administradores no pueden ser añadidos a asignaturas"})
                 continue
                 
-            if db_user.role == "teacher":
-                if db_user not in db_subject.teachers:
-                    db_subject.teachers.append(db_user)
-                    results["added"].append({"id": user_id, "role": "teacher"})
-                else:
-                    results["failed"].append({"id": user_id, "reason": "El profesor ya está asignado a esta asignatura"})
-                    
-            elif db_user.role == "student":
-                if db_user not in db_subject.students:
-                    db_subject.students.append(db_user)
-                    results["added"].append({"id": user_id, "role": "student"})
-                else:
-                    results["failed"].append({"id": user_id, "reason": "El estudiante ya está asignado a esta asignatura"})
-                    
+            if db_user not in db_subject.users:
+                db_subject.users.append(db_user)
+                results["added"].append({"id": user_id, "role": db_user.role})
             else:
-                results["failed"].append({"id": user_id, "reason": f"Rol no válido: {db_user.role}"})
+                results["failed"].append({"id": user_id, "reason": f"El {db_user.role} ya está asignado a esta asignatura"})
                 
         except Exception as e:
             results["failed"].append({"id": user_id, "reason": str(e)})
@@ -287,14 +245,6 @@ def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[i
 def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: list[int]) -> dict:
     """
     Elimina múltiples usuarios de una asignatura
-    
-    Args:
-        db: Sesión de base de datos
-        subject_id: ID de la asignatura
-        user_ids: Lista de IDs de usuarios a eliminar
-        
-    Returns:
-        Un diccionario con los resultados de la operación
     """
     db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
     if not db_subject:
@@ -314,20 +264,11 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
                 results["failed"].append({"id": user_id, "reason": "Usuario no encontrado"})
                 continue
                 
-            removed = False
-            
-            if db_user.role == "teacher" and db_user in db_subject.teachers:
-                db_subject.teachers.remove(db_user)
-                removed = True
-                results["removed"].append({"id": user_id, "role": "teacher"})
-                    
-            elif db_user.role == "student" and db_user in db_subject.students:
-                db_subject.students.remove(db_user)
-                removed = True
-                results["removed"].append({"id": user_id, "role": "student"})
-            
-            if not removed:
-                results["failed"].append({"id": user_id, "reason": "Usuario no asociado a la asignatura o rol incorrecto"})
+            if db_user in db_subject.users:
+                db_subject.users.remove(db_user)
+                results["removed"].append({"id": user_id, "role": db_user.role})
+            else:
+                results["failed"].append({"id": user_id, "reason": "Usuario no asociado a la asignatura"})
                 
         except Exception as e:
             results["failed"].append({"id": user_id, "reason": str(e)})

@@ -42,8 +42,8 @@ def test_verificar_profesores_en_base_de_datos(client, db_session_test, admin_au
     from app.models.models import Subject
     db_subject = db_session_test.query(Subject).filter(Subject.id == subject_id).first()
     
-    # Verifica que el profesor esté en la lista de profesores de la asignatura
-    teacher_ids = [teacher.id for teacher in db_subject.teachers]
+    # Verifica que el profesor esté en la lista de usuarios de la asignatura
+    teacher_ids = [user.id for user in db_subject.users]
     assert teacher_id in teacher_ids, "El profesor no está asignado a la asignatura"
 
 def test_verificar_estudiantes_en_base_de_datos(client, db_session_test, admin_auth_headers):
@@ -87,6 +87,6 @@ def test_verificar_estudiantes_en_base_de_datos(client, db_session_test, admin_a
     from app.models.models import Subject
     db_subject = db_session_test.query(Subject).filter(Subject.id == subject_id).first()
     
-    # Verifica que el estudiante esté en la lista de estudiantes de la asignatura
-    student_ids = [student.id for student in db_subject.students]
+    # Verifica que el estudiante esté en la lista de usuarios de la asignatura
+    student_ids = [user.id for user in db_subject.users]
     assert student_id in student_ids, "El estudiante no está asignado a la asignatura"

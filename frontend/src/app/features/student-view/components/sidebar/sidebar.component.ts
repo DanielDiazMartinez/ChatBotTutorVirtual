@@ -91,7 +91,7 @@ export class SidebarComponent implements OnInit, OnChanges {
 
   onNewConversation(): void {
     // Usar un documento fijo pero la asignatura actual
-    const documentId = 4;  // ID del documento fijo según lo solicitado
+    const documentId = 8;  // ID del documento fijo según lo solicitado
     const subjectId = this.currentSubject ? Number(this.currentSubject.id) : 3;
     
     // Mostrar un indicador de carga

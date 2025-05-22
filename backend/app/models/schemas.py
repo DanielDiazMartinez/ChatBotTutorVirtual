@@ -94,7 +94,7 @@ class DocumentCreate(DocumentBase):
 
 class DocumentOut(DocumentBase):
     id: int
-    teacher_id: int
+    user_id: int
     subject_id: Optional[int] = None
     topic_id: Optional[int] = None
     created_at: datetime

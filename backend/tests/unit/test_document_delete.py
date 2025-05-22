@@ -43,7 +43,7 @@ def test_delete_document_physical_file(db_session_test: Session, client: TestCli
         title="Test Document",
         file_path=test_file_path,
         description="Test Description",
-        teacher_id=test_teacher.id
+        user_id=test_teacher.id  # Cambiado de teacher_id a user_id
     )
     db_session_test.add(test_document)
     db_session_test.commit()
@@ -110,7 +110,7 @@ def test_delete_document_without_permission(db_session_test: Session, client: Te
         title="Test Document",
         file_path=test_file_path,
         description="Test Description",
-        teacher_id=test_teacher1.id
+        user_id=test_teacher1.id  # Cambiado de teacher_id a user_id
     )
     db_session_test.add(test_document)
     db_session_test.commit()

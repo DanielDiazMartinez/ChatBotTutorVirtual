@@ -34,7 +34,7 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
         title="Test Document",
         file_path="/fake/path/test_doc.pdf",
         description="Test Document Description",
-        teacher_id=test_teacher.id  # Usar el ID del profesor que acabamos de crear
+        user_id=test_teacher.id  # Usar el ID del profesor que acabamos de crear
     )
     
     db_session_test.add(test_document)
