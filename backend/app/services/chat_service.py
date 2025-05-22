@@ -51,7 +51,13 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
     conversation_history = get_conversation_history(db, conversation_id)
     
     # Generar respuesta con AI
-    bot_response = generate_ai_response(message_text, context, conversation_history)
+    bot_response = generate_ai_response(
+        user_question=message_text, 
+        context=context, 
+        conversation_history=conversation_history,
+        user_id=str(conversation.user_id),
+        conversation_id=conversation_id
+    )
     
     # Añadir mensaje del bot
     add_bot_message(db, conversation_id, bot_response)
@@ -220,7 +226,13 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
         conversation_history = get_conversation_history(db, conversation_id)
         
         # Generar respuesta con AI
-        bot_response = generate_ai_response(message_text, context, conversation_history)
+        bot_response = generate_ai_response(
+            user_question=message_text, 
+            context=context, 
+            conversation_history=conversation_history,
+            user_id=str(conversation.user_id),
+            conversation_id=conversation_id
+        )
     except Exception as e:
         print(f"Error generating AI response: {e}")
         bot_response = "Lo siento, hubo un error al generar la respuesta."

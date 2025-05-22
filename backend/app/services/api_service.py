@@ -7,6 +7,7 @@ import os
 from groq import Groq, GroqError
 from app.core.config import settings
 import logging
+from app.utils.groq_logger import log_groq_context
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,7 +28,8 @@ else:
         logger.error(f"FATAL ERROR: Failed to create Groq client: {type(e).__name__} - {e}")
         client = None
 
-def generate_ai_response(user_question: str, context: str, conversation_history: str = "") -> str:
+def generate_ai_response(user_question: str, context: str, conversation_history: str = "", 
+                      user_id: str = "unknown", conversation_id: int = None) -> str:
     """
     Genera una respuesta utilizando la API de Groq basada en la pregunta del usuario y el contexto proporcionado.
 
@@ -35,6 +37,8 @@ def generate_ai_response(user_question: str, context: str, conversation_history:
         user_question: La pregunta realizada por el usuario.
         context: El contexto extraído de los documentos relevantes.
         conversation_history: El historial de la conversación (opcional).
+        user_id: ID del usuario que realiza la consulta (opcional).
+        conversation_id: ID de la conversación (opcional).
 
     Returns:
         La respuesta generada por el modelo de Groq.
@@ -60,6 +64,21 @@ def generate_ai_response(user_question: str, context: str, conversation_history:
 
     ### Respuesta:
     """
+    
+    # Registrar el contexto completo enviado a Groq
+    try:
+        if conversation_id:
+            log_groq_context(
+                user_id=user_id, 
+                conversation_id=conversation_id, 
+                user_question=user_question, 
+                context=context, 
+                conversation_history=conversation_history, 
+                prompt=prompt
+            )
+            logger.info(f"Contexto de Groq registrado para conversación {conversation_id}")
+    except Exception as log_error:
+        logger.error(f"Error al registrar contexto de Groq: {str(log_error)}")
 
     logger.info(f"Preparing to call Groq API using model: {settings.GROQ_MODEL_NAME}")
     

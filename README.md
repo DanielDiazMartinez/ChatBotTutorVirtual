@@ -15,6 +15,7 @@ ChatBotTutorVirtual es una plataforma educativa integral que permite a los profe
 - **Autenticación**: JWT
 - **Procesamiento LLM**: Groq API
 - **Vectorización**: PineconeDB
+- **Logging**: Sistema de registro para contextos de Groq
 
 ### Base de datos
 - **Motor principal**: PostgreSQL
@@ -104,6 +105,31 @@ El sistema está estructurado alrededor de estos modelos principales:
 - **Interfaz administrativa** para profesores y gestores del sistema
 
 ## 💡 Implementación Técnica
+
+### Sistema de Logs para Contextos de Groq
+
+El sistema incluye una funcionalidad de logging avanzada para registrar los contextos enviados a la API de Groq:
+
+1. Guarda automáticamente en archivos JSON el contexto completo de cada consulta, incluyendo:
+   - Pregunta del usuario
+   - Contexto extraído de los documentos
+   - Historial de conversación
+   - Prompt completo enviado a Groq
+   - Estadísticas de tokens y longitud
+
+2. Organiza los logs por fecha para facilitar su análisis
+
+3. Incluye una herramienta de análisis (`analyze_groq_logs.py`) para extraer estadísticas y visualizar patrones de uso.
+
+Para analizar los logs, ejecuta:
+```bash
+python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_groq_logs.py
+```
+
+Para ver opciones adicionales:
+```bash
+python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_groq_logs.py --help
+```
 
 ### Búsqueda Vectorial
 

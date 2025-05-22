@@ -24,7 +24,9 @@ class TestApiService:
         result = generate_ai_response(
             user_question="¿Qué es Python?",
             context="Python es un lenguaje de programación",
-            conversation_history="Usuario: Hola\nBot: Hola, ¿en qué puedo ayudarte?"
+            conversation_history="Usuario: Hola\nBot: Hola, ¿en qué puedo ayudarte?",
+            user_id="test_user",
+            conversation_id=1
         )
         
         # Verificar resultado
@@ -42,7 +44,9 @@ class TestApiService:
         result = generate_ai_response(
             user_question="¿Qué es Python?",
             context="Python es un lenguaje de programación",
-            conversation_history=""
+            conversation_history="",
+            user_id="test_user",
+            conversation_id=2
         )
         
         assert "Lo siento, la configuración del servicio de IA no es correcta" in result
@@ -66,7 +70,9 @@ class TestApiService:
         result = generate_ai_response(
             user_question="¿Qué es Python?",
             context="Python es un lenguaje de programación",
-            conversation_history=""
+            conversation_history="",
+            user_id="test_user",
+            conversation_id=3
         )
         
         # Verificar que se maneja el error
