@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
-from ..models.models import DocumentChunk, User
+from ..models.models import DocumentChunk, User, Document
 from ..services.chat_service import (
     delete_conversation, 
     get_conversation_by_id, 
@@ -39,7 +39,31 @@ async def create_conversation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Crear una nueva conversación"""
+    """Crear una nueva conversación
+    
+    Se puede proporcionar:
+    - Solo subject_id: buscará en todos los documentos de esa asignatura
+    - document_id específico: se centrará en ese documento concreto
+    - Ambos: utilizará el documento específico pero también el contexto de la asignatura
+    """
+    # Verificar que se proporcionó al menos document_id o subject_id
+    if conversation_data.document_id is None and conversation_data.subject_id is None:
+        raise HTTPException(
+            status_code=400, 
+            detail="Se requiere al menos document_id o subject_id para crear una conversación"
+        )
+    
+    # Si se proporciona subject_id pero no document_id, seleccionamos un documento de la asignatura
+    if conversation_data.document_id is None and conversation_data.subject_id is not None:
+        # Buscar el primer documento de la asignatura
+        document = db.query(Document).filter(Document.subject_id == conversation_data.subject_id).first()
+        if not document:
+            raise HTTPException(
+                status_code=404, 
+                detail="No se encontraron documentos para la asignatura especificada"
+            )
+        conversation_data.document_id = document.id
+    
     bot_response_str, conversation_obj = generate_conversation(
         db=db,
         document_id=conversation_data.document_id,
@@ -209,6 +233,43 @@ async def get_context_for_question(
         db=db,
         query_embedding=query_embedding,
         document_id=document_id
+    )
+
+    context_out = [
+        DocumentChunkOut.model_validate(chunk) for chunk, _ in similar_chunks
+    ]
+
+    return {
+        "data": context_out,
+        "message": "Contexto obtenido correctamente",
+        "status": 200
+    }
+
+@chat_routes.post("/context/subject/{subject_id}", response_model=APIResponse)
+async def get_subject_context_for_question(
+    subject_id: int, 
+    db: Session = Depends(get_db), 
+    message_data: MessageCreate = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener contexto para una pregunta buscando en todos los documentos de una asignatura"""
+    if message_data is None or message_data.text is None:
+        raise HTTPException(status_code=400, detail="Se requiere texto del mensaje")
+
+    # Verificar que la asignatura existe
+    subject = db.query(Document).filter(Document.subject_id == subject_id).first()
+    if not subject:
+        raise HTTPException(status_code=404, detail="Asignatura no encontrada o sin documentos")
+
+    # Obtener el embedding para la consulta
+    from ..services.embedding_service import get_embedding_for_query
+    query_embedding = get_embedding_for_query(message_data.text)
+    
+    # Buscar chunks similares en todos los documentos de la asignatura
+    similar_chunks = search_similar_chunks(
+        db=db,
+        query_embedding=query_embedding,
+        subject_id=subject_id
     )
 
     context_out = [

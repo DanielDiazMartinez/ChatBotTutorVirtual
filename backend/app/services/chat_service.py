@@ -29,8 +29,23 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
     # Añadir mensaje del usuario
     add_user_message(db, conversation_id, message_text)
     
-    # Obtener contexto de documento
-    context = get_conversation_context(db, conversation.document_id, message_text)
+    # Obtener contexto, primero intentamos con el documento específico
+    # y también buscamos en todos los documentos de la asignatura si está definida
+    context = ""
+    if conversation.subject_id:
+        # Buscar en todos los documentos de la asignatura
+        context = get_conversation_context(
+            db=db, 
+            message_text=message_text,
+            subject_id=conversation.subject_id
+        )
+    else:
+        # Si no hay asignatura, buscar solo en el documento específico
+        context = get_conversation_context(
+            db=db, 
+            document_id=conversation.document_id, 
+            message_text=message_text
+        )
     
     # Obtener historial de conversación
     conversation_history = get_conversation_history(db, conversation_id)
@@ -149,6 +164,9 @@ def create_conversation(db: Session, document_id: int, user_id: int, user_type: 
 def generate_conversation(db: Session, document_id: int, user_id: int, user_type: str, subject_id: int, initial_message_text: str = None) -> Tuple[str, Conversation]:
     """
     Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
+    
+    La respuesta se genera utilizando el documento específico y, si está disponible,
+    todos los documentos de la asignatura para obtener un contexto más completo.
     """
    
     new_conversation = create_conversation(db, document_id, user_id, user_type, subject_id)
@@ -158,6 +176,7 @@ def generate_conversation(db: Session, document_id: int, user_id: int, user_type
         return "", new_conversation
     
     # Procesar mensaje y generar respuesta
+    # Esta función ya utiliza documentos de la asignatura cuando subject_id está disponible
     bot_response = process_message(db, new_conversation.id, initial_message_text)
     
     return bot_response, new_conversation
@@ -178,13 +197,28 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
     # Añadir mensaje del usuario
     user_msg = add_user_message(db, conversation_id, message_text)
     
-    # Obtener contexto de documento
-    context = get_conversation_context(db, conversation.document_id, message_text)
-    
-    # Obtener historial de conversación
-    conversation_history = get_conversation_history(db, conversation_id)
-    
+    # Obtener contexto, primero intentamos con el documento específico
+    # y también buscamos en todos los documentos de la asignatura si está definida
+    context = ""
     try:
+        if conversation.subject_id:
+            # Buscar en todos los documentos de la asignatura
+            context = get_conversation_context(
+                db=db, 
+                message_text=message_text,
+                subject_id=conversation.subject_id
+            )
+        else:
+            # Si no hay asignatura, buscar solo en el documento específico
+            context = get_conversation_context(
+                db=db, 
+                document_id=conversation.document_id, 
+                message_text=message_text
+            )
+        
+        # Obtener historial de conversación
+        conversation_history = get_conversation_history(db, conversation_id)
+        
         # Generar respuesta con AI
         bot_response = generate_ai_response(message_text, context, conversation_history)
     except Exception as e:
