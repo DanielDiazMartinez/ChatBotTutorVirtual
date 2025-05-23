@@ -116,7 +116,7 @@ class ConversationBase(BaseModel):
     """
     Modelo base para conversaciones.
     """
-    document_id: int
+    subject_id: Optional[int] = None
 
 class ConversationCreate(BaseModel):
     """
@@ -125,10 +125,8 @@ class ConversationCreate(BaseModel):
     Se puede proporcionar solo subject_id para buscar en todos los documentos
     de una asignatura, o especificar un document_id concreto.
     """
-    document_id: Optional[int] = None
     text: Optional[str] = None
     subject_id: Optional[int] = None
-    
     model_config = ConfigDict(extra="forbid")
 
 class ConversationOut(BaseModel):

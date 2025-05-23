@@ -46,6 +46,20 @@ def generate_ai_response(user_question: str, context: str, conversation_history:
     if client is None:
         logger.error("ERROR: generate_ai_response called but Groq client is not valid!")
         return "Lo siento, la configuración del servicio de IA no es correcta."
+        
+    # Log de depuración - verificamos si context es None o vacío
+    if context is None:
+        logger.warning("Context is None en generate_ai_response")
+        context = ""
+    elif not context.strip():
+        logger.warning("Context está vacío en generate_ai_response")
+        
+    # Log del tamaño del contexto
+    logger.info(f"Tamaño del contexto en generar_ai_response: {len(context)} caracteres")
+    
+    # Verifica si hay chunks en el contexto 
+    if len(context) < 10:
+        logger.warning(f"¡ALERTA! Contexto muy pequeño o vacío: '{context}'")
 
     prompt = f"""
     ### Instrucciones:
@@ -79,6 +93,7 @@ def generate_ai_response(user_question: str, context: str, conversation_history:
             logger.info(f"Contexto de Groq registrado para conversación {conversation_id}")
     except Exception as log_error:
         logger.error(f"Error al registrar contexto de Groq: {str(log_error)}")
+        logger.error(f"Detalles: user_id={user_id}, conversation_id={conversation_id}, context_len={len(context) if context else 0}")
 
     logger.info(f"Preparing to call Groq API using model: {settings.GROQ_MODEL_NAME}")
     

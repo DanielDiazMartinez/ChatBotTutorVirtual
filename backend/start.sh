@@ -18,6 +18,11 @@ echo "Extensión pgvector creada o ya existente"
 echo "Ejecutando migraciones de Alembic..."
 alembic upgrade head
 
+# Crear directorios de logs y asignar permisos
+echo "Configurando directorios de logs..."
+mkdir -p /app/logs/chat/groq_contexts
+chmod -R 777 /app/logs
+
 # Iniciar la aplicación
 echo "Iniciando aplicación..."
 exec "$@"

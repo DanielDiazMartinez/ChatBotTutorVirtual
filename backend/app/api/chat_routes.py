@@ -43,30 +43,18 @@ async def create_conversation(
     
     Se puede proporcionar:
     - Solo subject_id: buscará en todos los documentos de esa asignatura
-    - document_id específico: se centrará en ese documento concreto
+
     - Ambos: utilizará el documento específico pero también el contexto de la asignatura
     """
-    # Verificar que se proporcionó al menos document_id o subject_id
-    if conversation_data.document_id is None and conversation_data.subject_id is None:
+    # Verificar que se proporcionó al menos  subject_id
+    if conversation_data.subject_id is None:
         raise HTTPException(
             status_code=400, 
-            detail="Se requiere al menos document_id o subject_id para crear una conversación"
-        )
-    
-    # Si se proporciona subject_id pero no document_id, seleccionamos un documento de la asignatura
-    if conversation_data.document_id is None and conversation_data.subject_id is not None:
-        # Buscar el primer documento de la asignatura
-        document = db.query(Document).filter(Document.subject_id == conversation_data.subject_id).first()
-        if not document:
-            raise HTTPException(
-                status_code=404, 
-                detail="No se encontraron documentos para la asignatura especificada"
-            )
-        conversation_data.document_id = document.id
+            detail="Se requiere subject_id para crear una conversación"
+        )  
     
     bot_response_str, conversation_obj = generate_conversation(
         db=db,
-        document_id=conversation_data.document_id,
         user_id=current_user.id,
         user_type=current_user.role,
         subject_id=conversation_data.subject_id,
@@ -164,7 +152,7 @@ async def delete_conv(
     current_user: User = Depends(get_current_user)
 ):
     """Eliminar una conversación"""
-    conversation = get_conversation_by_id(conversation_id, db)
+    conversation = get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
@@ -172,7 +160,7 @@ async def delete_conv(
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta conversación")
             
-    delete_conversation(conversation_id, db)
+    delete_conversation(db, conversation_id)
     return {
         "data": None,
         "message": "Conversación eliminada correctamente",
@@ -196,7 +184,7 @@ async def add_message_to_conversation(
             message_text=message_data.text
         )
         
-        # Convertir modelos ORM a modelos Pydantic para serialización
+        
         user_message_out = MessageOut.model_validate(user_msg_obj)
         bot_message_out = MessageOut.model_validate(bot_msg_obj)
         

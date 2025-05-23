@@ -90,14 +90,13 @@ export class SidebarComponent implements OnInit, OnChanges {
   }
 
   onNewConversation(): void {
-    // Usar un documento fijo pero la asignatura actual
-    const documentId = 8;  // ID del documento fijo según lo solicitado
+    // Usar solo la asignatura actual
     const subjectId = this.currentSubject ? Number(this.currentSubject.id) : 3;
     
     // Mostrar un indicador de carga
     this.isLoading = true;
     
-    this.chatService.createConversation(documentId, subjectId).subscribe({
+    this.chatService.createConversation(subjectId).subscribe({
       next: (response) => {
         if (response.data) {
           // Crear la conversación con los datos devueltos por el backend

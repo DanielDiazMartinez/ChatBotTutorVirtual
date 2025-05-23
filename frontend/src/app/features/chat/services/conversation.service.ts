@@ -33,9 +33,9 @@ export class ConversationService {
   /**
    * Crea una nueva conversación
    */
-  createConversation(documentId: number, text: string, topicId?: number): Observable<ConversationWithBotResponse> {
+  createConversation(subjectId: number, text: string, topicId?: number): Observable<ConversationWithBotResponse> {
     const payload = {
-      document_id: documentId,
+      subject_id: subjectId,
       text,
       ...(topicId && { topic_id: topicId })
     };

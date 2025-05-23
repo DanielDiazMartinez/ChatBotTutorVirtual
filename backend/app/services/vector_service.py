@@ -7,6 +7,8 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select, literal_column
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Optional
+import logging
+
 from ..models.models import (
     Document, 
     DocumentChunk,
@@ -21,7 +23,6 @@ from app.services.embedding_service import get_embedding_for_query
 
 def search_similar_chunks(db: Session,
                           query_embedding: List[float],
-                          document_id: Optional[int] = None,
                           subject_id: Optional[int] = None,
                           limit: int = 3,
                           similarity_metric: str = "cosine") -> List[Tuple[DocumentChunk, float]]:
@@ -39,17 +40,39 @@ def search_similar_chunks(db: Session,
     Returns:
         Lista de tuplas (chunk, score) ordenadas por similitud
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Log para depuración
+    logger.info(f"Buscando chunks similares, subject_id={subject_id}, limit={limit}")
+    
+    if not query_embedding or len(query_embedding) == 0:
+        logger.error("query_embedding es None o vacío en search_similar_chunks")
+        return []
+        
+    # Log de dimensiones del embedding
+    logger.info(f"Dimensión del embedding de consulta: {len(query_embedding)}")
+        
     embedding_str = f"CAST(ARRAY[{', '.join(map(str, query_embedding))}] AS vector)"
 
-    if similarity_metric == "cosine":
-        distance_expression = CosineDistance(DocumentChunk.embedding, literal_column(embedding_str))
-        convert_score = lambda x: 1.0 - x
-    elif similarity_metric == "l2":
-        distance_expression = EuclideanDistance(DocumentChunk.embedding, literal_column(embedding_str))
-        convert_score = lambda x: 1.0 / (1.0 + x)
-    else:
-        distance_expression = InnerProduct(DocumentChunk.embedding, literal_column(embedding_str))
-        convert_score = lambda x: -x
+    try:
+        if similarity_metric == "cosine":
+            # Usamos directamente la sintaxis SQL de pgvector para la distancia coseno
+            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <=> {embedding_str})")
+            convert_score = lambda x: 1.0 - x
+        elif similarity_metric == "l2":
+            # Usamos directamente la sintaxis SQL de pgvector para la distancia euclidiana
+            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <-> {embedding_str})")
+            convert_score = lambda x: 1.0 / (1.0 + x)
+        else:
+            # Inner product negativo (más alto = más similar)
+            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <#> {embedding_str})")
+            convert_score = lambda x: -x
+        
+        logger.info(f"Expresión de distancia creada correctamente: {distance_expression}")
+    except Exception as e:
+        logger.error(f"Error al crear la expresión de distancia: {str(e)}")
+        raise
 
     # Construir la consulta base
     query = select(
@@ -57,18 +80,30 @@ def search_similar_chunks(db: Session,
         distance_expression.label("distance")
     )
     
-    # Si se proporciona document_id, filtrar por ese documento
-    if document_id:
-        query = query.filter(DocumentChunk.document_id == document_id)
     
     # Si se proporciona subject_id, filtrar por los documentos de esa asignatura
     if subject_id:
         query = query.join(Document, DocumentChunk.document_id == Document.id)
         query = query.filter(Document.subject_id == subject_id)
         
-        # Optimización: priorizamos chunks donde la distancia es baja
-        # Sin embargo, para mantener la diversidad, intentamos obtener chunks de diferentes documentos
-        # si es posible mediante una subquery para obtener el mejor chunk de cada documento
+        # Log para verificar documentos de asignatura
+        doc_count = db.query(Document).filter(Document.subject_id == subject_id).count()
+        logger.info(f"Documentos encontrados para subject_id={subject_id}: {doc_count}")
+        
+        # Verificar si los documentos tienen chunks
+        for doc in db.query(Document).filter(Document.subject_id == subject_id).all():
+            chunk_count = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).count()
+            logger.info(f"Documento id={doc.id}, título='{doc.title}' tiene {chunk_count} chunks")
+            
+            # Verificar si los chunks tienen embeddings válidos
+            if chunk_count > 0:
+                sample_chunk = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).first()
+                if sample_chunk and sample_chunk.embedding:
+                    embedding_dim = len(sample_chunk.embedding)
+                    logger.info(f"Un chunk del documento {doc.id} tiene un embedding de dimensión {embedding_dim}")
+                else:
+                    logger.warning(f"Los chunks del documento {doc.id} no tienen embeddings válidos")
+        
         if limit > 1:
             # Obtener primero los documentos de la asignatura
             documents = db.query(Document.id).filter(Document.subject_id == subject_id).all()
@@ -83,12 +118,29 @@ def search_similar_chunks(db: Session,
     query = query.order_by("distance").limit(limit)
 
     results = db.execute(query).all()
+    
+    # Log del número de resultados encontrados
+    logger.info(f"Resultados encontrados: {len(results)}")
+    
+    # Si no hay resultados, hacer log del query SQL para depuración
+    if len(results) == 0:
+        logger.warning(f"No se encontraron chunks similares. Query SQL: {query}")
+        
+        # Verificar si hay chunks en la base de datos
+        chunk_count = db.query(DocumentChunk).count()
+        logger.info(f"Total de chunks en la base de datos: {chunk_count}")
+        
+        # Si hay subject_id, verificar que hay chunks relacionados
+        if subject_id:
+            related_chunks = db.query(DocumentChunk).\
+                join(Document, DocumentChunk.document_id == Document.id).\
+                filter(Document.subject_id == subject_id).count()
+            logger.info(f"Chunks relacionados con subject_id={subject_id}: {related_chunks}")
 
     return [(row.DocumentChunk, convert_score(row.distance)) for row in results]
 
 def create_conversation(
     db: Session,
-    document_id: int,
     user_id: int,
     user_type: str,
     subject_id: int
@@ -98,8 +150,6 @@ def create_conversation(
     """
     from ..services.document_service import document_exists
     
-    if not document_exists(db, document_id):
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
 
     user = db.query(User).filter(
         and_(User.id == user_id, User.role == user_type)
@@ -107,11 +157,17 @@ def create_conversation(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Buscar un documento asociado a la asignatura
+    document = db.query(Document).filter(Document.subject_id == subject_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="No se encontraron documentos para la asignatura")
+        
+    # Crear la conversación con el ID del documento y la asignatura
     new_conversation = Conversation(
         user_id=user_id,
         user_role=user_type,
-        document_id=document_id,
-        subject_id=subject_id
+        subject_id=subject_id,
+        document_id=document.id
     )
 
     db.add(new_conversation)
@@ -182,7 +238,6 @@ def add_bot_message(
 
 def get_conversation_context(
     db: Session,
-    document_id: int = None,
     message_text: str = None,
     subject_id: int = None,
     limit: int = 5,
@@ -203,28 +258,36 @@ def get_conversation_context(
     Returns:
         Contexto como string concatenado
     """
+    logger = logging.getLogger(__name__)
+    
     if not message_text:
+        logger.warning("get_conversation_context llamado con message_text vacío")
         return ""
         
     # Validar que se proporcionó al menos uno de document_id o subject_id
-    if document_id is None and subject_id is None:
+    if subject_id is None:
+        logger.error("get_conversation_context llamado sin document_id ni subject_id")
         raise ValueError("Se requiere proporcionar document_id o subject_id")
+    
+    logger.info(f"Generando contexto para pregunta: '{message_text[:50]}...', subject_id={subject_id}]")
         
     query_embedding = get_embedding_for_query(message_text)
+    logger.debug(f"Embedding generado con tamaño: {len(query_embedding)}")
+    
     similar_chunks = search_similar_chunks(
         db=db, 
         query_embedding=query_embedding,
-        document_id=document_id,
         subject_id=subject_id,
         limit=limit,
         similarity_metric=similarity_metric
     )
     
+    logger.info(f"Búsqueda de chunks similares completada. Encontrados: {len(similar_chunks)} chunks")
     if not similar_chunks:
         return ""
     
     # Si estamos buscando por subject_id, añadimos información sobre el documento de origen
-    if subject_id and not document_id:
+    if subject_id:
         context_parts = []
         for chunk, score in similar_chunks:
             # Obtenemos el título del documento
@@ -235,10 +298,6 @@ def get_conversation_context(
             context_parts.append(f"[Del documento '{title_str}']: {chunk.content}")
         
         context = "\n\n".join(context_parts)
-    else:
-        # Comportamiento original para búsqueda en un solo documento
-        context = " ".join([chunk.content for chunk, _ in similar_chunks])
-    
     return context
 
 def get_conversation_history(

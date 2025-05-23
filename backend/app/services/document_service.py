@@ -29,7 +29,7 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     with open(file_path, "wb") as buffer:
         buffer.write(pdf_file.file.read())
     
-    # Si topic_id es 0, establecerlo como None para evitar violación de clave foránea
+    
     topic_id = None if document.topic_id == 0 else document.topic_id
     
     new_document = Document(

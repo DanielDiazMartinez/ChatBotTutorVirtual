@@ -17,9 +17,8 @@ interface ConversationWithResponse {
 export class ChatService {
   private api = inject(ApiService);
 
-  createConversation(documentId: number, subjectId: number): Observable<ApiResponse<ConversationWithResponse>> {
+  createConversation(subjectId: number): Observable<ApiResponse<ConversationWithResponse>> {
     const payload: any = {
-      document_id: documentId,
       subject_id: subjectId,
       text: null
     };

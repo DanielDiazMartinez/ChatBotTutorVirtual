@@ -20,6 +20,8 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
+logs/chat/
 
 # Docker
 *.pid

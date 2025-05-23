@@ -6,6 +6,10 @@ from typing import List, Optional, Dict, Any, Tuple
 from fastapi import HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+import logging
+
+# Configuración de logging
+logger = logging.getLogger(__name__)
 
 from app.models.models import Conversation, Message, User
 from app.services.api_service import generate_ai_response
@@ -34,6 +38,7 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
     context = ""
     if conversation.subject_id:
         # Buscar en todos los documentos de la asignatura
+        logger.info(f"Buscando contexto por subject_id={conversation.subject_id}")
         context = get_conversation_context(
             db=db, 
             message_text=message_text,
@@ -41,11 +46,17 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
         )
     else:
         # Si no hay asignatura, buscar solo en el documento específico
+        logger.info(f"Buscando contexto por document_id={conversation.document_id}")
         context = get_conversation_context(
             db=db, 
             document_id=conversation.document_id, 
             message_text=message_text
         )
+    
+    # Log para depuración de contexto
+    logger.info(f"Tamaño del contexto generado: {len(context)} caracteres")
+    if not context or len(context) < 10:
+        logger.warning(f"¡ALERTA! Contexto muy pequeño o vacío para message_id={conversation_id}")
     
     # Obtener historial de conversación
     conversation_history = get_conversation_history(db, conversation_id)
@@ -161,13 +172,13 @@ def get_conversation_messages(db: Session, conversation_id: int) -> List[Message
     
     return messages
 
-def create_conversation(db: Session, document_id: int, user_id: int, user_type: str, subject_id: int) -> Conversation:
+def create_conversation(db: Session, user_id: int, user_type: str, subject_id: int) -> Conversation:
     """
     Crea una nueva conversación utilizando el servicio vector.
     """
-    return create_conversation_in_vector(db, document_id, user_id, user_type, subject_id)
+    return create_conversation_in_vector(db, user_id, user_type, subject_id)
 
-def generate_conversation(db: Session, document_id: int, user_id: int, user_type: str, subject_id: int, initial_message_text: str = None) -> Tuple[str, Conversation]:
+def generate_conversation(db: Session, user_id: int, user_type: str, subject_id: int, initial_message_text: str = None) -> Tuple[str, Conversation]:
     """
     Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
     
@@ -175,7 +186,7 @@ def generate_conversation(db: Session, document_id: int, user_id: int, user_type
     todos los documentos de la asignatura para obtener un contexto más completo.
     """
    
-    new_conversation = create_conversation(db, document_id, user_id, user_type, subject_id)
+    new_conversation = create_conversation(db, user_id, user_type, subject_id)
     
     # Si no hay mensaje inicial, devolver conversación vacía
     if not initial_message_text:
@@ -191,16 +202,16 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
     """
     Añade un mensaje del usuario a una conversación existente y genera una respuesta.
     """
-    # Verificar que la conversación existe
+    
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
-    # Verificar que el usuario tiene permisos para esta conversación
+   
     if conversation.user_id != user_id or conversation.user_role != user_type:
         raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
     
-    # Añadir mensaje del usuario
+   
     user_msg = add_user_message(db, conversation_id, message_text)
     
     # Obtener contexto, primero intentamos con el documento específico
@@ -214,17 +225,9 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
                 message_text=message_text,
                 subject_id=conversation.subject_id
             )
-        else:
-            # Si no hay asignatura, buscar solo en el documento específico
-            context = get_conversation_context(
-                db=db, 
-                document_id=conversation.document_id, 
-                message_text=message_text
-            )
         
         # Obtener historial de conversación
         conversation_history = get_conversation_history(db, conversation_id)
-        
         # Generar respuesta con AI
         bot_response = generate_ai_response(
             user_question=message_text, 

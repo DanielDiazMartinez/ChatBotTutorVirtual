@@ -25,6 +25,7 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/app
+      - ./backend/logs:/app/logs
     depends_on:
       db:
         condition: service_healthy # Espera a que la BBDD esté saludable

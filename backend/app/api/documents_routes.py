@@ -29,9 +29,9 @@ async def upload_document(
     document_data = DocumentCreate(
         title=title, 
         description=description, 
-        user_id=current_user.id,  # Usamos user_id en lugar de teacher_id
-        subject_id=subject_id,  # Campo obligatorio
-        topic_id=topic_id  # Campo opcional
+        user_id=current_user.id, 
+        subject_id=subject_id,  
+        topic_id=topic_id  
     )
     document = save_document(db, pdf_file, document_data)
     return {
