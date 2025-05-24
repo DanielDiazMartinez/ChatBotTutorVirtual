@@ -15,9 +15,14 @@ logger = logging.getLogger(__name__)
 
 # Instancia global del modelo (singleton)
 sentence_transformer_model_instance = None
-#EMBEDDING_MODEL_NAME = 'all-MiniLM-L6-v2'  # Modelo más eficiente
+# Modelos por dimensiones:
+# all-MiniLM-L6-v2: 384 dimensiones (eficiente, más rápido)
+# all-mpnet-base-v2: 768 dimensiones (balance)
+# all-distilroberta-v1: ~768 dimensiones (potente, más preciso)
+# text-embedding-ada-002: 1536 dimensiones (alta precisión)
+# e5-large-v2: 1024 dimensiones (reciente, alta precisión)
 
-EMBEDDING_MODEL_NAME = 'all-distilroberta-v1'  # Modelo más potente
+EMBEDDING_MODEL_NAME = 'all-mpnet-base-v2'  # Usar modelo de mejor calidad
 def load_sentence_transformer_model_singleton(model_name: str = EMBEDDING_MODEL_NAME):
     """
     Carga el modelo SentenceTransformer como un singleton para evitar 
@@ -39,12 +44,29 @@ def get_embedding_for_query(text: str) -> List[float]:
     """
     Genera un embedding para un texto dado utilizando el modelo SentenceTransformer.
     """
-    model = load_sentence_transformer_model_singleton()
-    if not text:
+    if not text or text.strip() == "":
+        logger.warning("Se solicitó embedding para texto vacío")
         return []
-
-    embedding = model.encode(text)
-    return embedding.tolist()
+    
+    try:
+        model = load_sentence_transformer_model_singleton()
+        logger.info(f"Generando embedding para consulta: '{text[:50]}...' (longitud: {len(text)})")
+        
+        # Procesar el texto para mejorar resultados
+        processed_text = text.strip()
+        
+        # Generar embedding
+        embedding = model.encode(processed_text)
+        
+        # Verificar dimensiones del embedding
+        embedding_list = embedding.tolist()
+        embedding_dim = len(embedding_list)
+        logger.info(f"Embedding generado correctamente: dimensión={embedding_dim}")
+        
+        return embedding_list
+    except Exception as e:
+        logger.error(f"Error al generar embedding para consulta: {e}")
+        return []
 
 def semantic_split_text(
     text: str,

@@ -24,7 +24,7 @@ from app.services.embedding_service import get_embedding_for_query
 def search_similar_chunks(db: Session,
                           query_embedding: List[float],
                           subject_id: Optional[int] = None,
-                          limit: int = 3,
+                          limit: int = 10,
                           similarity_metric: str = "cosine") -> List[Tuple[DocumentChunk, float]]:
     """
     Busca chunks similares a un embedding de consulta usando pgvector
@@ -240,7 +240,7 @@ def get_conversation_context(
     db: Session,
     message_text: str = None,
     subject_id: int = None,
-    limit: int = 5,
+    limit: int = 10,
     similarity_metric: str = "cosine"
 ) -> str:
     """
@@ -284,26 +284,33 @@ def get_conversation_context(
     
     logger.info(f"Búsqueda de chunks similares completada. Encontrados: {len(similar_chunks)} chunks")
     if not similar_chunks:
+        logger.warning(f"No se encontraron chunks similares para la pregunta: '{message_text[:50]}...'")
         return ""
     
     # Si estamos buscando por subject_id, añadimos información sobre el documento de origen
     if subject_id:
         context_parts = []
-        for chunk, score in similar_chunks:
+        logger.info(f"Procesando {len(similar_chunks)} chunks para generar contexto")
+        
+        for i, (chunk, score) in enumerate(similar_chunks):
             # Obtenemos el título del documento
             document_title = db.query(Document.title).filter(Document.id == chunk.document_id).first()
             title_str = document_title[0] if document_title else "Documento desconocido"
+            
+            # Log de la puntuación de similitud
+            logger.info(f"Chunk {i+1}: score={score:.4f}, documento='{title_str}', longitud={len(chunk.content)}")
             
             # Formateamos el chunk con información del documento
             context_parts.append(f"[Del documento '{title_str}']: {chunk.content}")
         
         context = "\n\n".join(context_parts)
+        logger.info(f"Contexto generado con {len(context_parts)} chunks, longitud total: {len(context)} caracteres")
     return context
 
 def get_conversation_history(
     db: Session,
     conversation_id: int,
-    limit: int = 6
+    limit: int = 10
 ) -> str:
     """
     Obtiene el historial de conversación formateado como string.
