@@ -6,14 +6,12 @@ export interface LastMessage {
 
 export interface Conversation {
   id: number;
-  user_id?: number; // Cambiado de student_id para ser compatible con el backend
-  document_id: number;
+  user_id?: number; 
   subject_id?: number;
   user_role?: string;
   created_at: string;
   title?: string;
   pinned?: boolean;
-  document_title?: string;
   last_message?: string | LastMessage;
   messages?: Message[]; // Opcional, para mantener compatibilidad con el código existente
 }

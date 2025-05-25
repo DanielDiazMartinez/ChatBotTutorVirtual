@@ -38,7 +38,6 @@ class TestIntegrationAfterRestructuring:
         conv.id = 1
         conv.document_id = 1
         conv.user_id = 1
-        conv.user_role = "student"
         return conv
     @patch('app.services.document_service.document_exists')
     @patch('app.services.embedding_service.get_embedding_for_query')

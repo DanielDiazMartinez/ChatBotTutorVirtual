@@ -4,7 +4,7 @@ Este servicio maneja las operaciones con vectores y búsqueda semántica.
 Solo puede depender de servicios de la capa base (embedding_service, document_service).
 """
 from fastapi import HTTPException
-from sqlalchemy import and_, select, literal_column
+from sqlalchemy import  select, literal_column
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Optional
 import logging
@@ -12,9 +12,6 @@ import logging
 from ..models.models import (
     Document, 
     DocumentChunk,
-    CosineDistance, 
-    EuclideanDistance, 
-    InnerProduct, 
     Conversation, 
     Message, 
     User
@@ -32,7 +29,6 @@ def search_similar_chunks(db: Session,
     Args:
         db: Sesión de SQLAlchemy
         query_embedding: Vector de embedding de la consulta
-        document_id: ID del documento (opcional)
         subject_id: ID de la asignatura (opcional)
         limit: Número máximo de chunks a devolver
         similarity_metric: Métrica de similitud a usar ("cosine", "l2", "inner_product")
@@ -139,42 +135,7 @@ def search_similar_chunks(db: Session,
 
     return [(row.DocumentChunk, convert_score(row.distance)) for row in results]
 
-def create_conversation(
-    db: Session,
-    user_id: int,
-    user_type: str,
-    subject_id: int
-) -> Conversation:
-    """
-    Crea una nueva conversación.
-    """
-    from ..services.document_service import document_exists
-    
 
-    user = db.query(User).filter(
-        and_(User.id == user_id, User.role == user_type)
-    ).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    # Buscar un documento asociado a la asignatura
-    document = db.query(Document).filter(Document.subject_id == subject_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="No se encontraron documentos para la asignatura")
-        
-    # Crear la conversación con el ID del documento y la asignatura
-    new_conversation = Conversation(
-        user_id=user_id,
-        user_role=user_type,
-        subject_id=subject_id,
-        document_id=document.id
-    )
-
-    db.add(new_conversation)
-    db.commit()
-    db.refresh(new_conversation)
-    
-    return new_conversation
 
 def add_user_message(
     db: Session,
@@ -244,12 +205,11 @@ def get_conversation_context(
     similarity_metric: str = "cosine"
 ) -> str:
     """
-    Obtiene el contexto de un documento específico o de todos los documentos
-    de una asignatura basado en la similitud con el mensaje.
+    Obtiene el contexto de todos los documentos de una asignatura
+    basado en la similitud con el mensaje.
     
     Args:
         db: Sesión de SQLAlchemy
-        document_id: ID del documento (opcional si se proporciona subject_id)
         message_text: Texto del mensaje del usuario
         subject_id: ID de la asignatura (opcional)
         limit: Número máximo de chunks a devolver
@@ -264,10 +224,10 @@ def get_conversation_context(
         logger.warning("get_conversation_context llamado con message_text vacío")
         return ""
         
-    # Validar que se proporcionó al menos uno de document_id o subject_id
+    # Es opcional tener subject_id
     if subject_id is None:
-        logger.error("get_conversation_context llamado sin document_id ni subject_id")
-        raise ValueError("Se requiere proporcionar document_id o subject_id")
+        logger.warning("get_conversation_context llamado sin subject_id")
+        return ""
     
     logger.info(f"Generando contexto para pregunta: '{message_text[:50]}...', subject_id={subject_id}]")
         

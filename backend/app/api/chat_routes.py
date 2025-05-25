@@ -11,7 +11,7 @@ from ..services.chat_service import (
     get_conversations_by_user_role, 
     get_current_user_conversations,
     add_message_and_generate_response,
-    generate_conversation,
+    create_conversation,
     process_message
 )
 from ..core.database import get_db
@@ -34,7 +34,7 @@ from ..models.schemas import (
 chat_routes = APIRouter()
 
 @chat_routes.post("/conversation", response_model=APIResponse)
-async def create_conversation(
+async def create_conversation_route(
     conversation_data: ConversationCreate, 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -43,8 +43,6 @@ async def create_conversation(
     
     Se puede proporcionar:
     - Solo subject_id: buscará en todos los documentos de esa asignatura
-
-    - Ambos: utilizará el documento específico pero también el contexto de la asignatura
     """
     # Verificar que se proporcionó al menos  subject_id
     if conversation_data.subject_id is None:
@@ -52,22 +50,23 @@ async def create_conversation(
             status_code=400, 
             detail="Se requiere subject_id para crear una conversación"
         )  
-    
-    bot_response_str, conversation_obj = generate_conversation(
+
+    conversation_obj = create_conversation(
         db=db,
         user_id=current_user.id,
-        user_type=current_user.role,
-        subject_id=conversation_data.subject_id,
-        initial_message_text=conversation_data.text
+        subject_id=conversation_data.subject_id
     )
-    
+    if not conversation_obj:
+        raise HTTPException(
+            status_code=500, 
+            detail="Error al crear la conversación"
+        )
     # Convertir el modelo ORM a un modelo Pydantic
     conversation_data = ConversationOut.model_validate(conversation_obj)
     
     # Crear un objeto ConversationWithResponse
     response_data = {
         "conversation": conversation_data,
-        "bot_response": bot_response_str
     }
 
     return {
@@ -130,11 +129,11 @@ async def get_conversation(
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
     # Verificar que el usuario actual puede acceder a esta conversación
-    if current_user.role == "student" and not (conversation.user_id == current_user.id and conversation.user_role == "student"):
+    if current_user.role == "student" and not conversation.user_id == current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
     elif current_user.role == "teacher":
         # Los profesores pueden ver las conversaciones de las asignaturas que imparten
-        if not ((conversation.user_id == current_user.id and conversation.user_role == "teacher") or 
+        if not (conversation.user_id == current_user.id or 
                 (conversation.subject_id and conversation.subject_id in 
                  [s.id for s in current_user.teaching_subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
@@ -282,11 +281,11 @@ async def get_conversation_message_history(
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
     # Verificar que el usuario actual puede acceder a esta conversación
-    if current_user.role == "student" and not (conversation.user_id == current_user.id and conversation.user_role == "student"):
+    if current_user.role == "student" and not conversation.user_id == current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
     elif current_user.role == "teacher":
         # Los profesores pueden ver las conversaciones de las asignaturas que imparten
-        if not ((conversation.user_id == current_user.id and conversation.user_role == "teacher") or 
+        if not (conversation.user_id == current_user.id or 
                 (conversation.subject_id and conversation.subject_id in 
                  [s.id for s in current_user.teaching_subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")

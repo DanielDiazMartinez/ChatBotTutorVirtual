@@ -64,10 +64,7 @@ export class SidebarComponent implements OnInit, OnChanges {
    * Formatea el título de la conversación usando el documento o el último mensaje
    */
   formatConversationTitle(conversation: Conversation): string {
-    // Si tenemos un título de documento, lo usamos como primera opción
-    if (conversation.document_title) {
-      return conversation.document_title;
-    }
+
     
     if (conversation.last_message) {
       // Extraer el texto del mensaje dependiendo de si es string u objeto

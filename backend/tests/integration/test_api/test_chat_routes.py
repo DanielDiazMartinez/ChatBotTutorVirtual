@@ -28,7 +28,6 @@ def test_get_conversation_messages(client, db_session_test, student_auth_headers
     # Crear una conversación de prueba
     conversation = Conversation(
         user_id=student.id,
-        user_role="student",
         document_id=test_document.id,
         created_at=datetime.utcnow()
     )
@@ -138,7 +137,6 @@ def test_get_conversation_messages_unauthorized(client, db_session_test, student
     
     conversation = Conversation(
         user_id=other_student.id,
-        user_role="student",
         document_id=test_document.id,
         created_at=datetime.utcnow()
     )

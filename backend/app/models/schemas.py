@@ -135,8 +135,6 @@ class ConversationOut(BaseModel):
     """
     id: int
     user_id: int
-    user_role: str
-    document_id: int
     subject_id: Optional[int] = None
     messages: List["MessageOut"] = []
 

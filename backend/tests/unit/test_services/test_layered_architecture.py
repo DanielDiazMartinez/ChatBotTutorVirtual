@@ -42,7 +42,6 @@ def mock_db_session():
     # Mock para simular creación de conversación
     mock_conversation = MagicMock(spec=Conversation)
     mock_conversation.id = 1
-    mock_conversation.document_id = 1
     mock_conversation.user_id = 1
     session.add.return_value = None
     
@@ -61,7 +60,6 @@ def test_create_conversation(mock_db_session):
     """Prueba la creación de una conversación"""
     conversation = create_conversation(
         db=mock_db_session,
-        document_id=1,
         user_id=1,
         user_type="student",
         subject_id=1
@@ -134,8 +132,6 @@ def test_add_message_and_generate_response(mock_db_session):
     mock_conversation = MagicMock(spec=Conversation)
     mock_conversation.id = 1
     mock_conversation.user_id = 1
-    mock_conversation.user_role = "student"
-    mock_conversation.document_id = 1
     
     # Configurar el mock_db_session para devolver la conversación
     mock_db_session.query().filter().first.return_value = mock_conversation

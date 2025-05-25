@@ -105,6 +105,8 @@ class User(Base):
                           secondary='user_subject',
                           back_populates="users",
                           foreign_keys="[user_subject.c.user_id, user_subject.c.subject_id]")
+    
+    images = relationship("Image", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}')>"
@@ -127,7 +129,6 @@ class Document(Base):
     subject = relationship("Subject", back_populates="documents")
     topic = relationship("Topic", back_populates="documents")
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
-    conversations = relationship("Conversation", back_populates="document", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Document(id={self.id}, title='{self.title}')>"
@@ -155,23 +156,15 @@ class Conversation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    user_role = Column(String, nullable=False)  # 'teacher', 'student', etc.
-    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", foreign_keys=[user_id], backref="conversations")
-    document = relationship("Document", back_populates="conversations")
     subject = relationship("Subject", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
-    @validates('user_role')
-    def validate_role(self, key, value):
-        assert value in ['admin', 'teacher', 'student'], "El rol debe ser 'admin', 'teacher' o 'student'"
-        return value
-
     def __repr__(self):
-        return f"<Conversation(id={self.id}, user_role={self.user_role}, user_id={self.user_id}, document_id={self.document_id})>"
+        return f"<Conversation(id={self.id}, user_id={self.user_id}, subject_id={self.subject_id})>"
 
 
 class Message(Base):
@@ -179,15 +172,17 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
-    text = Column(Text, nullable=False)
+    text = Column(Text, nullable=True)  # Para mensajes de texto
+    image_id = Column(Integer, ForeignKey("images.id"), nullable=True)  # Referencia a la imagen si el mensaje contiene una
     is_bot = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    embedding = Column(Vector(768), nullable=True) 
+    embedding = Column(Vector(768), nullable=True)  # Para mensajes de texto
 
     conversation = relationship("Conversation", back_populates="messages")
+    image = relationship("Image", back_populates="messages")  # Nueva relación
 
     def __repr__(self):
-        return f"<Message(id={self.id}, conversation_id={self.conversation_id}, is_bot={self.is_bot})>"
+        return f"<Message(id={self.id}, conversation_id={self.conversation_id}, is_bot={self.is_bot}, image_id={self.image_id})>"
 
 
 # --- Modelos de Asignaturas y Tablas Intermedias ---
@@ -216,6 +211,7 @@ class Subject(Base):
     documents = relationship("Document", back_populates="subject")
     topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="subject", cascade="all, delete-orphan")
+    images = relationship("Image", back_populates="subject")
 
     def __repr__(self):
         return f"<Subject(id={self.id}, name='{self.name}', code='{self.code}')>"
@@ -231,8 +227,30 @@ class Topic(Base):
 
     subject = relationship("Subject", back_populates="topics")
     documents = relationship("Document", back_populates="topic", cascade="all, delete-orphan")
+    images = relationship("Image", back_populates="topic")
 
     def __repr__(self):
-        return f"<Topic(id={self.id}, name='{self.name}', subject_id={self.subject_id})>"
+        return f"<Topic(id={self.id}, name='{self.name}', subject_id={self.subject_id}')>"
+
+# --- Modelo de Imágenes ---
+
+class Image(Base):
+    __tablename__ = "images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_path = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="images")
+    subject = relationship("Subject", back_populates="images")
+    topic = relationship("Topic", back_populates="images")
+    messages = relationship("Message", back_populates="image")  # Nueva relación
+
+    def __repr__(self):
+        return f"<Image(id={self.id}, file_path='{self.file_path}')>"
 
 

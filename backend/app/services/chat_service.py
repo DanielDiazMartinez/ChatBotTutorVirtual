@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 from app.models.models import Conversation, Message, User
 from app.services.api_service import generate_ai_response
-from app.services.vector_service import (
-    create_conversation as create_conversation_in_vector, 
+from app.services.vector_service import ( 
     get_conversation_context,
     get_conversation_history,
     add_user_message,
@@ -45,11 +44,10 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
             subject_id=conversation.subject_id
         )
     else:
-        # Si no hay asignatura, buscar solo en el documento específico
-        logger.info(f"Buscando contexto por document_id={conversation.document_id}")
+        # Si no hay asignatura, no hay contexto específico
+        logger.info("No hay subject_id para buscar contexto")
         context = get_conversation_context(
             db=db, 
-            document_id=conversation.document_id, 
             message_text=message_text
         )
     
@@ -75,6 +73,35 @@ def process_message(db: Session, conversation_id: int, message_text: str) -> str
     
     return bot_response
 
+def create_conversation(
+    db: Session,
+    user_id: int,
+    subject_id: int
+) -> Conversation:
+    """
+    Crea una nueva conversación en la base de datos.
+    
+    Args:
+        db: Sesión de SQLAlchemy
+        user_id: ID del usuario creador
+        user_type: Rol del usuario ('student', 'teacher', etc.)
+        subject_id: ID de la asignatura asociada (opcional)
+        
+    Returns:
+        Objeto de la conversación creada
+    """
+   
+    conversation = Conversation(
+        user_id=user_id,
+        subject_id=subject_id
+    )
+    
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+    
+    return conversation
+
 def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List[Conversation]:
     """
     Obtiene todas las conversaciones asociadas a un usuario según su rol.
@@ -83,7 +110,7 @@ def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List
     
     if role == "student":
         query = query.filter(
-            and_(Conversation.user_id == user_id, Conversation.user_role == "student")
+            Conversation.user_id == user_id
         )
     elif role == "teacher":
         # Los profesores pueden ver sus propias conversaciones y las de sus asignaturas
@@ -96,7 +123,7 @@ def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List
         subject_ids = [subject.id for subject in teacher.subjects]
         query = query.filter(
             or_(
-                and_(Conversation.user_id == user_id, Conversation.user_role == "teacher"),
+                Conversation.user_id == user_id,
                 Conversation.subject_id.in_(subject_ids)
             )
         )
@@ -146,12 +173,9 @@ def get_current_user_conversations(db: Session, user_id: int, role: str, subject
         # Construir el objeto de respuesta
         conv_dict = {
             "id": conv.id,
-            "document_id": conv.document_id,
             "user_id": conv.user_id,
-            "user_role": conv.user_role,
             "subject_id": conv.subject_id,
             "created_at": conv.created_at,
-            "document_title": conv.document.title if conv.document else None,
             "last_message": {
                 "text": last_message.text if last_message else "",
                 "is_bot": last_message.is_bot if last_message else False,
@@ -172,31 +196,7 @@ def get_conversation_messages(db: Session, conversation_id: int) -> List[Message
     
     return messages
 
-def create_conversation(db: Session, user_id: int, user_type: str, subject_id: int) -> Conversation:
-    """
-    Crea una nueva conversación utilizando el servicio vector.
-    """
-    return create_conversation_in_vector(db, user_id, user_type, subject_id)
 
-def generate_conversation(db: Session, user_id: int, user_type: str, subject_id: int, initial_message_text: str = None) -> Tuple[str, Conversation]:
-    """
-    Crea una nueva conversación y genera una respuesta inicial si se proporciona un mensaje.
-    
-    La respuesta se genera utilizando el documento específico y, si está disponible,
-    todos los documentos de la asignatura para obtener un contexto más completo.
-    """
-   
-    new_conversation = create_conversation(db, user_id, user_type, subject_id)
-    
-    # Si no hay mensaje inicial, devolver conversación vacía
-    if not initial_message_text:
-        return "", new_conversation
-    
-    # Procesar mensaje y generar respuesta
-    # Esta función ya utiliza documentos de la asignatura cuando subject_id está disponible
-    bot_response = process_message(db, new_conversation.id, initial_message_text)
-    
-    return bot_response, new_conversation
 
 def add_message_and_generate_response(db: Session, conversation_id: int, user_id: int, user_type: str, message_text: str) -> Tuple[Message, Message]:
     """
@@ -208,7 +208,7 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
    
-    if conversation.user_id != user_id or conversation.user_role != user_type:
+    if conversation.user_id != user_id:
         raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
     
    

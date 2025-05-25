@@ -43,15 +43,11 @@ def test_get_my_conversations(db_session_test: Session, client: TestClient):
     
     # Crear conversaciones de prueba para el usuario
     conversation1 = Conversation(
-        user_id=test_user.id,
-        user_role="student",
-        document_id=test_document.id
+        user_id=test_user.id
     )
     
     conversation2 = Conversation(
-        user_id=test_user.id,
-        user_role="student",
-        document_id=test_document.id
+        user_id=test_user.id
     )
     
     db_session_test.add(conversation1)
