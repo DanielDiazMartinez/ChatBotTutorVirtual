@@ -3,15 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ChatMessage } from '../../interfaces/chat.interface';
 import { ChatMessageComponent } from '../chat-message/chat-message.component';
-import { ChatInputComponent } from '../chat-input/chat-input.component';
+import { ChatInputComponent, ChatMessageInput } from '../chat-input/chat-input.component';
 import { DocumentsModalComponent } from '../documents-modal/documents-modal.component';
+import { ImageModalComponent } from '../image-modal/image-modal.component';
 import { Subject } from '../../../subject-selection/interfaces/subject.interface';
 import { Conversation, Message } from '../../../../core/models/chat.model';
 
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatMessageComponent, ChatInputComponent, DocumentsModalComponent],
+  imports: [CommonModule, RouterModule, ChatMessageComponent, ChatInputComponent, DocumentsModalComponent, ImageModalComponent],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -29,7 +30,7 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
     return this._apiMessages;
   }
   
-  @Output() sendMessage = new EventEmitter<{conversationId: number, text: string}>();
+  @Output() sendMessage = new EventEmitter<{conversationId: number, text: string, file?: File}>();
   
   _apiMessages: Message[] = [];
   displayMessages: ChatMessage[] = [
@@ -82,7 +83,8 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
         id: apiMsg.id.toString(),
         content: apiMsg.text,
         isUser: !apiMsg.is_bot,
-        timestamp: new Date(apiMsg.created_at)
+        timestamp: new Date(apiMsg.created_at),
+        imageId: apiMsg.image_id
       }));
     } else if (this.activeConversation) {
       // Si hay una conversación activa pero no hay mensajes, mostrar un estado vacío
@@ -108,21 +110,22 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
     } catch(err) { }
   }
 
-  onSendMessage(content: string): void {
-    if (!content.trim()) return;
+  onSendMessage(content: ChatMessageInput): void {
+    if (!content.text.trim() && !content.file) return;
     
     // Si hay una conversación activa, enviamos el mensaje a través del Output
     if (this.activeConversation) {
       this.sendMessage.emit({
         conversationId: this.activeConversation.id,
-        text: content
+        text: content.text,
+        file: content.file
       });
     }
     
     // Añadimos el mensaje del usuario a la UI inmediatamente (optimistic update)
     this.displayMessages.push({
       id: Date.now().toString(),
-      content,
+      content: content.text,
       isUser: true,
       timestamp: new Date()
     });
@@ -147,7 +150,21 @@ export class ChatAreaComponent implements AfterViewChecked, OnChanges {
     }
   }
 
+  // Modal de imagen
+  isImageModalVisible = false;
+  selectedImageId: number | null = null;
+
   goToLogin(): void {
     this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  onImageClick(imageId: number): void {
+    this.selectedImageId = imageId;
+    this.isImageModalVisible = true;
+  }
+
+  onCloseImageModal(): void {
+    this.isImageModalVisible = false;
+    this.selectedImageId = null;
   }
 }

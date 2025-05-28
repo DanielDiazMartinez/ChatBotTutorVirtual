@@ -1,5 +1,15 @@
 <div class="message" [class.user-message]="message.isUser" [class.bot-message]="!message.isUser">
   <div class="message-content">
-    <div class="message-text">{{ message.content }}</div>
+    <div class="message-text">
+      {{ message.content }}
+      <span *ngIf="message.imageId" class="image-indicator" (click)="onImageClick(message.imageId!)" title="Ver imagen adjunta">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+        </svg>
+      </span>
+    </div>
+    <div *ngIf="message.imageId" class="message-image">
+      <img [src]="getImageUrl(message.imageId!)" alt="Imagen adjunta" (click)="onImageClick(message.imageId!)">
+    </div>
   </div>
 </div>

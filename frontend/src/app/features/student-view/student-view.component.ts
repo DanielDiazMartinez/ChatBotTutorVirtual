@@ -95,7 +95,6 @@ export class StudentViewComponent implements OnInit {
     // Creamos un objeto de conversación básico con el ID
     this.activeConversation = {
       id: conversationId,
-      document_id: 0,
       created_at: new Date().toISOString()
     };
     
@@ -138,8 +137,8 @@ export class StudentViewComponent implements OnInit {
     });
   }
 
-  onSendNewMessage(data: {conversationId: number, text: string}): void {
-    if (!data.conversationId || !data.text) return;
+  onSendNewMessage(data: {conversationId: number, text: string, file?: File}): void {
+    if (!data.conversationId || (!data.text && !data.file)) return;
     
     // Agregamos directamente el mensaje del usuario para mostrar feedback inmediato (optimistic update)
     const userMessage: Message = {
@@ -158,7 +157,7 @@ export class StudentViewComponent implements OnInit {
     }
     
     // Enviamos el mensaje al servidor
-    this.chatService.sendMessage(data.conversationId, data.text).subscribe({
+    this.chatService.sendMessage(data.conversationId, data.text, data.file).subscribe({
       next: (response) => {
         if (response.data) {
           // Reemplazamos el mensaje temporal con el real (si es necesario)

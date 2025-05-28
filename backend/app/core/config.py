@@ -22,7 +22,12 @@ class Settings:
    
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
-    GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "llama3-8b-8192") 
+    GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "llama3-8b-8192")
+    
+    # Configuración de Google AI Studio
+    GOOGLE_AI_API_KEY: str = os.getenv("GOOGLE_AI_API_KEY")
+    GOOGLE_AI_MODEL_NAME: str = os.getenv("GOOGLE_AI_MODEL_NAME", "gemma-2-9b-it")
+    
     UPLOAD_FOLDER: str = os.getenv("UPLOAD_FOLDER", "uploads")
     
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")

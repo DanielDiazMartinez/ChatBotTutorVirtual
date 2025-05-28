@@ -31,10 +31,24 @@ export class ChatService {
         return this.api.get<Conversation>(`conversation/${conversationId}`);
   }
 
-  sendMessage(conversationId: number, text: string): Observable<ApiResponse<Message>> {
-    return this.api.post<Message>(`chat/c/${conversationId}`, {
-      text
-    });
+  sendMessage(conversationId: number, text: string, file?: File): Observable<ApiResponse<Message>> {
+    // Si hay un archivo, usamos FormData para enviar los datos
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // El texto debe ser enviado como un string JSON en el campo message_data
+      const messageData = JSON.stringify({ text });
+      formData.append('message_data', messageData);
+      
+      return this.api.postFormData<Message>(`chat/c/${conversationId}`, formData);
+    } else {
+      // Si no hay archivo, enviamos solo el texto como message_data
+      const formData = new FormData();
+      formData.append('message_data', JSON.stringify({ text }));
+      
+      return this.api.postFormData<Message>(`chat/c/${conversationId}`, formData);
+    }
   }
 
   getConversationMessages(conversationId: number): Observable<ApiResponse<Message[]>> {

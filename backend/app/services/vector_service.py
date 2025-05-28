@@ -140,25 +140,28 @@ def search_similar_chunks(db: Session,
 def add_user_message(
     db: Session,
     conversation_id: int,
-    message_text: str
+    message_text: str = None,
+    image_id: int = None
 ) -> Message:
     """
     Añade un mensaje del usuario a una conversación existente.
+    Se puede proporcionar texto, imagen o ambos.
     """
     # Verificar que la conversación existe
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
-    # Crear embedding para el mensaje
-    question_embedding = get_embedding_for_query(message_text)
+    # Crear embedding para el mensaje si hay texto
+    question_embedding = get_embedding_for_query(message_text) if message_text else None
     
     # Crear el mensaje del usuario
     user_msg = Message(
         text=message_text,
         is_bot=False,
         conversation_id=conversation_id,
-        embedding=question_embedding
+        embedding=question_embedding,
+        image_id=image_id
     )
     
     db.add(user_msg)

@@ -1,4 +1,6 @@
 import os
+import uuid
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.models import Document
 from app.models.schemas import DocumentCreate
@@ -24,7 +26,13 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
 
     os.makedirs(subfolder_path, exist_ok=True)
     
-    file_path = os.path.join(subfolder_path, pdf_file.filename)
+    # Generamos un nombre único para el archivo
+    file_name, file_ext = os.path.splitext(pdf_file.filename)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    unique_id = str(uuid.uuid4())[:8]
+    unique_file_name = f"{file_name}_{timestamp}_{unique_id}{file_ext}"
+    
+    file_path = os.path.join(subfolder_path, unique_file_name)
     
     with open(file_path, "wb") as buffer:
         buffer.write(pdf_file.file.read())

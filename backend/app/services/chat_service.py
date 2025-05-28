@@ -8,11 +8,13 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 import logging
 
+from ..services.image_service import get_image_by_id, prepare_image_for_google_ai
+
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
 from app.models.models import Conversation, Message, User
-from app.services.api_service import generate_ai_response
+from app.services.api_service import generate_google_ai_response
 from app.services.vector_service import ( 
     get_conversation_context,
     get_conversation_history,
@@ -20,58 +22,6 @@ from app.services.vector_service import (
     add_bot_message
 )
 
-def process_message(db: Session, conversation_id: int, message_text: str) -> str:
-    """
-    Procesa un mensaje del usuario y genera una respuesta con AI.
-    """
-    # Obtener la conversación
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversación no encontrada")
-    
-    # Añadir mensaje del usuario
-    add_user_message(db, conversation_id, message_text)
-    
-    # Obtener contexto, primero intentamos con el documento específico
-    # y también buscamos en todos los documentos de la asignatura si está definida
-    context = ""
-    if conversation.subject_id:
-        # Buscar en todos los documentos de la asignatura
-        logger.info(f"Buscando contexto por subject_id={conversation.subject_id}")
-        context = get_conversation_context(
-            db=db, 
-            message_text=message_text,
-            subject_id=conversation.subject_id
-        )
-    else:
-        # Si no hay asignatura, no hay contexto específico
-        logger.info("No hay subject_id para buscar contexto")
-        context = get_conversation_context(
-            db=db, 
-            message_text=message_text
-        )
-    
-    # Log para depuración de contexto
-    logger.info(f"Tamaño del contexto generado: {len(context)} caracteres")
-    if not context or len(context) < 10:
-        logger.warning(f"¡ALERTA! Contexto muy pequeño o vacío para message_id={conversation_id}")
-    
-    # Obtener historial de conversación
-    conversation_history = get_conversation_history(db, conversation_id)
-    
-    # Generar respuesta con AI
-    bot_response = generate_ai_response(
-        user_question=message_text, 
-        context=context, 
-        conversation_history=conversation_history,
-        user_id=str(conversation.user_id),
-        conversation_id=conversation_id
-    )
-    
-    # Añadir mensaje del bot
-    add_bot_message(db, conversation_id, bot_response)
-    
-    return bot_response
 
 def create_conversation(
     db: Session,
@@ -198,49 +148,60 @@ def get_conversation_messages(db: Session, conversation_id: int) -> List[Message
 
 
 
-def add_message_and_generate_response(db: Session, conversation_id: int, user_id: int, user_type: str, message_text: str) -> Tuple[Message, Message]:
+def add_message_and_generate_response(db: Session, conversation_id: int, user_id: int, message_text: str = None, image_id: int = None) -> Tuple[Message, Message]:
     """
     Añade un mensaje del usuario a una conversación existente y genera una respuesta.
+    Se puede incluir texto, imagen o ambos en el mensaje.
     """
-    
+
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
-    
-   
+
+
     if conversation.user_id != user_id:
         raise HTTPException(status_code=403, detail="No tienes permiso para esta conversación")
-    
-   
-    user_msg = add_user_message(db, conversation_id, message_text)
-    
-    # Obtener contexto, primero intentamos con el documento específico
-    # y también buscamos en todos los documentos de la asignatura si está definida
+
+
+    user_msg = add_user_message(db, conversation_id, message_text, image_id)
+
+    image_base64: Optional[str] = None
+    image_mime_type: Optional[str] = None
+
+    if image_id:
+         image = get_image_by_id(image_id,db)
+         if image:
+             image_base64, image_mime_type = prepare_image_for_google_ai(image)
+
+
     context = ""
     try:
         if conversation.subject_id:
-            # Buscar en todos los documentos de la asignatura
+            
             context = get_conversation_context(
-                db=db, 
+                db=db,
                 message_text=message_text,
                 subject_id=conversation.subject_id
             )
+
         
-        # Obtener historial de conversación
         conversation_history = get_conversation_history(db, conversation_id)
-        # Generar respuesta con AI
-        bot_response = generate_ai_response(
-            user_question=message_text, 
-            context=context, 
+        
+        bot_response = generate_google_ai_response(
+            user_question=message_text,
+            context=context,
             conversation_history=conversation_history,
-            user_id=str(conversation.user_id),
+            image_base64=image_base64,
+            image_mime_type=image_mime_type,
+            asignatura=conversation.subject_id,
+            user_id=str(user_id),
             conversation_id=conversation_id
         )
     except Exception as e:
         print(f"Error generating AI response: {e}")
         bot_response = "Lo siento, hubo un error al generar la respuesta."
+
     
-    # Añadir mensaje del bot
     bot_msg = add_bot_message(db, conversation_id, bot_response)
     
     return user_msg, bot_msg

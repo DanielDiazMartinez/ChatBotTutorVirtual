@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.models import Document, DocumentChunk, User, Conversation, Message
 from app.services.embedding_service import create_document_chunks
-from app.services.chat_service import process_message, generate_conversation
+from app.services.chat_service import generate_conversation
 
 class TestIntegrationAfterRestructuring:
     """Tests de integración para verificar la correcta interacción entre servicios después de la reestructuración"""

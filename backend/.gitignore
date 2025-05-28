@@ -30,5 +30,12 @@ docker-compose.override.yml
 # Archivos de subida
 uploads/
 script.py
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+data/uploads/images/
+/data/uploads/images/
 
 #

@@ -1,0 +1,16 @@
+# Archivos de imágenes
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.svg
+
+# Directorios de imágenes
+data/uploads/
+data/uploads/images/
+*/data/uploads/images/
+backend/data/uploads/
+backend/data/uploads/images/
+backend/app/uploads/

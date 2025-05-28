@@ -1,94 +1,178 @@
 .chat-input-container {
-  display: flex;
-  align-items: center; 
-  gap: 1rem;
-  background-color: white;
-  border: 1px solid #8FBC94;
-  border-radius: 1rem;
-  padding: 0.75rem 1rem;
   width: 100%;
-  max-width: 100%;
+  max-width: 800px;
   margin: 0 auto;
-  box-shadow: 0 4px 12px rgba(143, 188, 148, 0.15);
-  transition: all 0.2s ease;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-radius: 8px 8px 0 0;
+  
+}
 
-  &:focus-within {
-    box-shadow: 0 6px 16px rgba(143, 188, 148, 0.2);
-    border-color: #7da882;
-  }
-
-  .chat-input {
-    flex: 1;
-    border: none;
-    background: none;
-    resize: none;
-    padding: 0.5rem;
-    font-family: inherit;
-    font-size: 1rem;
-    line-height: 1.5;
-    min-height: 24px;
-    max-height: 150px;
-    overflow-y: auto;
-    color: #3f6464;
-
-    &:focus {
-      outline: none;
-    }
-
-    &::placeholder {
-      color: #8FBC94;
-      opacity: 0.7;
-    }
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #c5e99b;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      background: #8FBC94;
-    }
-  }
-
-  .send-button {
-    background-color: #c5e99b;
-    color: #3f6464;
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
+.selected-file-container {
+  margin-bottom: 0.75rem;
+  
+  .selected-file {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(143, 188, 148, 0.2);
-    margin-top: 1px; // Ajustado para centrar perfectamente
-
-    &:hover {
-      background-color: #8FBC94;
-      color: white;
-      transform: scale(1.05);
+    justify-content: space-between;
+    background-color: #f0f8f0;
+    border: 1px solid #c5e99b;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    
+    .file-name {
+      color: #3f6464;
+      font-weight: 500;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-
-    &:disabled {
-      background-color: #f5f5f5;
-      cursor: default;
-      color: #cccccc;
-      box-shadow: none;
-      transform: none;
+    
+    .remove-file {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 0.5rem;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #e53935;
+      }
     }
+  }
+}
 
+.input-and-buttons {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  background-color: #f8fff8;
+  border: 2px solid #e0e8e0;
+  border-radius: 24px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+  
+  &:focus-within {
+    border-color: #8FBC94;
+    box-shadow: 0 0 0 3px rgba(143, 188, 148, 0.15);
+  }
+}
+
+.attach-button {
+  background: none;
+  border: none;
+  color: #8FBC94;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    background-color: rgba(143, 188, 148, 0.1);
+    color: #3f6464;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  background: none;
+  resize: none;
+  outline: none;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #3f6464;
+  min-height: 24px;
+  max-height: 120px;
+  overflow-y: auto;
+  font-family: inherit;
+  
+  &::placeholder {
+    color: #999;
+  }
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c5c5c5;
+    border-radius: 2px;
+  }
+}
+
+.send-button {
+  background-color: #8FBC94;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover:not(:disabled) {
+    background-color: #7da882;
+    transform: scale(1.05);
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .chat-input-container {
+    padding: 0.75rem 1rem;
+  }
+  
+  .input-and-buttons {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .attach-button,
+  .send-button {
+    width: 36px;
+    height: 36px;
+    
     svg {
       width: 18px;
       height: 18px;

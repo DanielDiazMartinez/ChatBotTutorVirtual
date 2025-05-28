@@ -22,4 +22,5 @@ export interface Message {
   text: string;
   is_bot: boolean;
   created_at: string;
+  image_id?: number;
 }

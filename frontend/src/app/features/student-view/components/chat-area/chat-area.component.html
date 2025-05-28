@@ -14,6 +14,7 @@
       <app-chat-message
         *ngFor="let message of displayMessages"
         [message]="message"
+        (imageClick)="onImageClick($event)"
       ></app-chat-message>
     </div>
   </div>
@@ -27,4 +28,10 @@
     [isVisible]="isDocumentsModalVisible"
     [currentSubjectId]="currentSubject?.id"
   ></app-documents-modal>
+
+  <app-image-modal
+    [isVisible]="isImageModalVisible"
+    [imageId]="selectedImageId"
+    (closeModal)="onCloseImageModal()"
+  ></app-image-modal>
 </div>

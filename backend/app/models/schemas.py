@@ -153,20 +153,23 @@ class ConversationWithResponse(BaseModel):
 #  SCHEMA PARA LOS MENSAJES
 # ----------------------------------------
 class MessageBase(BaseModel):
-    text: str
+    text: Optional[str] = None
     is_bot: bool  
 
 class MessageCreate(BaseModel):
     """
     Modelo para crear un nuevo mensaje.
-    Solo incluye el texto, ya que is_bot y created_at
-    se gestionan en el backend.
+    Puede incluir texto y/o una referencia a una imagen.
+    is_bot y created_at se gestionan en el backend.
     """
-    text: str
+    text: Optional[str] = None
 
-class MessageOut(MessageBase):
+class MessageOut(BaseModel):
     id: int
+    text: Optional[str] = None
+    is_bot: bool
     conversation_id: int
+    image_id: Optional[int] = None
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -175,6 +178,21 @@ class MessagePairOut(BaseModel):
     user_message: MessageOut  
     bot_message: MessageOut 
 
+    model_config = ConfigDict(from_attributes=True)
+    
+    
+class ImageOut(BaseModel):
+    """
+    Modelo de salida para las imágenes.
+    """
+    id: int
+    file_path: str
+    description: Optional[str] = None
+    user_id: int
+    subject_id: Optional[int] = None
+    topic_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    
     model_config = ConfigDict(from_attributes=True)
 
 # ----------------------------------------

@@ -41,4 +41,8 @@ export class ApiService {
   upload<T>(endpoint: string, formData: FormData): Observable<ApiResponse<T>> {
     return this.http.post<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, formData);
   }
+  
+  postFormData<T>(endpoint: string, formData: FormData): Observable<ApiResponse<T>> {
+    return this.http.post<ApiResponse<T>>(`${this.apiUrl}/${endpoint}`, formData);
+  }
 }

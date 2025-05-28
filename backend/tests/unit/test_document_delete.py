@@ -24,7 +24,9 @@ def test_delete_document_physical_file(db_session_test: Session, client: TestCli
     db_session_test.refresh(test_teacher)
     
     # Crear un directorio temporal para la prueba
-    test_upload_folder = os.path.join(settings.UPLOAD_FOLDER, str(test_teacher.id))
+    import tempfile
+    temp_dir = tempfile.mkdtemp()
+    test_upload_folder = os.path.join(temp_dir, str(test_teacher.id))
     os.makedirs(test_upload_folder, exist_ok=True)
     
     # Crear un archivo de prueba
@@ -50,7 +52,7 @@ def test_delete_document_physical_file(db_session_test: Session, client: TestCli
     db_session_test.refresh(test_document)
     
     # Crear token de acceso para el profesor
-    token = create_access_token({"sub": test_teacher.id, "role": test_teacher.role})
+    token = create_access_token({"sub": str(test_teacher.id), "role": test_teacher.role})
     
     # Realizar petición de eliminación con el token
     response = client.delete(
@@ -69,6 +71,10 @@ def test_delete_document_physical_file(db_session_test: Session, client: TestCli
     # Limpiar
     db_session_test.query(User).filter(User.id == test_teacher.id).delete()
     db_session_test.commit()
+    
+    # Limpiar el directorio temporal
+    import shutil
+    shutil.rmtree(temp_dir)
 
 def test_delete_document_without_permission(db_session_test: Session, client: TestClient):
     """
@@ -94,7 +100,9 @@ def test_delete_document_without_permission(db_session_test: Session, client: Te
     db_session_test.refresh(test_teacher2)
     
     # Crear un directorio temporal para la prueba
-    test_upload_folder = os.path.join(settings.UPLOAD_FOLDER, str(test_teacher1.id))
+    import tempfile
+    temp_dir = tempfile.mkdtemp()
+    test_upload_folder = os.path.join(temp_dir, str(test_teacher1.id))
     os.makedirs(test_upload_folder, exist_ok=True)
     
     # Crear un archivo de prueba
@@ -117,7 +125,7 @@ def test_delete_document_without_permission(db_session_test: Session, client: Te
     db_session_test.refresh(test_document)
     
     # Crear token de acceso para el profesor 2
-    token = create_access_token({"sub": test_teacher2.id, "role": test_teacher2.role})
+    token = create_access_token({"sub": str(test_teacher2.id), "role": test_teacher2.role})
     
     # Intentar eliminar el documento del profesor 1 con el token del profesor 2
     response = client.delete(
@@ -136,3 +144,7 @@ def test_delete_document_without_permission(db_session_test: Session, client: Te
     db_session_test.query(Document).filter(Document.id == test_document.id).delete()
     db_session_test.query(User).filter(User.id.in_([test_teacher1.id, test_teacher2.id])).delete()
     db_session_test.commit()
+    
+    # Limpiar el directorio temporal
+    import shutil
+    shutil.rmtree(temp_dir)

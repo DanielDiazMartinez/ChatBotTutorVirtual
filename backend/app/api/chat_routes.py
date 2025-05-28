@@ -1,9 +1,10 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
 
-from ..models.models import DocumentChunk, User, Document
+from ..models.models import  User, Document, Message
 from ..services.chat_service import (
     delete_conversation, 
     get_conversation_by_id, 
@@ -12,8 +13,9 @@ from ..services.chat_service import (
     get_current_user_conversations,
     add_message_and_generate_response,
     create_conversation,
-    process_message
 )
+from ..services.image_service import get_image_by_message
+
 from ..core.database import get_db
 from ..core.auth import require_role, get_current_user
 from ..services.vector_service import (
@@ -169,20 +171,55 @@ async def delete_conv(
 @chat_routes.post("/c/{conversation_id}", response_model=APIResponse)
 async def add_message_to_conversation(
     conversation_id: int,
-    message_data: MessageCreate,
+    message_data: str = Form(None),
+    file: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Añadir mensaje a una conversación"""
+    """Añadir mensaje a una conversación, opcionalmente con una imagen"""
     try:
+    
+        # Procesar la imagen si se proporcionó
+        image_id = None
+        if file:
+            # Usar las funciones del image_service
+            from app.services.image_service import upload_image
+            image = await upload_image(
+                file=file,
+                user_id=current_user.id,
+                subject_id=None,  
+                db=db
+            )
+            image_id = image.id
+        
+        # Parsear el mensaje si fue enviado como string JSON
+        message_text = None
+        if message_data:
+            try:
+                import json
+                message_obj = json.loads(message_data)
+                message_text = message_obj.get("text")
+                print(f"DEBUG - message_text después de json.loads: '{message_text}'")
+            except json.JSONDecodeError:
+                message_text = message_data
+                print(f"DEBUG - Error JSON, usando message_data como texto: '{message_text}'")
+        else:
+            print("DEBUG - No se recibió message_data")
+        
+        # Validar que se proporcionó texto o archivo
+        if not message_text and not image_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Se requiere proporcionar texto del mensaje o un archivo"
+            )
+        
         user_msg_obj, bot_msg_obj = add_message_and_generate_response(
             db=db,
             conversation_id=conversation_id,
             user_id=current_user.id,
-            user_type=current_user.role,
-            message_text=message_data.text
+            message_text=message_text,
+            image_id=image_id
         )
-        
         
         user_message_out = MessageOut.model_validate(user_msg_obj)
         bot_message_out = MessageOut.model_validate(bot_msg_obj)
@@ -198,6 +235,7 @@ async def add_message_to_conversation(
     except HTTPException as e:
         raise e
     except Exception as e:
+        print(f"Error processing message: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error procesando el mensaje")
 
 @chat_routes.post("/context/{document_id}", response_model=APIResponse)
@@ -298,3 +336,5 @@ async def get_conversation_message_history(
         "message": "Mensajes obtenidos correctamente",
         "status": 200
     }
+
+

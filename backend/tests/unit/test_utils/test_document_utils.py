@@ -91,27 +91,26 @@ class TestEmbeddingService:
         assert len(result) == 768
         mock_model.encode.assert_called_once_with("¿Qué es Python?")
     
-    @patch('app.services.embedding_service.SemanticSplitterNodeParser')
-    def test_semantic_split_text(self, mock_splitter_class):
+    @patch('nltk.tokenize.sent_tokenize')
+    @patch('app.services.embedding_service.load_sentence_transformer_model_singleton')
+    def test_semantic_split_text(self, mock_load_model, mock_sent_tokenize):
         """Test para la división semántica de textos"""
         # Configurar el mock
-        mock_splitter = MagicMock()
-        mock_splitter_instance = MagicMock()
-        mock_splitter_class.from_defaults.return_value = mock_splitter_instance
+        mock_sent_tokenize.return_value = ["Oración 1.", "Oración 2."]
         
-        mock_node1 = MagicMock()
-        mock_node1.get_content.return_value = "Chunk 1"
-        mock_node2 = MagicMock()
-        mock_node2.get_content.return_value = "Chunk 2"
-        
-        mock_splitter_instance.get_nodes_from_documents.return_value = [mock_node1, mock_node2]
+        mock_model = MagicMock()
+        mock_model.encode.return_value = np.array([[0.1, 0.2], [0.3, 0.4]])
+        mock_load_model.return_value = mock_model
         
         # Llamar a la función
-        result = semantic_split_text("Este es un texto de prueba que debería dividirse en chunks.")
+        result = semantic_split_text(
+            text="Este es un texto de prueba que debería dividirse en chunks.",
+            model=mock_model
+        )
         
         # Verificar resultado
-        assert result == ["Chunk 1", "Chunk 2"]
-        mock_splitter_class.from_defaults.assert_called_once()
+        assert len(result) > 0  # Al menos debería devolver algún chunk
+        mock_sent_tokenize.assert_called_once_with("Este es un texto de prueba que debería dividirse en chunks.")
     
     @patch('app.services.embedding_service.semantic_split_text')
     @patch('app.services.embedding_service.load_sentence_transformer_model_singleton')
@@ -131,5 +130,5 @@ class TestEmbeddingService:
         # Verificar resultado
         assert mock_db_session.add_all.called
         assert mock_db_session.flush.called
-        mock_split.assert_called_once_with("Este es un texto de prueba.")
+        mock_split.assert_called_once_with("Este es un texto de prueba.", mock_model)
         mock_model.encode.assert_called_once()

@@ -13,12 +13,26 @@ from pathlib import Path
 logger = logging.getLogger("groq_context_logger")
 logger.setLevel(logging.INFO)
 
+# Determinar la ruta base del proyecto
+# Si estamos en Docker, usa /app, si no, usa la ruta relativa
+if os.path.exists("/app"):
+    BASE_DIR = Path("/app")
+else:
+    # Obtener la ruta del directorio actual y navegar hacia arriba hasta la raíz del proyecto
+    BASE_DIR = Path(__file__).parent.parent.parent
+
 # Crear directorio de logs si no existe
-LOGS_DIR = Path("/app/logs/chat/groq_contexts")
+LOGS_DIR = BASE_DIR / "logs" / "chat" / "groq_contexts"
 try:
     # Asegurar que toda la estructura de directorios existe
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    os.chmod(str(LOGS_DIR), 0o777)  # Asegurar permisos completos
+    
+    # Intentar cambiar los permisos, pero no fallar si no se puede
+    try:
+        os.chmod(str(LOGS_DIR), 0o777)  # Asegurar permisos completos
+    except PermissionError:
+        print(f"Aviso: No se pudieron cambiar los permisos del directorio {LOGS_DIR}")
+    
     print(f"Directorio de logs creado en: {LOGS_DIR}")
 except Exception as e:
     print(f"Error al crear directorio de logs: {str(e)}")
@@ -32,11 +46,15 @@ def setup_file_handler():
     current_date = datetime.now().strftime("%Y-%m-%d")
     log_file = log_path / f"groq_context_{current_date}.log"
     
-    # Asegurar que el archivo existe y tiene permisos
+    # Asegurar que el archivo existe
     with open(log_file, "a") as f:
         f.write(f"\n--- Sesión iniciada {datetime.now().isoformat()} ---\n")
     
-    os.chmod(str(log_file), 0o666)
+    # Intentar cambiar los permisos, pero no fallar si no se puede
+    try:
+        os.chmod(str(log_file), 0o666)
+    except PermissionError:
+        print(f"Aviso: No se pudieron cambiar los permisos del archivo de log {log_file}")
     
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)

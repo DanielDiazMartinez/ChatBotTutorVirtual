@@ -172,14 +172,14 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
-    text = Column(Text, nullable=True)  # Para mensajes de texto
+    text = Column(Text, nullable=True) 
     image_id = Column(Integer, ForeignKey("images.id"), nullable=True)  # Referencia a la imagen si el mensaje contiene una
     is_bot = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    embedding = Column(Vector(768), nullable=True)  # Para mensajes de texto
+    embedding = Column(Vector(768), nullable=True) 
 
     conversation = relationship("Conversation", back_populates="messages")
-    image = relationship("Image", back_populates="messages")  # Nueva relación
+    image = relationship("Image", back_populates="messages")  
 
     def __repr__(self):
         return f"<Message(id={self.id}, conversation_id={self.conversation_id}, is_bot={self.is_bot}, image_id={self.image_id})>"
