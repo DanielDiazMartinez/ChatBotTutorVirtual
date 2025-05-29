@@ -94,4 +94,14 @@ export class SubjectService {
   removeUsersFromSubject(subjectId: number, userIds: number[]): Observable<ApiResponse<any>> {
     return this.api.delete<any>(`subjects/${subjectId}/users`, { user_ids: userIds });
   }
+
+  // Método para obtener temas de una asignatura
+  getTopicsBySubject(subjectId: string): Observable<ApiResponse<any[]>> {
+    return this.api.get<any[]>(`topics/subject/${subjectId}`);
+  }
+
+  // Método para crear un nuevo tema
+  createTopic(topic: { name: string; description: string; subject_id: number }): Observable<ApiResponse<any>> {
+    return this.api.post<any>('topics', topic);
+  }
 }

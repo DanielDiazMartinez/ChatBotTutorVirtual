@@ -115,13 +115,41 @@ export class SubjectsComponent implements OnInit {
       // Cargar estudiantes de la asignatura desde el backend
       this.loadSubjectStudents(subjectId);
       
-      // Cargar temas específicos de la asignatura (mantener datos de muestra por ahora)
-      this.topics = this.topicsMap[subjectId] || [];
+      // Cargar temas específicos de la asignatura desde el backend
+      this.loadSubjectTopics(subjectId);
       
       // Resetear estados
       this.selectedTopicId = null;
       this.searchTerm = '';
     }
+  }
+
+  // Cargar temas de una asignatura específica
+  private loadSubjectTopics(subjectId: string): void {
+    console.log('Cargando temas para la asignatura:', subjectId);
+    
+    this.coreSubjectService.getTopicsBySubject(subjectId).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servicio de temas:', response);
+        
+        if (response.data) {
+          this.topics = response.data.map((topic: any) => ({
+            id: topic.id.toString(),
+            name: topic.name,
+            description: topic.description || 'Sin descripción',
+            documentCount: topic.documentCount || 0
+          }));
+          console.log('Temas cargados:', this.topics);
+        } else {
+          console.log('No se encontraron temas en la respuesta');
+          this.topics = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar temas de la asignatura:', error);
+        this.topics = [];
+      }
+    });
   }
   
   // Cargar estudiantes de una asignatura específica
@@ -153,33 +181,8 @@ export class SubjectsComponent implements OnInit {
         this.students = [];
         this.isLoadingStudents = false;
       }
-    });
-  }
-  
-  // Datos de muestra de temas por asignatura (mantenemos por ahora hasta implementar la gestión de temas)
-  topicsMap: { [key: string]: Topic[] } = {
-    '1': [
-      { id: '1', name: 'Álgebra Lineal', description: 'Sistemas de ecuaciones y matrices', documentCount: 3 },
-      { id: '2', name: 'Cálculo Diferencial', description: 'Derivadas y aplicaciones', documentCount: 5 },
-      { id: '3', name: 'Geometría Analítica', description: 'Coordenadas y vectores', documentCount: 2 }
-    ],
-    '2': [
-      { id: '4', name: 'Mecánica Clásica', description: 'Leyes de Newton y aplicaciones', documentCount: 4 },
-      { id: '5', name: 'Electromagnetismo', description: 'Campo eléctrico y magnético', documentCount: 3 },
-      { id: '6', name: 'Termodinámica', description: 'Energía y entropía', documentCount: 2 }
-    ],
-    '3': [
-      { id: '7', name: 'Temario General', description: 'Conocimientos básicos para oposiciones', documentCount: 5 },
-      { id: '8', name: 'Derecho Constitucional', description: 'Constitución española y derechos fundamentales', documentCount: 4 },
-      { id: '9', name: 'Pruebas Físicas', description: 'Preparación física y pruebas de aptitud', documentCount: 3 }
-    ],
-    '4': [
-      { id: '10', name: 'Narrativa', description: 'Análisis de novelas y cuentos', documentCount: 6 },
-      { id: '11', name: 'Poesía', description: 'Métrica y recursos literarios', documentCount: 4 },
-      { id: '12', name: 'Teatro', description: 'Obras dramáticas y representación', documentCount: 5 }
-    ]
-  };
-  
+    });  }
+
   // Referencias a los arrays activos según la asignatura seleccionada
   students: Student[] = [];
   topics: Topic[] = [];
@@ -230,7 +233,6 @@ export class SubjectsComponent implements OnInit {
   
   selectTopic(topicId: string): void {
     this.selectedTopicId = topicId;
-    // Cargar documentos para el tema seleccionado
     this.documents = this.getFilteredDocumentsByTopic(topicId);
   }
   
@@ -243,15 +245,27 @@ export class SubjectsComponent implements OnInit {
   }
   
   addNewTopic(): void {
-    if (this.newTopicName.trim()) {
-      const newTopic: Topic = {
-        id: Date.now().toString(),
+    if (this.newTopicName.trim() && this.subject?.id) {
+      const topicData = {
         name: this.newTopicName,
-        description: this.newTopicDescription || 'Sin descripción',
-        documentCount: 0
+        description: this.newTopicDescription || '',
+        subject_id: parseInt(this.subject.id)
       };
-      this.topics.push(newTopic);
-      this.toggleNewTopicForm();
+
+      this.coreSubjectService.createTopic(topicData).subscribe({
+        next: (response) => {
+          console.log('Tema creado exitosamente:', response);
+          
+          // Recargar la lista de temas
+          this.loadSubjectTopics(this.subject.id);
+          
+          // Cerrar el formulario
+          this.toggleNewTopicForm();
+        },
+        error: (error) => {
+          console.error('Error al crear el tema:', error);
+        }
+      });
     }
   }
   
