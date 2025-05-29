@@ -58,15 +58,71 @@
       text-decoration: none;
       transition: all 0.2s ease;
       border-radius: 8px;
+      position: relative;
 
       &:hover {
         background-color: rgba(143, 188, 148, 0.1);
       }
 
+
       .nav-icon {
         margin-right: 0.75rem;
         flex-shrink: 0;
       }
+
+      .expand-icon {
+        margin-left: auto;
+        transition: transform 0.2s ease;
+
+        &.expanded {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
+  // Estilos para la sublista de asignaturas
+  .subjects-sublist {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background-color: rgba(143, 188, 148, 0.05);
+    border-radius: 0 0 8px 8px;
+
+    &.expanded {
+      max-height: 400px;
+      padding: 0.5rem 0;
+    }
+
+    .subject-item {
+      margin-bottom: 0.25rem;
+
+      a {
+        padding: 0.5rem 1rem 0.5rem 3rem;
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .subject-name {
+          font-weight: 500;
+          color: #3f6464;
+          padding: 0.25rem 0.5rem;
+          border-radius: 8px;
+          transition: background-color 0.2s ease;
+        }
+      }
+    }
+
+    .loading-item,
+    .no-subjects-item {
+      padding: 0.5rem 1rem 0.5rem 3rem;
+      font-size: 0.85rem;
+      color: #888;
+      font-style: italic;
     }
   }
 }
