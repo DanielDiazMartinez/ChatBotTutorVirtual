@@ -16,6 +16,7 @@ from ..services.subject_service import (
     update_subject,
     delete_subject,
     get_subject_documents,
+    get_subject_users,
 )
 
 subjects_routes = APIRouter()
@@ -193,5 +194,22 @@ def remove_multiple_users_from_subject_route(
             "failed": result["failed"]
         },
         "message": f"Se eliminaron {len(result['removed'])} usuarios de la asignatura. {len(result['failed'])} fallaron.",
+        "status": 200
+    }
+
+@subjects_routes.get("/{subject_id}/users", response_model=APIResponse)
+def get_subject_users_route(
+    subject_id: int,
+    db: Session = Depends(get_db),
+    _: dict = Depends(require_role(["student", "teacher", "admin"]))
+):
+    """Obtiene todos los usuarios asociados a una asignatura"""
+    users_data = get_subject_users(db=db, subject_id=subject_id)
+    if users_data is None:
+        raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+    
+    return {
+        "data": users_data,
+        "message": "Usuarios de la asignatura obtenidos correctamente",
         "status": 200
     }

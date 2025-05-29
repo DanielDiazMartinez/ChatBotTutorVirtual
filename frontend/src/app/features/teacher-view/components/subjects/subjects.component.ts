@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, RouterModule } from '@angular/router';
+import { SubjectService as CoreSubjectService } from '../../../../core/services/subject.service';
+import { SubjectService } from '../../../../services/subject.service';
+import { AuthService } from '../../../../services/auth.service';
 
 interface Student {
   id: string;
   name: string;
   email: string;
-  progress: number;
 }
 
 interface Topic {
@@ -34,57 +36,86 @@ interface Document {
   styleUrl: './subjects.component.scss'
 })
 export class SubjectsComponent implements OnInit {
-  // Datos de muestra de asignaturas
-  subjects = [
-    { id: '1', name: 'Matemáticas', description: 'Álgebra, Cálculo y Geometría' },
-    { id: '2', name: 'Física', description: 'Mecánica, Electricidad y Termodinámica' },
-    { id: '3', name: 'Biología', description: 'Genética, Ecología y Evolución' },
-    { id: '4', name: 'Literatura', description: 'Narrativa, Poesía y Teatro' }
-  ];
-  
   // Asignatura seleccionada actualmente
-  subject = {
-    id: '1',
-    name: 'Matemáticas',
-    description: 'Álgebra, Cálculo y Geometría'
-  };
+  subject: any = null;
   
-  constructor(private route: ActivatedRoute) {}
+  // Lista de asignaturas del profesor
+  teacherSubjects: any[] = [];
+  
+  // Estado de carga
+  isLoadingSubjects: boolean = false;
+  isLoadingStudents: boolean = false;
+  
+  constructor(
+    private route: ActivatedRoute,
+    private coreSubjectService: CoreSubjectService,
+    private subjectService: SubjectService,
+    private authService: AuthService
+  ) {}
   
   ngOnInit(): void {
-    // Si no hay ID en la ruta, cargar la primera asignatura por defecto
-    this.students = this.studentsMap['1'] || [];
-    this.topics = this.topicsMap['1'] || [];
+    this.loadTeacherSubjects();
     
     this.route.paramMap.subscribe((params: ParamMap) => {
       const subjectId = params.get('id');
       if (subjectId) {
         this.loadSubjectDetails(subjectId);
       } else {
-        // Si no hay ID en la ruta, intentamos obtener del queryParams
-        this.route.queryParamMap.subscribe(queryParams => {
-          const subjectName = queryParams.get('name');
-          if (subjectName) {
-            // Buscar por nombre si está disponible
-            const foundSubject = this.subjects.find(s => s.name === subjectName);
-            if (foundSubject) {
-              this.loadSubjectDetails(foundSubject.id);
+        // Si no hay ID en la ruta, cargar la primera asignatura disponible
+        if (this.teacherSubjects.length > 0) {
+          this.loadSubjectDetails(this.teacherSubjects[0].id);
+        }
+      }
+    });
+  }
+  
+  // Cargar las asignaturas del profesor actual
+  private loadTeacherSubjects(): void {
+    this.isLoadingSubjects = true;
+    
+    this.authService.getCurrentUserFromBackend().subscribe({
+      next: (user: any) => {
+        const userId = user.data.id;
+        this.subjectService.getSubjectsByUserId(userId.toString()).subscribe({
+          next: (response) => {
+            this.teacherSubjects = response.data || [];
+            this.isLoadingSubjects = false;
+            
+            // Si hay un ID en la ruta, cargar esa asignatura
+            const subjectId = this.route.snapshot.paramMap.get('id');
+            if (subjectId) {
+              this.loadSubjectDetails(subjectId);
+            } else if (this.teacherSubjects.length > 0) {
+              // Si no hay ID específico, cargar la primera asignatura
+              this.loadSubjectDetails(this.teacherSubjects[0].id);
             }
+          },
+          error: (error) => {
+            console.error('Error al cargar asignaturas del profesor:', error);
+            this.isLoadingSubjects = false;
           }
         });
+      },
+      error: (error) => {
+        console.error('Error al obtener usuario actual:', error);
+        this.isLoadingSubjects = false;
       }
     });
   }
   
   loadSubjectDetails(subjectId: string): void {
-    // Aquí se cargarían los detalles de la asignatura desde un servicio
-    // Por ahora, usamos datos de muestra
-    const foundSubject = this.subjects.find(s => s.id === subjectId);
+    // Buscar la asignatura en la lista del profesor
+    const foundSubject = this.teacherSubjects.find(s => s.id === subjectId);
     if (foundSubject) {
-      this.subject = foundSubject;
+      this.subject = {
+        ...foundSubject,
+        description: foundSubject.description || 'Sin descripción disponible'
+      };
       
-      // Cargar estudiantes y temas específicos de la asignatura
-      this.students = this.studentsMap[subjectId] || [];
+      // Cargar estudiantes de la asignatura desde el backend
+      this.loadSubjectStudents(subjectId);
+      
+      // Cargar temas específicos de la asignatura (mantener datos de muestra por ahora)
       this.topics = this.topicsMap[subjectId] || [];
       
       // Resetear estados
@@ -93,35 +124,39 @@ export class SubjectsComponent implements OnInit {
     }
   }
   
-  // Datos de muestra de estudiantes por asignatura
-  studentsMap: { [key: string]: Student[] } = {
-    '1': [
-      { id: '1', name: 'Ana García', email: 'ana@example.com', progress: 85 },
-      { id: '2', name: 'Carlos López', email: 'carlos@example.com', progress: 72 },
-      { id: '3', name: 'María Rodríguez', email: 'maria@example.com', progress: 94 },
-      { id: '4', name: 'Pedro Sánchez', email: 'pedro@example.com', progress: 65 },
-      { id: '5', name: 'Laura Martínez', email: 'laura@example.com', progress: 88 }
-    ],
-    '2': [
-      { id: '6', name: 'Javier Ruiz', email: 'javier@example.com', progress: 79 },
-      { id: '7', name: 'Elena Gómez', email: 'elena@example.com', progress: 88 },
-      { id: '8', name: 'Miguel Torres', email: 'miguel@example.com', progress: 62 },
-      { id: '9', name: 'Sofía Navarro', email: 'sofia@example.com', progress: 95 }
-    ],
-    '3': [
-      { id: '10', name: 'Daniel Pérez', email: 'daniel@example.com', progress: 77 },
-      { id: '11', name: 'Lucía Fernández', email: 'lucia@example.com', progress: 91 },
-      { id: '12', name: 'Roberto Díaz', email: 'roberto@example.com', progress: 84 }
-    ],
-    '4': [
-      { id: '13', name: 'Carmen Vega', email: 'carmen@example.com', progress: 82 },
-      { id: '14', name: 'Jorge Medina', email: 'jorge@example.com', progress: 75 },
-      { id: '15', name: 'Alicia Ramos', email: 'alicia@example.com', progress: 89 },
-      { id: '16', name: 'Pablo Ortiz', email: 'pablo@example.com', progress: 71 }
-    ]
-  };
+  // Cargar estudiantes de una asignatura específica
+  private loadSubjectStudents(subjectId: string): void {
+    this.isLoadingStudents = true;
+    console.log('Cargando estudiantes para la asignatura:', subjectId);
+    
+    this.coreSubjectService.getSubjectUsers(subjectId).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servicio de usuarios de asignatura:', response);
+        
+        // La respuesta del backend tiene la estructura: response.data.students
+        if (response.data && response.data.students) {
+          console.log('Estudiantes encontrados:', response.data.students);
+          this.students = response.data.students.map((user: any) => ({
+            id: user.id.toString(),
+            name: user.full_name,
+            email: user.email
+          }));
+          console.log('Estudiantes filtrados:', this.students);
+        } else {
+          console.log('No se encontraron estudiantes en la respuesta');
+          this.students = [];
+        }
+        this.isLoadingStudents = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar estudiantes de la asignatura:', error);
+        this.students = [];
+        this.isLoadingStudents = false;
+      }
+    });
+  }
   
-  // Datos de muestra de temas por asignatura
+  // Datos de muestra de temas por asignatura (mantenemos por ahora hasta implementar la gestión de temas)
   topicsMap: { [key: string]: Topic[] } = {
     '1': [
       { id: '1', name: 'Álgebra Lineal', description: 'Sistemas de ecuaciones y matrices', documentCount: 3 },
@@ -134,9 +169,9 @@ export class SubjectsComponent implements OnInit {
       { id: '6', name: 'Termodinámica', description: 'Energía y entropía', documentCount: 2 }
     ],
     '3': [
-      { id: '7', name: 'Genética', description: 'Leyes de Mendel y herencia', documentCount: 5 },
-      { id: '8', name: 'Ecología', description: 'Ecosistemas y biodiversidad', documentCount: 4 },
-      { id: '9', name: 'Evolución', description: 'Selección natural y adaptación', documentCount: 3 }
+      { id: '7', name: 'Temario General', description: 'Conocimientos básicos para oposiciones', documentCount: 5 },
+      { id: '8', name: 'Derecho Constitucional', description: 'Constitución española y derechos fundamentales', documentCount: 4 },
+      { id: '9', name: 'Pruebas Físicas', description: 'Preparación física y pruebas de aptitud', documentCount: 3 }
     ],
     '4': [
       { id: '10', name: 'Narrativa', description: 'Análisis de novelas y cuentos', documentCount: 6 },

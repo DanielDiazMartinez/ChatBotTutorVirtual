@@ -90,18 +90,13 @@ export class LoginComponent {
 
   onRegister() {
     if (this.registerForm.valid) {
-      // Nota: el registro realmente debería incluir más campos,
-      // pero para simplificar se deja así y posiblemente se ampliaría en una vista de registro completa
       const newUser = {
         email: this.registerForm.get('email')?.value,
         name: this.registerForm.get('email')?.value.split('@')[0], // Usar parte del email como nombre provisional
-        password: 'Password123!', // Contraseña provisional (en un caso real, se pediría al usuario)
         role: this.registerForm.get('role')?.value
       };
       
       console.log('Register:', newUser);
-      // El registro normalmente lo haría un administrador, 
-      // esto es solo para demostración
       alert('La funcionalidad de registro no está habilitada. Por favor, use el login.');
     } else {
       console.log('Formulario de registro inválido');

@@ -296,3 +296,36 @@ def get_subject_documents(db: Session, subject_id: int):
         
     documents = db.query(Document).filter(Document.subject_id == subject_id).all()
     return documents
+
+def get_subject_users(db: Session, subject_id: int) -> dict:
+    """Obtiene todos los usuarios asociados a una asignatura"""
+    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    if not db_subject:
+        return None
+    
+    # Preparar la lista de usuarios
+    users = [
+        {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "created_at": user.created_at
+        }
+        for user in db_subject.users
+    ] if db_subject.users else []
+    
+    # Separar usuarios por rol
+    teachers = [user for user in users if user["role"] == "teacher"]
+    students = [user for user in users if user["role"] == "student"]
+    
+    return {
+        "subject_id": db_subject.id,
+        "subject_name": db_subject.name,
+        "subject_code": db_subject.code,
+        "teachers": teachers,
+        "students": students,
+        "teacher_count": len(teachers),
+        "student_count": len(students),
+        "total_users": len(users)
+    }

@@ -1,6 +1,6 @@
 <div class="subject-container">
   <!-- Encabezado de la asignatura -->
-  <div class="subject-header">
+  <div class="subject-header" *ngIf="subject">
     <h1>{{ subject.name }}</h1>
     <p class="subject-description">{{ subject.description }}</p>
   </div>
@@ -22,27 +22,27 @@
       </div>
       
       <div class="student-list">
-        <div class="student-card" *ngFor="let student of getFilteredStudents()" 
-          [routerLink]="['/teacher/student-profile']" 
-          [queryParams]="{name: student.name}">
-          <div class="student-avatar">
-            {{ student.name.charAt(0) }}
-          </div>
-          <div class="student-info">
-            <h3 class="student-name">{{ student.name }}</h3>
-            <p class="student-email">{{ student.email }}</p>
-          </div>
-          <div class="student-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="student.progress"></div>
-            </div>
-            <span class="progress-text">{{ student.progress }}%</span>
-          </div>
+        <div *ngIf="isLoadingStudents" class="loading-message">
+          <p>Cargando estudiantes...</p>
         </div>
         
-        <div class="no-results" *ngIf="getFilteredStudents().length === 0">
-          <p>No se encontraron estudiantes</p>
-        </div>
+        <ng-container *ngIf="!isLoadingStudents">
+          <div class="student-card" *ngFor="let student of getFilteredStudents()" 
+            [routerLink]="['/teacher/student-profile']" 
+            [queryParams]="{name: student.name}">
+            <div class="student-avatar">
+              {{ student.name.charAt(0) }}
+            </div>
+            <div class="student-info">
+              <h3 class="student-name">{{ student.name }}</h3>
+              <p class="student-email">{{ student.email }}</p>
+            </div>
+          </div>
+          
+          <div class="no-results" *ngIf="getFilteredStudents().length === 0">
+            <p>No se encontraron estudiantes</p>
+          </div>
+        </ng-container>
       </div>
     </div>
     

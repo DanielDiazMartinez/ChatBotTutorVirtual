@@ -19,6 +19,14 @@ export interface Subject {
 export interface SubjectUsersResponse {
   assignedUsers: User[];
   availableUsers: User[];
+  students: any[];
+  teachers: any[];
+  student_count: number;
+  teacher_count: number;
+  total_users: number;
+  subject_id: number;
+  subject_name: string;
+  subject_code: string;
 }
 
 @Injectable({
