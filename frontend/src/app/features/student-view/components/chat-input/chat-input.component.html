@@ -28,6 +28,7 @@
     </button>
     
     <textarea
+      #messageInput
       [(ngModel)]="message"
       (keypress)="onKeyPress($event)"
       placeholder="Escribe un mensaje..."

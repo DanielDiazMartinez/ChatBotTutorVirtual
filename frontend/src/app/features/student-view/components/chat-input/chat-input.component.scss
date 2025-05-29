@@ -104,9 +104,12 @@
   line-height: 1.4;
   color: #3f6464;
   min-height: 24px;
-  max-height: 120px;
+  max-height: 150px; // Aumentamos un poco la altura máxima
   overflow-y: auto;
   font-family: inherit;
+  transition: height 0.2s ease; // Añadimos transición para suavizar los cambios de altura
+  overflow-x: hidden; // Evitamos scroll horizontal
+  word-wrap: break-word; // Aseguramos que las palabras largas se rompan
   
   &::placeholder {
     color: #999;

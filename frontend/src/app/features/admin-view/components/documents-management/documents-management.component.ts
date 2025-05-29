@@ -9,5 +9,5 @@ import { DocumentsComponent as SharedDocumentsComponent } from '../../../../shar
   template: '<app-documents [isAdminView]="true"></app-documents>'
 })
 export class DocumentsManagementComponent {
-  // Este componente simplemente utiliza el componente compartido de documentos con la vista de admin
+  // Este componente utiliza el componente compartido de documentos con la vista de admin
 }
