@@ -80,6 +80,14 @@ export class LoginComponent {
     }
   }
 
+  // Manejar evento Enter en el formulario de login
+  onKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.onLogin();
+    }
+  }
+
   onRegister() {
     if (this.registerForm.valid) {
       // Nota: el registro realmente debería incluir más campos,

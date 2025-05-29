@@ -24,19 +24,16 @@ export class ChatInputComponent implements AfterViewInit {
   selectedFileName: string = '';
 
   ngAfterViewInit(): void {
-    // Inicializar el ajuste de altura del textarea
-    if (this.messageInput?.nativeElement) {
+    if (this.messageInput?.nativeElement) { 
       this.adjustTextareaHeight();
     }
   }
   
-  // Escucha cambios en el contenido del mensaje para ajustar altura
   @HostListener('input', ['$event.target'])
   onInput(textArea: HTMLTextAreaElement): void {
     this.adjustTextareaHeight();
   }
 
-  // Ajusta la altura del textarea según el contenido
   adjustTextareaHeight(): void {
     const textarea = this.messageInput.nativeElement;
    
@@ -54,7 +51,6 @@ export class ChatInputComponent implements AfterViewInit {
       this.message = '';
       this.clearSelectedFile();
       
-      // Restablecer altura del textarea después de enviar
       setTimeout(() => {
         if (this.messageInput?.nativeElement) {
           this.messageInput.nativeElement.style.height = 'auto';

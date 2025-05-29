@@ -22,7 +22,7 @@
 
       <div class="login-section">
         <h2>Inicia sesión</h2>
-        <form [formGroup]="loginForm">
+        <form [formGroup]="loginForm" (keypress)="onKeyPress($event)">
           <input 
             type="email" 
             placeholder="Dirección de correo electrónico"
