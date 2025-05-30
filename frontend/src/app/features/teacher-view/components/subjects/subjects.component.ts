@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, RouterModule } from '@angular/router';
 import { SubjectService as CoreSubjectService } from '../../../../core/services/subject.service';
 import { SubjectService } from '../../../../services/subject.service';
 import { AuthService } from '../../../../services/auth.service';
+import { UploadDocumentModalComponent } from '../../../../shared/components/upload-document-modal/upload-document-modal.component';
 
 interface Student {
   id: string;
@@ -31,11 +32,14 @@ interface Document {
 @Component({
   selector: 'app-subjects',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, UploadDocumentModalComponent],
   templateUrl: './subjects.component.html',
   styleUrl: './subjects.component.scss'
 })
 export class SubjectsComponent implements OnInit {
+  // ViewChild para el modal de subir documentos
+  @ViewChild(UploadDocumentModalComponent) uploadModal!: UploadDocumentModalComponent;
+  
   // Asignatura seleccionada actualmente
   subject: any = null;
   
@@ -65,6 +69,13 @@ export class SubjectsComponent implements OnInit {
         if (this.teacherSubjects.length > 0) {
           this.loadSubjectDetails(this.teacherSubjects[0].id);
         }
+      }
+    });
+
+    // Listener para recargar temas cuando se suba un documento
+    window.addEventListener('document-uploaded', () => {
+      if (this.subject?.id) {
+        this.loadSubjectTopics(this.subject.id);
       }
     });
   }
@@ -189,29 +200,6 @@ export class SubjectsComponent implements OnInit {
   
   // Datos de muestra de documentos por tema
   documentsMap: { [key: string]: Document[] } = {
-    // Temas de Matemáticas
-    '1': [
-      { id: '1', name: 'Introducción a Matrices', type: 'pdf', size: '2.4 MB', uploadDate: new Date('2025-02-15'), topicId: '1' },
-      { id: '2', name: 'Ejercicios de Ecuaciones', type: 'docx', size: '1.8 MB', uploadDate: new Date('2025-03-10'), topicId: '1' },
-      { id: '3', name: 'Examen Parcial Resuelto', type: 'pdf', size: '3.2 MB', uploadDate: new Date('2025-04-05'), topicId: '1' }
-    ],
-    '2': [
-      { id: '4', name: 'Guía de Derivadas', type: 'pdf', size: '4.1 MB', uploadDate: new Date('2025-01-20'), topicId: '2' },
-      { id: '5', name: 'Presentación de Aplicaciones', type: 'ppt', size: '5.7 MB', uploadDate: new Date('2025-02-28'), topicId: '2' }
-    ],
-    '3': [
-      { id: '6', name: 'Ejercicios Vectores', type: 'pdf', size: '1.5 MB', uploadDate: new Date('2025-03-15'), topicId: '3' }
-    ],
-    // Temas de Física
-    '4': [
-      { id: '7', name: 'Problemas de Cinemática', type: 'pdf', size: '3.5 MB', uploadDate: new Date('2025-03-05'), topicId: '4' },
-      { id: '8', name: 'Leyes de Newton', type: 'docx', size: '1.9 MB', uploadDate: new Date('2025-02-20'), topicId: '4' }
-    ],
-    '5': [
-      { id: '9', name: 'Campo Eléctrico', type: 'pdf', size: '2.7 MB', uploadDate: new Date('2025-03-18'), topicId: '5' },
-      { id: '10', name: 'Experimentos de Magnetismo', type: 'ppt', size: '4.3 MB', uploadDate: new Date('2025-04-02'), topicId: '5' }
-    ],
-    // Y así con otros temas...
   };
   
   // Referencia actual a los documentos del tema seleccionado
@@ -224,6 +212,9 @@ export class SubjectsComponent implements OnInit {
   newTopicDescription: string = '';
   showNewTopicForm: boolean = false;
   showUploadForm: boolean = false;
+  
+  // ID del tema seleccionado para subir documentos
+  selectedTopicForUpload: string | null = null;
   
   // Métodos de la UI
   getFilteredDocumentsByTopic(topicId: string): Document[] {
@@ -274,32 +265,17 @@ export class SubjectsComponent implements OnInit {
   }
   
   uploadDocument(topicId: string): void {
-    // Aquí iría la lógica para subir documentos
-    // Por ahora, simularemos que se agregó un nuevo documento
-    const newDoc: Document = {
-      id: Date.now().toString(),
-      name: 'Nuevo Documento',
-      type: 'pdf',
-      size: '1.2 MB',
-      uploadDate: new Date(),
-      topicId: topicId
-    };
+    // Guardar el ID del tema seleccionado
+    this.selectedTopicForUpload = topicId;
     
-    // Inicializar el array de documentos para el tema si no existe
-    if (!this.documentsMap[topicId]) {
-      this.documentsMap[topicId] = [];
-    }
-    
-    // Agregar el documento al mapa y actualizar la lista actual
-    this.documentsMap[topicId].push(newDoc);
-    if (this.selectedTopicId === topicId) {
-      this.documents = this.documentsMap[topicId];
-    }
-    
-    // Actualizar el contador de documentos del tema
-    const topic = this.topics.find(t => t.id === topicId);
-    if (topic) {
-      topic.documentCount++;
+    // Abrir el modal de subir documentos
+    this.openUploadModal();
+  }
+
+  // Método para abrir el modal de subir documentos
+  openUploadModal(): void {
+    if (this.uploadModal) {
+      this.uploadModal.open(this.selectedTopicForUpload || undefined);
     }
   }
   

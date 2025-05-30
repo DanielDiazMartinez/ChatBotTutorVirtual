@@ -24,6 +24,7 @@ export class UploadDocumentModalComponent implements OnInit {
   uploadForm!: FormGroup;
   selectedFile: File | null = null;
   fileMaxSize = 10; // MB
+  currentTopicId: string | null = null;
 
   ngOnInit(): void {
     this.initForm();
@@ -79,8 +80,9 @@ export class UploadDocumentModalComponent implements OnInit {
     }
   }
 
-  open(): void {
+  open(topicId?: string): void {
     this.isVisible = true;
+    this.currentTopicId = topicId || null;
     this.resetForm();
   }
 
@@ -93,6 +95,7 @@ export class UploadDocumentModalComponent implements OnInit {
     this.uploadForm.reset();
     this.selectedFile = null;
     this.uploadError = null;
+    this.currentTopicId = null;
   }
 
   submit(): void {
@@ -110,7 +113,8 @@ export class UploadDocumentModalComponent implements OnInit {
       formData.title,
       formData.description,
       this.selectedFile,
-      formData.subjectId
+      formData.subjectId,
+      this.currentTopicId || undefined
     ).subscribe({
       next: () => {
         this.isLoading = false;

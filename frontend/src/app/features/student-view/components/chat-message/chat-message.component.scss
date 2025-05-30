@@ -43,6 +43,35 @@
       font-size: 1rem;
       font-weight: 400;
       position: relative;
+
+      // Estilos para listas numeradas formateadas
+      .numbered-item {
+        display: flex;
+        align-items: flex-start;
+        margin: 0.75rem 0;
+        gap: 0.5rem;
+
+        .number {
+          font-weight: 600;
+          color: #3f6464;
+          min-width: 1.5rem;
+          flex-shrink: 0;
+        }
+
+        .content {
+          flex: 1;
+        }
+
+        strong {
+          font-weight: 600;
+          color: #2c5f2c;
+        }
+      }
+
+      // Espaciado para párrafos
+      br + br {
+        margin-bottom: 0.5rem;
+      }
       
       .image-indicator {
         display: inline-flex;
