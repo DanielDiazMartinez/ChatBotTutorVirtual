@@ -9,12 +9,6 @@ from sqlalchemy.orm import Session
 from app.models.models import Document, DocumentChunk, Subject
 from app.services.api_service import generate_google_ai_simple
 
-# Cache simple para evitar regenerar resúmenes
-_summary_cache = {}
-_last_request_time = 0
-_min_request_interval = 60  # 1 minuto entre peticiones
-
-
 async def generate_document_summary(
     document: Document, 
     db: Session, 
@@ -89,10 +83,7 @@ async def generate_subject_summary(subject_id: int, db: Session) -> str:
         if not subject:
             return "Asignatura no encontrada."
         
-        # Si ya tiene resumen, devolverlo
-        if subject.summary:
-            return subject.summary
-        
+        # Siempre generar un nuevo resumen, independientemente de si ya existe uno
         documents = db.query(Document).filter(
             Document.subject_id == subject_id,
         ).all()

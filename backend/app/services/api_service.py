@@ -183,7 +183,7 @@ def generate_google_ai_response(
     conversation_history: str = "",
     image_base64: Optional[str] = None,  
     image_mime_type: Optional[str] = None,  
-    asignatura: Optional[str] = None,
+    asignatura: Optional[dict] = None,
     user_id: str = "unknown",
     conversation_id: int = None
 ) -> str:
@@ -216,49 +216,44 @@ def generate_google_ai_response(
         logger.warning("Contexto está vacío en generate_google_ai_response")
     logger.info(f"Tamaño del contexto en generate_google_ai_response: {len(context)} caracteres")
 
+    # Construir información de la asignatura si está disponible
+    subject_info_text = ""
+    if asignatura and isinstance(asignatura, dict):
+        subject_info_text = f"""
+        **Información de la Asignatura:**
+        - Nombre: {asignatura.get('name', 'No especificado')}
+        - Código: {asignatura.get('code', 'No especificado')}
+        - Descripción: {asignatura.get('description', 'No especificada')}"""
+        
+        if asignatura.get('summary') and asignatura['summary'].strip():
+            subject_info_text += f"""
+        - Resumen de la asignatura: {asignatura['summary']}"""
+        
+        subject_info_text += "\n"
+
     # Construcción del prompt basado en si hay imagen o no
     prompt = ""
     if image_base64 and image_mime_type:
         # Caso con imagen
         if user_question and user_question.strip():
-            if asignatura:
-                prompt = f"""
+            prompt = f"""
                 ### Instrucciones:
-                Eres un tutor virtual especializado en educación de la asignatura de {asignatura}. Analiza la siguiente imagen en relación con la pregunta del estudiante: '{user_question}'. Basándote en el contexto proporcionado y la imagen, proporciona una respuesta clara, concisa y pedagógica.
+                Eres un tutor virtual especializado en educación. Analiza la siguiente imagen en relación con la pregunta del estudiante: '{user_question}'. Basándote en el contexto proporcionado y la imagen, proporciona una respuesta clara, concisa y pedagógica.
 
+                {subject_info_text}
                 **Contexto de la Asignatura:**
-                {context}
-
-                ### Respuesta:
-                """
-            else:
-                prompt = f"""
-                ### Instrucciones:
-                Analiza la siguiente imagen en relación con la pregunta del estudiante: '{user_question}'. Basándote en el contexto proporcionado y la imagen, proporciona una respuesta clara y concisa.
-
-                **Contexto:**
                 {context}
 
                 ### Respuesta:
                 """
         else:
             # Imagen sin pregunta directa - caso de profesor o análisis general
-            if asignatura:
-                prompt = f"""
+            prompt = f"""
                 ### Instrucciones:
-                Eres un tutor virtual especializado en educación de la asignatura de {asignatura}. Describe y analiza el contenido de la siguiente imagen en el contexto de la asignatura. Identifica los elementos clave y explica su posible relevancia educativa.
+                Eres un tutor virtual especializado en educación. Describe y analiza el contenido de la siguiente imagen en el contexto de la asignatura. Identifica los elementos clave y explica su posible relevancia educativa.
 
+                {subject_info_text}
                 **Contexto de la Asignatura:**
-                {context}
-
-                ### Respuesta:
-                """
-            else:
-                prompt = f"""
-                ### Instrucciones:
-                Describe y analiza el contenido de la siguiente imagen. Identifica los elementos clave y proporciona una explicación concisa.
-
-                **Contexto:**
                 {context}
 
                 ### Respuesta:
@@ -297,6 +292,7 @@ def generate_google_ai_response(
 
         Responde de manera directa sin mencionar constantemente que te basas en el contexto proporcionado.
 
+        {subject_info_text}
         ### Historial de la Conversación:
         {conversation_history}
 

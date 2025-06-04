@@ -35,4 +35,19 @@ export class DocumentService {
   deleteDocument(documentId: number): Observable<ApiResponse<any>> {
     return this.api.delete(`documents/${documentId}`);
   }
+
+  // Métodos para gestión de resúmenes de asignaturas
+  generateSubjectSummary(subjectId: number): Observable<ApiResponse<{summary: string}>> {
+    return this.api.post<{summary: string}>(`documents/subjects/${subjectId}/summary`, {});
+  }
+
+  updateSubjectSummary(subjectId: number, summary: string): Observable<ApiResponse<{updated: boolean}>> {
+    const formData = new FormData();
+    formData.append('new_summary', summary);
+    return this.api.put<{updated: boolean}>(`documents/subjects/${subjectId}/summary`, formData);
+  }
+
+  getDocumentsByTopic(topicId: number): Observable<ApiResponse<Document[]>> {
+    return this.api.get<Document[]>(`documents/topic/${topicId}`);
+  }
 }

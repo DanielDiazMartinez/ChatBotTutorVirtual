@@ -13,7 +13,7 @@ from ..services.image_service import get_image_by_id, prepare_image_for_google_a
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
-from app.models.models import Conversation, Message, User
+from app.models.models import Conversation, Message, User, Subject
 from app.services.api_service import generate_google_ai_response
 from app.services.vector_service import ( 
     get_conversation_context,
@@ -175,8 +175,19 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
 
 
     context = ""
+    subject_info = None
     try:
         if conversation.subject_id:
+            # Obtener información completa de la asignatura incluyendo el resumen
+            subject = db.query(Subject).filter(Subject.id == conversation.subject_id).first()
+            if subject:
+                subject_info = {
+                    "id": subject.id,
+                    "name": subject.name,
+                    "code": subject.code,
+                    "description": subject.description,
+                    "summary": subject.summary
+                }
             
             context = get_conversation_context(
                 db=db,
@@ -193,7 +204,7 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
             conversation_history=conversation_history,
             image_base64=image_base64,
             image_mime_type=image_mime_type,
-            asignatura=conversation.subject_id,
+            asignatura=subject_info,
             user_id=str(user_id),
             conversation_id=conversation_id
         )

@@ -28,6 +28,7 @@ def create_subject(db: Session, subject: SubjectCreate) -> dict:
         "name": db_subject.name,
         "code": db_subject.code,
         "description": db_subject.description,
+        "summary": db_subject.summary,
         "created_at": db_subject.created_at
     }
 
@@ -61,6 +62,7 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         "name": db_subject.name,
         "code": db_subject.code,
         "description": db_subject.description,
+        "summary": db_subject.summary,
         "created_at": db_subject.created_at,
         "teachers": teachers,
         "students": students,
@@ -77,6 +79,7 @@ def get_all_subjects(db: Session) -> list[dict]:
             "name": subject.name,
             "code": subject.code,
             "description": subject.description,
+            "summary": subject.summary,
             "created_at": subject.created_at,
             "teachers": [
                 {
@@ -140,6 +143,7 @@ def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict
         "name": db_subject.name,
         "code": db_subject.code,
         "description": db_subject.description,
+        "summary": db_subject.summary,
         "created_at": db_subject.created_at,
         "teachers": teachers,
         "students": students,

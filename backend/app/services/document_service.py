@@ -141,4 +141,51 @@ def delete_document(db: Session, document_id: int, user_id: int = None, is_admin
     
     return {"id": document_id}
 
+def get_documents_by_topic_id(db: Session, topic_id: int, current_user):
+    """
+    Obtiene todos los documentos asociados a un tema específico.
+    Los administradores pueden ver todos los documentos.
+    Los profesores y estudiantes solo pueden ver documentos de asignaturas a las que tienen acceso.
+    """
+    from app.models.models import Topic, Subject
+    
+    # Verificar que el tema existe
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Tema no encontrado")
+    
+    # Verificar acceso a la asignatura del tema
+    subject = db.query(Subject).filter(Subject.id == topic.subject_id).first()
+    if not subject:
+        raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+    
+    # Los administradores tienen acceso completo
+    if current_user.role == "admin":
+        documents = db.query(Document).filter(Document.topic_id == topic_id).all()
+    else:
+        # Para profesores y estudiantes, verificar acceso a la asignatura
+        is_assigned = any(user.id == current_user.id for user in subject.users)
+        if not is_assigned:
+            raise HTTPException(
+                status_code=403, 
+                detail="No tienes permisos para acceder a los documentos de este tema"
+            )
+        
+        documents = db.query(Document).filter(Document.topic_id == topic_id).all()
+    
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "description": doc.description,
+            "file_path": doc.file_path,
+            "user_id": doc.user_id,
+            "subject_id": doc.subject_id,
+            "topic_id": doc.topic_id,
+            "created_at": doc.created_at.isoformat() if doc.created_at else None,
+            "updated_at": doc.updated_at.isoformat() if doc.updated_at else None
+        }
+        for doc in documents
+    ]
+
 

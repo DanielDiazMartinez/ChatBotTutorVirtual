@@ -5,6 +5,7 @@ import { ActivatedRoute, ParamMap, RouterModule } from '@angular/router';
 import { SubjectService as CoreSubjectService } from '../../../../core/services/subject.service';
 import { SubjectService } from '../../../../services/subject.service';
 import { AuthService } from '../../../../services/auth.service';
+import { DocumentService } from '../../../../core/services/document.service';
 import { UploadDocumentModalComponent } from '../../../../shared/components/upload-document-modal/upload-document-modal.component';
 
 interface Student {
@@ -49,12 +50,21 @@ export class SubjectsComponent implements OnInit {
   // Estado de carga
   isLoadingSubjects: boolean = false;
   isLoadingStudents: boolean = false;
+  isLoadingDocuments: boolean = false;
+  
+  // Estado para gestión de resúmenes
+  showSummaryEditor: boolean = false;
+  isGeneratingSummary: boolean = false;
+  isUpdatingSummary: boolean = false;
+  subjectSummary: string = '';
+  originalSummary: string = '';
   
   constructor(
     private route: ActivatedRoute,
     private coreSubjectService: CoreSubjectService,
     private subjectService: SubjectService,
-    private authService: AuthService
+    private authService: AuthService,
+    private documentService: DocumentService
   ) {}
   
   ngOnInit(): void {
@@ -194,13 +204,42 @@ export class SubjectsComponent implements OnInit {
       }
     });  }
 
+  // Cargar documentos de un tema específico
+  private loadDocumentsByTopic(topicId: number): void {
+    this.isLoadingDocuments = true;
+    console.log('Cargando documentos para el tema:', topicId);
+    
+    this.documentService.getDocumentsByTopic(topicId).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servicio de documentos por tema:', response);
+        
+        if (response.data) {
+          this.documents = response.data.map((doc: any) => ({
+            id: doc.id.toString(),
+            name: doc.title,
+            type: 'PDF',
+            size: 'N/A', // El backend no devuelve el tamaño
+            uploadDate: new Date(doc.created_at || Date.now()),
+            topicId: doc.topic_id?.toString() || ''
+          }));
+          console.log('Documentos cargados:', this.documents);
+        } else {
+          console.log('No se encontraron documentos en la respuesta');
+          this.documents = [];
+        }
+        this.isLoadingDocuments = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar documentos del tema:', error);
+        this.documents = [];
+        this.isLoadingDocuments = false;
+      }
+    });
+  }
+
   // Referencias a los arrays activos según la asignatura seleccionada
   students: Student[] = [];
   topics: Topic[] = [];
-  
-  // Datos de muestra de documentos por tema
-  documentsMap: { [key: string]: Document[] } = {
-  };
   
   // Referencia actual a los documentos del tema seleccionado
   documents: Document[] = [];
@@ -217,14 +256,9 @@ export class SubjectsComponent implements OnInit {
   selectedTopicForUpload: string | null = null;
   
   // Métodos de la UI
-  getFilteredDocumentsByTopic(topicId: string): Document[] {
-    if (!topicId) return [];
-    return this.documentsMap[topicId] || [];
-  }
-  
   selectTopic(topicId: string): void {
     this.selectedTopicId = topicId;
-    this.documents = this.getFilteredDocumentsByTopic(topicId);
+    this.loadDocumentsByTopic(parseInt(topicId));
   }
   
   toggleNewTopicForm(): void {
@@ -281,10 +315,68 @@ export class SubjectsComponent implements OnInit {
   
   getFilteredStudents(): Student[] {
     if (!this.searchTerm.trim()) return this.students;
-    const term = this.searchTerm.toLowerCase();
+    
     return this.students.filter(student => 
-      student.name.toLowerCase().includes(term) || 
-      student.email.toLowerCase().includes(term)
+      student.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+  }
+
+  // Métodos para gestión de resúmenes de asignatura
+  toggleSummaryEditor(): void {
+    this.showSummaryEditor = !this.showSummaryEditor;
+    if (this.showSummaryEditor) {
+      this.originalSummary = this.subject?.summary || '';
+      this.subjectSummary = this.originalSummary;
+    }
+  }
+
+  generateSummary(): void {
+    if (!this.subject?.id) return;
+    
+    this.isGeneratingSummary = true;
+    this.documentService.generateSubjectSummary(parseInt(this.subject.id)).subscribe({
+      next: (response) => {
+        if (response.data?.summary) {
+          this.subjectSummary = response.data.summary;
+          this.subject.summary = response.data.summary;
+          // NO actualizar originalSummary para que el botón "Guardar" se active
+        }
+        this.isGeneratingSummary = false;
+      },
+      error: (error) => {
+        console.error('Error generando resumen:', error);
+        this.isGeneratingSummary = false;
+      }
+    });
+  }
+
+  saveSummary(): void {
+    if (!this.subject?.id || !this.subjectSummary.trim()) return;
+    
+    this.isUpdatingSummary = true;
+    this.documentService.updateSubjectSummary(parseInt(this.subject.id), this.subjectSummary).subscribe({
+      next: (response) => {
+        if (response.data?.updated) {
+          this.subject.summary = this.subjectSummary;
+          this.originalSummary = this.subjectSummary;
+          this.showSummaryEditor = false;
+        }
+        this.isUpdatingSummary = false;
+      },
+      error: (error) => {
+        console.error('Error actualizando resumen:', error);
+        this.isUpdatingSummary = false;
+      }
+    });
+  }
+
+  cancelSummaryEdit(): void {
+    this.subjectSummary = this.originalSummary;
+    this.showSummaryEditor = false;
+  }
+
+  hasSummaryChanged(): boolean {
+    return this.subjectSummary !== this.originalSummary;
   }
 }

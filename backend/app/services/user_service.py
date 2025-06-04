@@ -151,6 +151,7 @@ def get_subjects_by_user_id(user_id: int, db: Session):
             "name": subject.name,
             "code": subject.code,
             "description": subject.description,
+            "summary": subject.summary,
             "created_at": subject.created_at
         }
         

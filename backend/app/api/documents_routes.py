@@ -2,14 +2,36 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.models.models import User
+from app.models.models import User, Subject
 from ..core.database import get_db
 from ..core.auth import get_current_user, require_role
-from ..services.document_service import save_document, list_documents, list_all_documents, delete_document
+from ..services.document_service import save_document, list_documents, list_all_documents, delete_document, get_documents_by_topic_id, get_documents_by_topic_id
 from ..services.summary_service import generate_document_summary_by_id, generate_subject_summary, update_subject_summary
 from ..models.schemas import APIResponse, DocumentOut, DocumentCreate
 
 documents_routes = APIRouter()
+
+def validate_subject_access(current_user: User, subject_id: int, db: Session):
+    """Valida que el usuario tenga acceso a la asignatura"""
+    # Los administradores tienen acceso a todas las asignaturas
+    if current_user.role == "admin":
+        return True
+    
+    # Para profesores, verificar que estén asignados a la asignatura
+    if current_user.role == "teacher":
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+        
+        # Verificar si el profesor está asignado a esta asignatura
+        is_assigned = any(user.id == current_user.id for user in subject.users)
+        if not is_assigned:
+            raise HTTPException(
+                status_code=403, 
+                detail="No tienes permisos para acceder a esta asignatura"
+            )
+    
+    return True
 
 @documents_routes.post("/upload", response_model=APIResponse)
 async def upload_document(
@@ -145,12 +167,15 @@ async def generate_subject_summary_endpoint(
     subject_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: dict = Depends(require_role(["admin"]))
+    _: dict = Depends(require_role(["teacher", "admin"]))
 ):
     """
     Genera un resumen de todos los documentos de una asignatura.
-    Solo accesible para administradores.
+    Accesible para profesores y administradores.
     """
+    # Validar que el usuario tenga acceso a la asignatura
+    validate_subject_access(current_user, subject_id, db)
+    
     try:
         summary = await generate_subject_summary(subject_id, db)
         return {
@@ -167,12 +192,15 @@ def update_subject_summary_endpoint(
     new_summary: str = Form(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: dict = Depends(require_role(["admin"]))
+    _: dict = Depends(require_role(["teacher", "admin"]))
 ):
     """
     Actualiza el resumen de una asignatura con un nuevo texto proporcionado.
-    Solo accesible para administradores.
+    Accesible para profesores y administradores.
     """
+    # Validar que el usuario tenga acceso a la asignatura
+    validate_subject_access(current_user, subject_id, db)
+    
     try:
         success = update_subject_summary(subject_id, db, new_summary)
         if success:
@@ -183,6 +211,27 @@ def update_subject_summary_endpoint(
             }
         else:
             raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@documents_routes.get("/topic/{topic_id}", response_model=APIResponse)
+def get_documents_by_topic(
+    topic_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+):
+    """
+    Obtiene todos los documentos asociados a un tema específico.
+    Accesible para profesores, estudiantes y administradores.
+    """
+    try:
+        documents = get_documents_by_topic_id(db, topic_id, current_user)
+        return {
+            "data": documents,
+            "message": f"Documentos del tema {topic_id} obtenidos exitosamente",
+            "status": 200
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

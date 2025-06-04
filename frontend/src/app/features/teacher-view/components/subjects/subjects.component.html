@@ -5,6 +5,83 @@
     <p class="subject-description">{{ subject.description }}</p>
   </div>
   
+  <!-- Sección de resumen de la asignatura -->
+  <div class="subject-summary-section" *ngIf="subject">
+    <div class="summary-header">
+      <h3>Resumen de la Asignatura</h3>
+      <button 
+        class="summary-action-btn" 
+        (click)="toggleSummaryEditor()"
+        [disabled]="isGeneratingSummary || isUpdatingSummary"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="m18.5 2.5 3 3L13 14l-4 1 1-4 8.5-8.5z"></path>
+        </svg>
+        {{ showSummaryEditor ? 'Cancelar' : 'Editar Resumen' }}
+      </button>
+    </div>
+    
+    <!-- Vista del resumen existente -->
+    <div class="summary-display" *ngIf="!showSummaryEditor">
+      <div class="summary-content" *ngIf="subject.summary; else noSummary">
+        <p>{{ subject.summary }}</p>
+      </div>
+      <ng-template #noSummary>
+        <div class="no-summary">
+          <p>No hay resumen disponible para esta asignatura.</p>
+          <button 
+            class="generate-btn" 
+            (click)="generateSummary()"
+            [disabled]="isGeneratingSummary"
+          >
+            <span *ngIf="isGeneratingSummary" class="loading-spinner"></span>
+            {{ isGeneratingSummary ? 'Generando...' : 'Generar Resumen Automático' }}
+          </button>
+        </div>
+      </ng-template>
+    </div>
+    
+    <!-- Editor de resumen -->
+    <div class="summary-editor" *ngIf="showSummaryEditor">
+      <div class="editor-actions">
+        <button 
+          class="generate-auto-btn" 
+          (click)="generateSummary()"
+          [disabled]="isGeneratingSummary"
+        >
+          <span *ngIf="isGeneratingSummary" class="loading-spinner"></span>
+          {{ isGeneratingSummary ? 'Generando...' : 'Generar Automáticamente' }}
+        </button>
+      </div>
+      
+      <textarea 
+        [(ngModel)]="subjectSummary"
+        placeholder="Escriba aquí el resumen de la asignatura..."
+        class="summary-textarea"
+        rows="6"
+      ></textarea>
+      
+      <div class="editor-buttons">
+        <button 
+          class="cancel-btn" 
+          (click)="cancelSummaryEdit()"
+          [disabled]="isUpdatingSummary"
+        >
+          Cancelar
+        </button>
+        <button 
+          class="save-btn" 
+          (click)="saveSummary()"
+          [disabled]="!subjectSummary.trim() || !hasSummaryChanged() || isUpdatingSummary"
+        >
+          <span *ngIf="isUpdatingSummary" class="loading-spinner"></span>
+          {{ isUpdatingSummary ? 'Guardando...' : 'Guardar Resumen' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="subject-content">
     <!-- Panel izquierdo - Lista de estudiantes -->
     <div class="student-panel">
@@ -118,7 +195,14 @@
       </div>
       
       <div class="documents-list" *ngIf="selectedTopicId">
-        <div class="document-card" *ngFor="let doc of getFilteredDocumentsByTopic(selectedTopicId)">
+        <!-- Estado de carga -->
+        <div class="loading-state" *ngIf="isLoadingDocuments">
+          <div class="loading-spinner"></div>
+          <p>Cargando documentos...</p>
+        </div>
+        
+        <!-- Lista de documentos -->
+        <div class="document-card" *ngFor="let doc of documents" [hidden]="isLoadingDocuments">
           <div class="document-icon" [ngClass]="doc.type">
             <svg *ngIf="doc.type === 'pdf'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -157,7 +241,7 @@
           </div>
         </div>
         
-        <div class="no-documents" *ngIf="getFilteredDocumentsByTopic(selectedTopicId).length === 0">
+        <div class="no-documents" *ngIf="documents.length === 0 && !isLoadingDocuments">
           <p>No hay documentos disponibles para este tema</p>
           <button class="upload-btn" (click)="uploadDocument(selectedTopicId)">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
