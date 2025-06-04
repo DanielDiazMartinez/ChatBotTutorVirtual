@@ -120,6 +120,7 @@ class Document(Base):
     title = Column(String, nullable=False)
     file_path = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    summary = Column(Text, nullable=True)  # Resumen del documento generado por IA
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
     topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
@@ -200,6 +201,7 @@ class Subject(Base):
     name = Column(String, nullable=False)
     code = Column(String, nullable=False, unique=True)
     description = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True)  # Resumen de la asignatura generado por IA
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     users = relationship(

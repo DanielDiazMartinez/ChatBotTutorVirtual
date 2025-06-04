@@ -347,3 +347,33 @@ def generate_google_ai_response(
     except Exception as e:
         logger.error(f"Error inesperado durante llamada a Google AI: {type(e).__name__} - {e}")
         return "Lo siento, ocurrió un error inesperado al procesar la solicitud de IA con la imagen."
+
+def generate_google_ai_simple(prompt: str) -> str:
+    """
+    Función genérica para llamar a la API de Google AI con cualquier prompt.
+    
+    Args:
+        prompt: El prompt completo a enviar a la API
+        
+    Returns:
+        La respuesta generada por el modelo de Google AI
+    """
+    if google_client is None:
+        logger.error("ERROR: generate_google_ai_simple llamado pero el cliente de Google AI no es válido!")
+        return "Lo siento, la configuración del servicio de IA no es correcta."
+
+    try:
+        logger.info("Ejecutando llamada a Google AI API con prompt personalizado")
+        
+        response = google_client.generate_content(prompt)
+        
+        if response.text:
+            logger.info("Respuesta de Google AI obtenida exitosamente")
+            return response.text.strip()
+        else:
+            logger.warning("Google AI no devolvió texto en la respuesta")
+            return "Lo siento, no recibí una respuesta válida del modelo de IA."
+            
+    except Exception as e:
+        logger.error(f"Error inesperado durante llamada a Google AI: {type(e).__name__} - {e}")
+        return f"Lo siento, ocurrió un error al procesar la solicitud: {str(e)}"

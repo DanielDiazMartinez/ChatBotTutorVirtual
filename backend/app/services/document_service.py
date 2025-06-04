@@ -4,10 +4,14 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.models import Document
 from app.models.schemas import DocumentCreate
-from fastapi import HTTPException, UploadFile, logger
+from fastapi import HTTPException, UploadFile
+import logging
+
+logger = logging.getLogger(__name__)
 from app.core.config import settings
 
 from app.services.embedding_service import create_document_chunks
+from app.services.summary_service import update_document_summary
 from ..utils.document_utils import extract_text_from_pdf
 
 
@@ -59,6 +63,15 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
     
     create_document_chunks(db, new_document.id, content)
+    
+    # Generar resumen del documento después de procesar los chunks
+    try:
+        import asyncio
+        asyncio.create_task(update_document_summary(new_document.id, db))
+        logger.info(f"Resumen generado para el documento {new_document.id}")
+    except Exception as e:
+        logger.warning(f"Error al generar resumen para documento {new_document.id}: {e}")
+        
         
     return new_document
 

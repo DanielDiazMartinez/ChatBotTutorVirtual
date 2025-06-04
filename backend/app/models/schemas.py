@@ -84,6 +84,7 @@ class TokenData(BaseModel):
 class DocumentBase(BaseModel):
     title: str
     description: Optional[str] = None
+    summary: Optional[str] = None
 
 class DocumentCreate(DocumentBase):    
     user_id: int
