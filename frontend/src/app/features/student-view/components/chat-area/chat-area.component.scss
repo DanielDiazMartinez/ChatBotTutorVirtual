@@ -53,7 +53,7 @@
     flex-direction: column;
     width: 100%;
     transition: all 0.3s ease;
-    margin-bottom: 80px; // Espacio suficiente para que no se oculten los mensajes detrás del input
+    margin-bottom: 110px; // Espacio optimizado para evitar que los mensajes largos se oculten detrás del input
 
     &.drawer-open {
       width: 100%; // Mantenemos el ancho completo
@@ -64,7 +64,7 @@
       width: 100%;
       max-width: 800px;
       margin: 0 auto;
-      padding: 0 2rem; // Reducir padding horizontal
+      padding: 0 2rem 1rem 2rem; // Padding inferior reducido para equilibrar el espacio
       display: flex;
       flex-direction: column;
       align-items: stretch; // Cambiar a stretch para mejor alineación
