@@ -18,6 +18,37 @@
   
   <!-- Área de texto y botones -->
   <div class="input-and-buttons">
+    <!-- Contenedor del menú de prompts -->
+    <div class="prompt-menu-container">
+      <button 
+        class="prompt-button" 
+        title="Prompts predefinidos" 
+        (click)="togglePromptMenu()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      
+      <!-- Menú desplegable de prompts -->
+      <div class="prompt-menu" *ngIf="showPromptMenu">
+        <div class="prompt-menu-header">
+          <h4>Prompts Predefinidos</h4>
+        </div>
+        <div class="prompt-list">
+          <button 
+            *ngFor="let prompt of predefinedPrompts" 
+            class="prompt-item"
+            (click)="selectPrompt(prompt)">
+            <span class="prompt-icon">{{ prompt.icon }}</span>
+            <div class="prompt-content">
+              <div class="prompt-title">{{ prompt.title }}</div>
+              <div class="prompt-preview">{{ prompt.text.substring(0, 80) }}...</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <button 
       class="attach-button" 
       title="Adjuntar imagen" 

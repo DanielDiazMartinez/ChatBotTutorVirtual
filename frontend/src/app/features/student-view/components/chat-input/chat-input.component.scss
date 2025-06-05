@@ -94,6 +94,118 @@
   }
 }
 
+.prompt-menu-container {
+  position: relative;
+  
+  .prompt-button {
+    background: none;
+    border: none;
+    color: #8FBC94;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    
+    &:hover {
+      background-color: rgba(143, 188, 148, 0.1);
+      color: #3f6464;
+    }
+    
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .prompt-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 0.5rem;
+    background: white;
+    border: 1px solid #e0e8e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    
+    .prompt-menu-header {
+      padding: 1rem 1rem 0.5rem;
+      border-bottom: 1px solid #f0f0f0;
+      
+      h4 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #3f6464;
+      }
+    }
+    
+    .prompt-list {
+      padding: 0.5rem;
+      
+      .prompt-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        background: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background-color: #f8fff8;
+        }
+        
+        .prompt-icon {
+          font-size: 1.2rem;
+          flex-shrink: 0;
+        }
+        
+        .prompt-content {
+          flex: 1;
+          
+          .prompt-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #3f6464;
+            margin-bottom: 0.25rem;
+          }
+          
+          .prompt-preview {
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.3;
+          }
+        }
+      }
+    }
+    
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c5c5c5;
+      border-radius: 2px;
+    }
+  }
+}
+
 .chat-input {
   flex: 1;
   border: none;
@@ -172,6 +284,7 @@
   }
   
   .attach-button,
+  .prompt-button,
   .send-button {
     width: 36px;
     height: 36px;
@@ -179,6 +292,25 @@
     svg {
       width: 18px;
       height: 18px;
+    }
+  }
+  
+  .prompt-menu-container .prompt-menu {
+    width: 280px;
+    max-height: 300px;
+    
+    .prompt-list .prompt-item {
+      padding: 0.5rem;
+      
+      .prompt-content {
+        .prompt-title {
+          font-size: 0.8rem;
+        }
+        
+        .prompt-preview {
+          font-size: 0.7rem;
+        }
+      }
     }
   }
 }

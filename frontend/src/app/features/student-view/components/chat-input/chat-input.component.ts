@@ -7,6 +7,12 @@ export interface ChatMessageInput {
   file?: File;
 }
 
+export interface PredefinedPrompt {
+  title: string;
+  text: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-chat-input',
   standalone: true,
@@ -22,6 +28,41 @@ export class ChatInputComponent implements AfterViewInit {
   message: string = '';
   selectedFile: File | null = null;
   selectedFileName: string = '';
+  showPromptMenu: boolean = false;
+
+  // Prompts predefinidos
+  predefinedPrompts: PredefinedPrompt[] = [
+    {
+      title: 'Crear Examen Completo',
+      text: 'Crea un examen de 10 preguntas sobre los temas que hemos visto en la asignatura. Incluye 5 preguntas de opción múltiple, 3 de verdadero/falso y 2 de desarrollo.',
+      icon: '📝'
+    },
+    {
+      title: 'Resumen de Tema',
+      text: 'Crea un resumen completo y estructurado de los temas principales que hemos estudiado en la asignatura.',
+      icon: '📋'
+    },
+    {
+      title: 'Ejercicios de Práctica',
+      text: 'Genera ejercicios de práctica sobre los conceptos más importantes de la asignatura con sus respectivas soluciones.',
+      icon: '🏋️'
+    },
+    {
+      title: 'Mapa Conceptual',
+      text: 'Elabora un mapa conceptual en formato texto que muestre las relaciones entre los conceptos principales de la asignatura.',
+      icon: '🗺️'
+    },
+    {
+      title: 'Guía de Estudio',
+      text: 'Crea una guía de estudio organizada con los puntos clave, técnicas de memorización y recomendaciones para preparar el examen.',
+      icon: '📚'
+    },
+    {
+      title: 'Preguntas Frecuentes',
+      text: 'Identifica y responde las preguntas más frecuentes sobre los temas de la asignatura que suelen tener los estudiantes.',
+      icon: '❓'
+    }
+  ];
 
   ngAfterViewInit(): void {
     if (this.messageInput?.nativeElement) { 
@@ -32,6 +73,14 @@ export class ChatInputComponent implements AfterViewInit {
   @HostListener('input', ['$event.target'])
   onInput(textArea: HTMLTextAreaElement): void {
     this.adjustTextareaHeight();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.prompt-menu-container')) {
+      this.showPromptMenu = false;
+    }
   }
 
   adjustTextareaHeight(): void {
@@ -84,5 +133,19 @@ export class ChatInputComponent implements AfterViewInit {
     if (this.fileInput?.nativeElement) {
       this.fileInput.nativeElement.value = '';
     }
+  }
+
+  togglePromptMenu(): void {
+    this.showPromptMenu = !this.showPromptMenu;
+  }
+
+  selectPrompt(prompt: PredefinedPrompt): void {
+    this.message = prompt.text;
+    this.showPromptMenu = false;
+    
+    // Ajustar la altura del textarea después de establecer el mensaje
+    setTimeout(() => {
+      this.adjustTextareaHeight();
+    }, 0);
   }
 }
