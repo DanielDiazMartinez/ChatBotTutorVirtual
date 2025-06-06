@@ -1,5 +1,5 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from typing import Dict, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, logger, status, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlalchemy import Tuple
 from sqlalchemy.orm import Session
@@ -336,5 +336,147 @@ async def get_conversation_message_history(
         "message": "Mensajes obtenidos correctamente",
         "status": 200
     }
+
+@chat_routes.get("/messages", response_model=APIResponse)
+async def get_user_messages(
+    subject_id: Optional[int] = Query(None, description="Filtrar por ID de asignatura"),
+    topic_id: Optional[int] = Query(None, description="Filtrar por ID de tema"),
+    user_id: Optional[int] = Query(None, description="Filtrar por ID de usuario"),
+    limit: Optional[int] = Query(None, description="Límite de resultados"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Obtener todos los mensajes de usuarios con información del usuario
+    
+    Este endpoint devuelve todos los mensajes realizados por usuarios (no bot) 
+    junto con información del usuario, asignatura y tema.
+    Solo accesible para administradores y profesores.
+    """
+    from ..services.message_service import get_user_messages_with_filters
+    
+    try:
+        messages_data = get_user_messages_with_filters(
+            db=db,
+            subject_id=subject_id,
+            topic_id=topic_id,
+            user_id=user_id,
+            limit=limit
+        )
+        
+        return {
+            "data": messages_data,
+            "message": f"Se encontraron {len(messages_data)} mensajes",
+            "status": 200
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener mensajes: {str(e)}"
+        )
+
+@chat_routes.get("/messages/statistics", response_model=APIResponse)
+async def get_messages_statistics(
+    subject_id: Optional[int] = Query(None, description="Filtrar por ID de asignatura"),
+    topic_id: Optional[int] = Query(None, description="Filtrar por ID de tema"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Obtener estadísticas sobre los mensajes de usuarios
+    
+    Devuelve información estadística como total de mensajes, usuarios únicos,
+    y distribución por asignaturas.
+    Solo accesible para administradores y profesores.
+    """
+    from ..services.message_service import get_messages_statistics
+    
+    try:
+        statistics = get_messages_statistics(
+            db=db,
+            subject_id=subject_id,
+            topic_id=topic_id
+        )
+        
+        return {
+            "data": statistics,
+            "message": "Estadísticas obtenidas correctamente",
+            "status": 200
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener estadísticas: {str(e)}"
+        )
+
+@chat_routes.get("/messages/{message_id}", response_model=APIResponse)
+async def get_message_by_id(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Obtener un mensaje específico por su ID
+    
+    Solo accesible para administradores y profesores.
+    """
+    from ..services.message_service import get_message_by_id
+    
+    try:
+        message = get_message_by_id(db=db, message_id=message_id)
+        
+        if not message:
+            raise HTTPException(
+                status_code=404,
+                detail="Mensaje no encontrado"
+            )
+        
+        return {
+            "data": message,
+            "message": "Mensaje obtenido correctamente",
+            "status": 200
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener el mensaje: {str(e)}"
+        )
+
+@chat_routes.get("/messages/recent/{limit}", response_model=APIResponse)
+async def get_recent_messages(
+    limit: int = 10,
+    subject_id: Optional[int] = Query(None, description="Filtrar por ID de asignatura"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Obtener los mensajes más recientes
+    
+    Solo accesible para administradores y profesores.
+    """
+    from ..services.message_service import get_recent_messages
+    
+    try:
+        if limit > 100:  # Limitar para evitar sobrecarga
+            limit = 100
+            
+        recent_messages = get_recent_messages(
+            db=db,
+            limit=limit,
+            subject_id=subject_id
+        )
+        
+        return {
+            "data": recent_messages,
+            "message": f"Se obtuvieron los {len(recent_messages)} mensajes más recientes",
+            "status": 200
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener mensajes recientes: {str(e)}"
+        )
 
 

@@ -1,25 +1,31 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { SubjectService } from '../../../../core/services/subject.service';
+import { ChatService } from '../../../../core/services/chat.service';
+import { Subject } from '../../../../core/services/subject.service';
 
 interface Question {
   id: string;
   text: string;
   subject: string;
   topic: string;
-  difficulty: 'Fácil' | 'Media' | 'Difícil';
-  correctPercentage: number;
-  attempts: number;
+  userId: string;
+  userName: string;
+  userEmail?: string;
 }
 
 interface QuestionStats {
   totalQuestions: number;
-  averageSuccess: number;
-  byDifficulty: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
+  uniqueUsers?: number;
+  questionsBySubject?: { [key: string]: number };
+}
+
+interface Topic {
+  id: string;
+  name: string;
+  description: string;
+  subject_id: number;
 }
 
 @Component({
@@ -29,100 +35,162 @@ interface QuestionStats {
   templateUrl: './questions.component.html',
   styleUrls: ['./questions.component.scss']
 })
-export class QuestionsComponent {
+export class QuestionsComponent implements OnInit {
   selectedSubject: string = 'Todas';
   selectedTopic: string = 'Todos';
   
   stats: QuestionStats = {
-    totalQuestions: 125,
-    averageSuccess: 68.4,
-    byDifficulty: {
-      easy: 85.2,
-      medium: 62.7,
-      hard: 41.3
-    }
+    totalQuestions: 0,
+    uniqueUsers: 0,
+    questionsBySubject: {}
   };
 
-  questions: Question[] = [
-    {
-      id: '1',
-      text: '¿Cuál es la fórmula del área de un círculo?',
-      subject: 'Matemáticas',
-      topic: 'Geometría',
-      difficulty: 'Fácil',
-      correctPercentage: 92.5,
-      attempts: 240
-    },
-    {
-      id: '2',
-      text: 'Explique la ley de Ohm y su aplicación en circuitos eléctricos.',
-      subject: 'Física',
-      topic: 'Electricidad',
-      difficulty: 'Media',
-      correctPercentage: 67.8,
-      attempts: 185
-    },
-    {
-      id: '3',
-      text: 'Analice la estructura molecular del ADN y explique su función.',
-      subject: 'Biología',
-      topic: 'Genética',
-      difficulty: 'Difícil',
-      correctPercentage: 38.2,
-      attempts: 156
-    },
-    {
-      id: '4',
-      text: 'Describa las principales características del Romanticismo en la literatura.',
-      subject: 'Literatura',
-      topic: 'Movimientos Literarios',
-      difficulty: 'Media',
-      correctPercentage: 71.5,
-      attempts: 128
-    },
-    {
-      id: '5',
-      text: 'Resuelva la siguiente ecuación diferencial: dy/dx = 2xy',
-      subject: 'Matemáticas',
-      topic: 'Cálculo',
-      difficulty: 'Difícil',
-      correctPercentage: 45.3,
-      attempts: 112
-    }
-  ];
+  questions: Question[] = [];
+  subjects: Subject[] = [];
+  topics: Topic[] = [];
+  allTopics: Topic[] = []; // Para almacenar todos los temas
 
-  subjects = ['Todas', 'Matemáticas', 'Física', 'Biología', 'Literatura'];
-  topics = ['Todos', 'Geometría', 'Cálculo', 'Electricidad', 'Genética', 'Movimientos Literarios'];
+  constructor(
+    private subjectService: SubjectService,
+    private chatService: ChatService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadSubjects();
+    this.loadAllTopics();
+    this.loadQuestions();
+    this.loadStatistics();
+  }
+
+  loadSubjects(): void {
+    this.subjectService.getSubjects().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.subjects = response.data;
+          console.log('Asignaturas cargadas:', this.subjects);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar asignaturas:', error);
+      }
+    });
+  }
+
+  loadAllTopics(): void {
+    // Por ahora cargaremos todos los temas disponibles
+    // En el futuro podrías implementar un endpoint específico para obtener todos los temas
+    this.allTopics = [];
+    this.topics = [];
+  }
+
+  loadTopicsForSubject(subjectId: string): void {
+    if (!subjectId || subjectId === 'Todas') {
+      this.topics = this.allTopics;
+      return;
+    }
+
+    this.subjectService.getTopicsBySubject(subjectId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.topics = response.data.map((topic: any) => ({
+            id: topic.id.toString(),
+            name: topic.name,
+            description: topic.description || '',
+            subject_id: topic.subject_id
+          }));
+          console.log('Temas cargados para la asignatura:', this.topics);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar temas:', error);
+        this.topics = [];
+      }
+    });
+  }
+
+  loadQuestions(subjectId?: number, topicId?: number): void {
+    this.chatService.getUserMessages(subjectId, topicId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.questions = response.data;
+          console.log('Mensajes cargados:', this.questions);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar mensajes:', error);
+        this.questions = [];
+      }
+    });
+  }
+
+  loadStatistics(subjectId?: number, topicId?: number): void {
+    this.chatService.getMessagesStatistics(subjectId, topicId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.stats = {
+            totalQuestions: response.data.total_messages || 0,
+            uniqueUsers: response.data.unique_users || 0,
+            questionsBySubject: response.data.messages_by_subject || {}
+          };
+          console.log('Estadísticas cargadas:', this.stats);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas:', error);
+        this.stats = {
+          totalQuestions: 0,
+          uniqueUsers: 0,
+          questionsBySubject: {}
+        };
+      }
+    });
+  }
 
   onSubjectChange(event: Event): void {
     this.selectedSubject = (event.target as HTMLSelectElement).value;
-    // Aquí filtrarías los temas según la asignatura seleccionada
-    // Y después filtrarías las preguntas
+    this.selectedTopic = 'Todos'; // Reset topic selection
+    
+    if (this.selectedSubject === 'Todas') {
+      this.topics = this.allTopics;
+      this.loadQuestions(); // Cargar todas las preguntas
+      this.loadStatistics(); // Cargar todas las estadísticas
+    } else {
+      const selectedSubjectData = this.subjects.find(s => s.name === this.selectedSubject);
+      if (selectedSubjectData) {
+        this.loadTopicsForSubject(selectedSubjectData.id);
+        const subjectId = Number(selectedSubjectData.id);
+        this.loadQuestions(subjectId); // Cargar preguntas filtradas por asignatura
+        this.loadStatistics(subjectId); // Cargar estadísticas filtradas por asignatura
+      }
+    }
   }
 
   onTopicChange(event: Event): void {
     this.selectedTopic = (event.target as HTMLSelectElement).value;
-    // Aquí filtrarías las preguntas por tema
+    
+    // Cargar preguntas y estadísticas filtradas por asignatura y tema
+    const selectedSubjectData = this.subjects.find(s => s.name === this.selectedSubject);
+    const selectedTopicData = this.topics.find(t => t.name === this.selectedTopic);
+    
+    const subjectId = selectedSubjectData && this.selectedSubject !== 'Todas' ? Number(selectedSubjectData.id) : undefined;
+    const topicId = selectedTopicData && this.selectedTopic !== 'Todos' ? Number(selectedTopicData.id) : undefined;
+    
+    this.loadQuestions(subjectId, topicId);
+    this.loadStatistics(subjectId, topicId);
   }
 
   getFilteredQuestions(): Question[] {
-    return this.questions
-      .filter(q => this.selectedSubject === 'Todas' || q.subject === this.selectedSubject)
-      .filter(q => this.selectedTopic === 'Todos' || q.topic === this.selectedTopic);
+    // Ya no necesitamos filtrar aquí porque el filtrado se hace en el backend
+    return this.questions;
   }
 
-  getDifficultyClass(difficulty: string): string {
-    switch(difficulty) {
-      case 'Fácil': return 'easy';
-      case 'Media': return 'medium';
-      case 'Difícil': return 'hard';
-      default: return '';
-    }
+  getSubjectNames(): string[] {
+    const names = ['Todas', ...this.subjects.map(s => s.name)];
+    return names;
   }
 
-  getSuccessRateClass(rate: number): string {
-    if (rate >= 75) return 'high';
-    if (rate >= 50) return 'medium';
-    return 'low';
+  getTopicNames(): string[] {
+    const names = ['Todos', ...this.topics.map(t => t.name)];
+    return names;
   }
 }

@@ -73,4 +73,112 @@ export class ChatService {
   getTeacherDocuments(): Observable<ApiResponse<Document[]>> {
     return this.api.get<Document[]>('documents/list');
   }
+
+  getUserMessages(subjectId?: number, topicId?: number, userId?: number, limit?: number): Observable<ApiResponse<any[]>> {
+    let url = 'chat/messages';
+    const params: string[] = [];
+    
+    if (subjectId) {
+      params.push(`subject_id=${subjectId}`);
+    }
+    
+    if (topicId) {
+      params.push(`topic_id=${topicId}`);
+    }
+
+    if (userId) {
+      params.push(`user_id=${userId}`);
+    }
+
+    if (limit) {
+      params.push(`limit=${limit}`);
+    }
+    
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+    
+    return this.api.get<any[]>(url);
+  }
+
+  getMessagesStatistics(subjectId?: number, topicId?: number): Observable<ApiResponse<any>> {
+    let url = 'chat/messages/statistics';
+    const params: string[] = [];
+    
+    if (subjectId) {
+      params.push(`subject_id=${subjectId}`);
+    }
+    
+    if (topicId) {
+      params.push(`topic_id=${topicId}`);
+    }
+    
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+    
+    return this.api.get<any>(url);
+  }
+
+  getMessageById(messageId: number): Observable<ApiResponse<any>> {
+    return this.api.get<any>(`chat/messages/${messageId}`);
+  }
+
+  getRecentMessages(limit: number = 10, subjectId?: number): Observable<ApiResponse<any[]>> {
+    let url = `chat/messages/recent/${limit}`;
+    
+    if (subjectId) {
+      url += `?subject_id=${subjectId}`;
+    }
+    
+    return this.api.get<any[]>(url);
+  }
+
+  // Métodos para análisis de IA de temas (mantenemos compatibilidad)
+  analyzeMessageTopic(messageId: number): Observable<any> {
+    return this.api.post<any>(`chat/messages/${messageId}/analyze-topic`, {});
+  }
+
+  autoAssignTopicToMessage(messageId: number): Observable<any> {
+    return this.api.post<any>(`chat/messages/${messageId}/auto-assign-topic`, {});
+  }
+
+  bulkAssignTopicsToMessages(messageIds: number[]): Observable<any> {
+    return this.api.post<any>(`chat/messages/bulk-assign-topics`, {
+      message_ids: messageIds
+    });
+  }
+
+  getAvailableTopicsForAI(): Observable<any> {
+    return this.api.get<any>(`ai/available-topics`);
+  }
+
+  // Backward compatibility methods - delegate to new message methods
+  getUserQuestions(subjectId?: number, topicId?: number, userId?: number, limit?: number): Observable<ApiResponse<any[]>> {
+    return this.getUserMessages(subjectId, topicId, userId, limit);
+  }
+
+  getQuestionsStatistics(subjectId?: number, topicId?: number): Observable<ApiResponse<any>> {
+    return this.getMessagesStatistics(subjectId, topicId);
+  }
+
+  getQuestionById(questionId: number): Observable<ApiResponse<any>> {
+    return this.getMessageById(questionId);
+  }
+
+  getRecentQuestions(limit: number = 10, subjectId?: number): Observable<ApiResponse<any[]>> {
+    return this.getRecentMessages(limit, subjectId);
+  }
+
+  analyzeQuestionTopic(questionId: number): Observable<any> {
+    return this.analyzeMessageTopic(questionId);
+  }
+
+  autoAssignTopicToQuestion(questionId: number): Observable<any> {
+    return this.autoAssignTopicToMessage(questionId);
+  }
+
+  bulkAssignTopicsToQuestions(questionIds: number[]): Observable<any> {
+    return this.bulkAssignTopicsToMessages(questionIds);
+  }
 }
