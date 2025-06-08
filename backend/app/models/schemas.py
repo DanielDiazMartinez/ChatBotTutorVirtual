@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 # ----------------------------------------
 # SCHEMA PARA USUARIOS
@@ -279,5 +279,42 @@ class APIResponse(BaseModel):
     error: Optional[str] = None
     status: Optional[int] = 200
 
+    model_config = ConfigDict(from_attributes=True)
+
+# ----------------------------------------
+# SCHEMA PARA ANÁLISIS DE ESTUDIANTES
+# ----------------------------------------
+
+class StudentAnalysisStatistics(BaseModel):
+    """
+    Modelo para estadísticas de participación de estudiantes en una asignatura.
+    """
+    total_messages: int = Field(..., example=150)
+    unique_students: int = Field(..., example=25)
+    participation_rate: float = Field(..., example=0.75)
+    most_active_students: List[Dict[str, Any]] = Field(default_factory=list)
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class StudentAnalysisSummary(BaseModel):
+    """
+    Modelo para el resumen completo del análisis de estudiantes.
+    """
+    subject_id: int = Field(..., example=1)
+    subject_name: str = Field(..., example="Matemáticas Básicas")
+    analysis_summary: str = Field(..., description="Resumen generado por IA sobre las deficiencias y gaps identificados")
+    statistics: StudentAnalysisStatistics
+    sample_questions: List[str] = Field(default_factory=list, description="Muestra de preguntas representativas")
+    analysis_date: datetime = Field(default_factory=datetime.now)
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class StudentAnalysisRequest(BaseModel):
+    """
+    Modelo para solicitar análisis de estudiantes con parámetros opcionales.
+    """
+    days_back: Optional[int] = Field(default=30, example=30, description="Días hacia atrás para analizar mensajes")
+    min_participation: Optional[int] = Field(default=1, example=1, description="Mínimo de mensajes por estudiante")
+    
     model_config = ConfigDict(from_attributes=True)
 

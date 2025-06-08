@@ -259,6 +259,147 @@
       </div>
     </div>
   </div>
+
+  <!-- Sección de análisis de estudiantes -->
+  <div class="student-analysis-section" *ngIf="subject">
+    <div class="analysis-header">
+      <h3>Análisis de Participación de Estudiantes</h3>
+      <button 
+        class="analysis-toggle-btn" 
+        (click)="toggleAnalysisSection()"
+        [disabled]="isGeneratingAnalysis"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 0-9-4-9-9s4-9 9-9 9 4 9 9-4 9-9 9"></path>
+          <path d="m9 9 3 3 3-3"></path>
+        </svg>
+        {{ showAnalysisSection ? 'Ocultar Análisis' : 'Ver Análisis' }}
+      </button>
+    </div>
+
+    <!-- Panel de análisis expandible -->
+    <div class="analysis-content" *ngIf="showAnalysisSection">
+      <!-- Configuración del análisis -->
+      <div class="analysis-settings">
+        <h4>Configuración del Análisis</h4>
+        <div class="settings-row">
+          <div class="setting-item">
+            <label for="daysBack">Período de análisis (días):</label>
+            <input 
+              type="number" 
+              id="daysBack"
+              [(ngModel)]="analysisSettings.days_back"
+              min="1" 
+              max="365"
+              (change)="updateAnalysisSettings()"
+              class="setting-input"
+            >
+          </div>
+          <div class="setting-item">
+            <label for="minParticipation">Participación mínima:</label>
+            <input 
+              type="number" 
+              id="minParticipation"
+              [(ngModel)]="analysisSettings.min_participation"
+              min="1"
+              (change)="updateAnalysisSettings()"
+              class="setting-input"
+            >
+          </div>
+          <button 
+            class="refresh-btn"
+            (click)="refreshAnalysis()"
+            [disabled]="isGeneratingAnalysis"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M3 21v-5h5"></path>
+            </svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado de carga -->
+      <div class="analysis-loading" *ngIf="isGeneratingAnalysis">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <p>Generando análisis con IA...</p>
+          <small>Este proceso puede tomar unos momentos</small>
+        </div>
+      </div>
+
+      <!-- Resultados del análisis -->
+      <div class="analysis-results" *ngIf="studentAnalysis && !isGeneratingAnalysis">
+        <!-- Estadísticas generales -->
+        <div class="stats-section">
+          <h4>Estadísticas de Participación</h4>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">{{ studentAnalysis.statistics.total_messages }}</div>
+              <div class="stat-label">Total de Mensajes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ studentAnalysis.statistics.unique_students }}</div>
+              <div class="stat-label">Estudiantes Activos</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatParticipationRate(studentAnalysis.statistics.participation_rate) }}</div>
+              <div class="stat-label">Tasa de Participación</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estudiantes más activos -->
+        <div class="active-students-section" *ngIf="studentAnalysis.statistics.most_active_students?.length > 0">
+          <h4>Estudiantes Más Activos</h4>
+          <div class="active-students-list">
+            <div 
+              class="student-item" 
+              *ngFor="let student of studentAnalysis.statistics.most_active_students.slice(0, 5)"
+            >
+              <span class="student-name">{{ student.student_name }}</span>
+              <span class="message-count">{{ student.message_count }} mensajes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen del análisis de IA -->
+        <div class="ai-analysis-section">
+          <h4>Análisis de Deficiencias Identificadas</h4>
+          <div class="analysis-summary">
+            <div [innerHTML]="studentAnalysis.analysis_summary"></div>
+          </div>
+          <div class="analysis-meta">
+            <small>Análisis generado el {{ formatAnalysisDate(studentAnalysis.analysis_date) }}</small>
+          </div>
+        </div>
+
+        <!-- Preguntas de muestra -->
+        <div class="sample-questions-section" *ngIf="studentAnalysis.sample_questions?.length > 0">
+          <h4>Preguntas Representativas</h4>
+          <div class="questions-list">
+            <div 
+              class="question-item" 
+              *ngFor="let question of studentAnalysis.sample_questions"
+            >
+              "{{ question }}"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado cuando no hay datos -->
+      <div class="no-analysis-data" *ngIf="!studentAnalysis && !isGeneratingAnalysis && showAnalysisSection">
+        <p>No se encontraron datos suficientes para generar el análisis en el período especificado.</p>
+        <button class="retry-btn" (click)="generateStudentAnalysis()">
+          Intentar de nuevo
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal de subir documento -->

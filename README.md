@@ -13,9 +13,9 @@ ChatBotTutorVirtual es una plataforma educativa integral que permite a los profe
 - **ORM**: SQLAlchemy
 - **Migraciones**: Alembic
 - **Autenticación**: JWT
-- **Procesamiento LLM**: Groq API
-- **Vectorización**: PineconeDB
-- **Logging**: Sistema de registro para contextos de Groq
+- **Procesamiento LLM**: Google AI API
+- **Vectorización**: pgVector
+- **Logging**: Sistema de registro para contextos de Google AI
 
 ### Base de datos
 - **Motor principal**: PostgreSQL
@@ -106,29 +106,29 @@ El sistema está estructurado alrededor de estos modelos principales:
 
 ## 💡 Implementación Técnica
 
-### Sistema de Logs para Contextos de Groq
+### Sistema de Logs para Contextos de Google AI
 
-El sistema incluye una funcionalidad de logging avanzada para registrar los contextos enviados a la API de Groq:
+El sistema incluye una funcionalidad de logging avanzada para registrar los contextos enviados a la API de Google AI:
 
 1. Guarda automáticamente en archivos JSON el contexto completo de cada consulta, incluyendo:
    - Pregunta del usuario
    - Contexto extraído de los documentos
    - Historial de conversación
-   - Prompt completo enviado a Groq
+   - Prompt completo enviado a Google AI
    - Estadísticas de tokens y longitud
 
 2. Organiza los logs por fecha para facilitar su análisis
 
-3. Incluye una herramienta de análisis (`analyze_groq_logs.py`) para extraer estadísticas y visualizar patrones de uso.
+3. Incluye una herramienta de análisis (`analyze_google_ai_logs.py`) para extraer estadísticas y visualizar patrones de uso.
 
 Para analizar los logs, ejecuta:
 ```bash
-python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_groq_logs.py
+python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_google_ai_logs.py
 ```
 
 Para ver opciones adicionales:
 ```bash
-python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_groq_logs.py --help
+python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_google_ai_logs.py --help
 ```
 
 ### Búsqueda Vectorial

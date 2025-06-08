@@ -20,7 +20,7 @@ alembic upgrade head
 
 # Crear directorios de logs y asignar permisos
 echo "Configurando directorios de logs..."
-mkdir -p /app/logs/chat/groq_contexts
+mkdir -p /app/logs/chat/google_ai_contexts
 chmod -R 777 /app/logs
 
 # Iniciar la aplicación

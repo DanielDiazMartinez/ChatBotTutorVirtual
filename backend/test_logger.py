@@ -1,10 +1,10 @@
-# Test script for groq_logger
+# Test script for google_ai_logger
 import os
 from pathlib import Path
 from datetime import datetime
 import json
 
-LOGS_DIR = Path("/home/dani/Proyectos/ChatBotTutorVirtual/backend/logs/chat/groq_contexts")
+LOGS_DIR = Path("/home/dani/Proyectos/ChatBotTutorVirtual/backend/logs/chat/google_ai_contexts")
 log_path = LOGS_DIR.resolve()
 
 # Ensure directory exists

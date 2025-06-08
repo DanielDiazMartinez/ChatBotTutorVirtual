@@ -1,6 +1,6 @@
 """
-Servicio de logging para Groq - Capa utilitaria
-Este servicio maneja el registro de las interacciones con la API de Groq.
+Servicio de logging para Google AI - Capa utilitaria
+Este servicio maneja el registro de las interacciones con la API de Google AI.
 """
 import os
 import logging
@@ -9,8 +9,8 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
-# Configuración de logging específico para contextos de Groq
-logger = logging.getLogger("groq_context_logger")
+# Configuración de logging específico para contextos de Google AI
+logger = logging.getLogger("google_ai_context_logger")
 logger.setLevel(logging.INFO)
 
 # Determinar la ruta base del proyecto
@@ -22,7 +22,7 @@ else:
     BASE_DIR = Path(__file__).parent.parent.parent
 
 # Crear directorio de logs si no existe
-LOGS_DIR = BASE_DIR / "logs" / "chat" / "groq_contexts"
+LOGS_DIR = BASE_DIR / "logs" / "chat" / "google_ai_contexts"
 try:
     # Asegurar que toda la estructura de directorios existe
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -41,10 +41,10 @@ except Exception as e:
 log_path = LOGS_DIR.resolve()
 
 def setup_file_handler():
-    """Configura un manejador de archivos para el logger de contextos de Groq."""
+    """Configura un manejador de archivos para el logger de contextos de Google AI."""
     # Crear un nuevo archivo de log cada día
     current_date = datetime.now().strftime("%Y-%m-%d")
-    log_file = log_path / f"groq_context_{current_date}.log"
+    log_file = log_path / f"google_ai_context_{current_date}.log"
     
     # Asegurar que el archivo existe
     with open(log_file, "a") as f:
@@ -71,9 +71,9 @@ def setup_file_handler():
 # Configurar el handler de archivo
 file_handler = setup_file_handler()
 
-def log_groq_context(user_id: str, conversation_id: int, user_question: str, context: str, conversation_history: str = "", prompt: str = None):
+def log_google_context(user_id: str, conversation_id: int, user_question: str, context: str, conversation_history: str = "", prompt: str = None):
     """
-    Registra el contexto completo enviado a la API de Groq.
+    Registra el contexto completo enviado a la API de Google AI.
     
     Args:
         user_id: ID del usuario que realiza la consulta
@@ -81,7 +81,7 @@ def log_groq_context(user_id: str, conversation_id: int, user_question: str, con
         user_question: Pregunta realizada por el usuario
         context: Contexto extraído de los documentos
         conversation_history: Historial de la conversación
-        prompt: Prompt completo enviado a Groq (opcional)
+        prompt: Prompt completo enviado a Google AI (opcional)
     """
     try:
         # Crear un directorio específico para la fecha actual
@@ -95,7 +95,7 @@ def log_groq_context(user_id: str, conversation_id: int, user_question: str, con
         
         # Crear un nombre de archivo único basado en timestamp y conversation_id
         timestamp = datetime.now().strftime("%H%M%S")
-        filename = f"groq_context_{timestamp}_{conversation_id}.json"
+        filename = f"google_ai_context_{timestamp}_{conversation_id}.json"
         file_path = str(daily_dir / filename)
         
         # Registrar información de depuración
@@ -105,9 +105,9 @@ def log_groq_context(user_id: str, conversation_id: int, user_question: str, con
         
         # También escribir directamente en el archivo de log general
         current_date = datetime.now().strftime("%Y-%m-%d")
-        log_file = log_path / f"groq_context_{current_date}.log"
+        log_file = log_path / f"google_ai_context_{current_date}.log"
         with open(str(log_file), 'a', encoding='utf-8') as f:
-            f.write(f"\n=== CONTEXTO ENVIADO A GROQ ({datetime.now().isoformat()}) ===\n")
+            f.write(f"\n=== CONTEXTO ENVIADO A GOOGLE AI ({datetime.now().isoformat()}) ===\n")
             f.write(f"Conversación ID: {conversation_id}, Usuario ID: {user_id}\n")
             f.write(f"Pregunta: {user_question}\n\n")
             f.write(f"Contexto completo:\n{context}\n\n")

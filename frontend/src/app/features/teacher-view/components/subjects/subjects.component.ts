@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, RouterModule } from '@angular/router';
-import { SubjectService as CoreSubjectService } from '../../../../core/services/subject.service';
+import { SubjectService as CoreSubjectService, StudentAnalysisRequest } from '../../../../core/services/subject.service';
 import { SubjectService } from '../../../../services/subject.service';
 import { AuthService } from '../../../../services/auth.service';
 import { DocumentService } from '../../../../core/services/document.service';
@@ -58,6 +58,15 @@ export class SubjectsComponent implements OnInit {
   isUpdatingSummary: boolean = false;
   subjectSummary: string = '';
   originalSummary: string = '';
+  
+  // Estado para análisis de estudiantes
+  studentAnalysis: any = null;
+  isGeneratingAnalysis: boolean = false;
+  showAnalysisSection: boolean = false;
+  analysisSettings: StudentAnalysisRequest = {
+    days_back: 30,
+    min_participation: 1
+  };
   
   constructor(
     private route: ActivatedRoute,
@@ -378,5 +387,69 @@ export class SubjectsComponent implements OnInit {
 
   hasSummaryChanged(): boolean {
     return this.subjectSummary !== this.originalSummary;
+  }
+
+  // Métodos para análisis de estudiantes
+  toggleAnalysisSection(): void {
+    this.showAnalysisSection = !this.showAnalysisSection;
+    if (this.showAnalysisSection && !this.studentAnalysis) {
+      this.generateStudentAnalysis();
+    }
+  }
+
+  generateStudentAnalysis(): void {
+    if (!this.subject?.id) return;
+
+    this.isGeneratingAnalysis = true;
+    this.coreSubjectService.generateStudentAnalysis(
+      parseInt(this.subject.id), 
+      this.analysisSettings
+    ).subscribe({
+      next: (response) => {
+        this.studentAnalysis = response.data;
+        this.isGeneratingAnalysis = false;
+      },
+      error: (error) => {
+        console.error('Error al generar análisis de estudiantes:', error);
+        this.isGeneratingAnalysis = false;
+        
+        // Mostrar mensaje específico dependiendo del tipo de error
+        let errorMessage = 'Error al generar el análisis. Por favor, inténtelo de nuevo.';
+        
+        if (error.status === 404) {
+          errorMessage = 'No se encontraron mensajes de estudiantes para analizar en el período especificado. Intente ampliar el rango de días o verificar que los estudiantes estén participando.';
+        } else if (error.status === 500) {
+          errorMessage = 'Error interno del servidor al generar el análisis. Por favor, contacte al administrador si el problema persiste.';
+        }
+        
+        alert(errorMessage);
+      }
+    });
+  }
+
+  refreshAnalysis(): void {
+    this.studentAnalysis = null;
+    this.generateStudentAnalysis();
+  }
+
+  updateAnalysisSettings(): void {
+    if (this.studentAnalysis) {
+      this.refreshAnalysis();
+    }
+  }
+
+  formatParticipationRate(rate: number): string {
+    return `${(rate * 100).toFixed(1)}%`;
+  }
+
+  formatAnalysisDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

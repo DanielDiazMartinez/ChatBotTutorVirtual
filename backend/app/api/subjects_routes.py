@@ -1,10 +1,13 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+import logging
 
 from ..core.database import get_db
-from ..core.auth import require_role
-from ..models.schemas import APIResponse, SubjectCreate, SubjectOut, UserIdsRequest, DocumentOut
+from ..core.auth import require_role, get_current_user
+
+logger = logging.getLogger(__name__)
+from ..models.schemas import APIResponse, SubjectCreate, SubjectOut, UserIdsRequest, DocumentOut, StudentAnalysisSummary, StudentAnalysisRequest, StudentAnalysisStatistics
 from ..models.models import User, Document
 from ..services.subject_service import (
     add_user_to_subject,
@@ -17,6 +20,12 @@ from ..services.subject_service import (
     delete_subject,
     get_subject_documents,
     get_subject_users,
+)
+from ..services.student_analysis_service import (
+    generate_student_analysis_summary,
+    get_subject_analysis_statistics,
+    get_most_active_students,
+    get_subject_question_topics
 )
 
 subjects_routes = APIRouter()
@@ -213,3 +222,99 @@ def get_subject_users_route(
         "message": "Usuarios de la asignatura obtenidos correctamente",
         "status": 200
     }
+
+# ----------------------------------------
+# ENDPOINTS PARA ANÁLISIS DE ESTUDIANTES
+# ----------------------------------------
+
+@subjects_routes.post("/{subject_id}/analysis", response_model=APIResponse)
+async def generate_subject_student_analysis(
+    subject_id: int,
+    analysis_request: StudentAnalysisRequest = StudentAnalysisRequest(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "admin"]))
+):
+    """
+    Genera un análisis completo de las preguntas y participación de estudiantes en una asignatura.
+    Utiliza IA para identificar deficiencias y gaps en el aprendizaje.
+    Accesible solo para profesores y administradores.
+    """
+    try:
+        # Verificar que la asignatura existe
+        subject = get_subject_by_id(db=db, subject_id=subject_id)
+        if not subject:
+            raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+        
+        # Generar el análisis completo
+        analysis_summary = await generate_student_analysis_summary(
+            subject_id=subject_id,
+            db=db,
+            days_limit=analysis_request.days_back,
+            min_participation=analysis_request.min_participation
+        )
+        
+        if not analysis_summary:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error interno al generar el análisis de estudiantes"
+            )
+        
+        # Crear la respuesta estructurada
+        response_data = StudentAnalysisSummary(
+            subject_id=subject_id,
+            subject_name=subject["name"],
+            analysis_summary=analysis_summary["analysis"],
+            statistics=StudentAnalysisStatistics(
+                total_messages=analysis_summary["statistics"]["total_messages"],
+                unique_students=analysis_summary["statistics"]["unique_students"],
+                participation_rate=analysis_summary["statistics"]["participation_rate"],
+                most_active_students=analysis_summary["statistics"]["most_active_students"]
+            ),
+            sample_questions=analysis_summary.get("sample_questions", [])
+        )
+        
+        return {
+            "data": response_data.model_dump(),
+            "message": "Análisis de estudiantes generado correctamente",
+            "status": 200
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generando análisis de estudiantes para asignatura {subject_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
+
+@subjects_routes.get("/{subject_id}/analysis/statistics", response_model=APIResponse)
+def get_subject_student_statistics(
+    subject_id: int,
+    days_back: int = Query(default=30, description="Días hacia atrás para analizar"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "admin"]))
+):
+    """
+    Obtiene estadísticas de participación de estudiantes en una asignatura.
+    Accesible solo para profesores y administradores.
+    """
+    try:
+        # Verificar que la asignatura existe
+        subject = get_subject_by_id(db=db, subject_id=subject_id)
+        if not subject:
+            raise HTTPException(status_code=404, detail="Asignatura no encontrada")
+        
+        # Obtener estadísticas
+        statistics = get_subject_analysis_statistics(
+            subject_id=subject_id,
+            db=db,
+            days_back=days_back
+        )
+        
+        return {
+            "data": statistics,
+            "message": "Estadísticas de participación obtenidas correctamente",
+            "status": 200
+        }
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas para asignatura {subject_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")

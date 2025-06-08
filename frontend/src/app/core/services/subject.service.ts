@@ -29,6 +29,32 @@ export interface SubjectUsersResponse {
   subject_code: string;
 }
 
+// Interfaces para análisis de estudiantes
+export interface StudentAnalysisStatistics {
+  total_messages: number;
+  unique_students: number;
+  participation_rate: number;
+  most_active_students: Array<{
+    student_id: number;
+    student_name: string;
+    message_count: number;
+  }>;
+}
+
+export interface StudentAnalysisSummary {
+  subject_id: number;
+  subject_name: string;
+  analysis_summary: string;
+  statistics: StudentAnalysisStatistics;
+  sample_questions: string[];
+  analysis_date: string;
+}
+
+export interface StudentAnalysisRequest {
+  days_back?: number;
+  min_participation?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -103,5 +129,20 @@ export class SubjectService {
   // Método para crear un nuevo tema
   createTopic(topic: { name: string; description: string; subject_id: number }): Observable<ApiResponse<any>> {
     return this.api.post<any>('topics', topic);
+  }
+
+  // Métodos para análisis de estudiantes
+  generateStudentAnalysis(
+    subjectId: number, 
+    request: StudentAnalysisRequest = {}
+  ): Observable<ApiResponse<StudentAnalysisSummary>> {
+    return this.api.post<StudentAnalysisSummary>(`subjects/${subjectId}/analysis`, request);
+  }
+
+  getStudentStatistics(
+    subjectId: number,
+    daysBack: number = 30
+  ): Observable<ApiResponse<StudentAnalysisStatistics>> {
+    return this.api.get<StudentAnalysisStatistics>(`subjects/${subjectId}/analysis/statistics`, { days_back: daysBack });
   }
 }
