@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
+import os
 
 from app.models.models import User, Subject
 from ..core.database import get_db
 from ..core.auth import get_current_user, require_role
-from ..services.document_service import save_document, list_documents, list_all_documents, delete_document, get_documents_by_topic_id, get_documents_by_topic_id
+from ..services.document_service import save_document, list_documents, list_all_documents, delete_document, get_documents_by_topic_id, get_document_by_id
 from ..services.summary_service import generate_document_summary_by_id, generate_subject_summary, update_subject_summary
 from ..models.schemas import APIResponse, DocumentOut, DocumentCreate
 
@@ -139,6 +141,56 @@ def remove_document(
         "message": "Documento y archivos asociados eliminados correctamente",
         "status": 200
     }
+
+@documents_routes.get("/{document_id}/download")
+def download_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+):
+    """
+    Descarga un documento PDF por su ID.
+    Accesible para profesores, estudiantes y administradores.
+    Los estudiantes solo pueden descargar documentos a los que tienen acceso a través de sus asignaturas.
+    Los profesores pueden descargar sus propios documentos.
+    Los administradores pueden descargar cualquier documento.
+    """
+    # Obtener el documento
+    document = get_document_by_id(db, document_id)
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    # Verificar permisos de acceso
+    if current_user.role == "admin":
+        # Los administradores pueden acceder a cualquier documento
+        pass
+    elif current_user.role == "teacher":
+        # Los profesores solo pueden acceder a sus propios documentos
+        if document.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    elif current_user.role == "student":
+        # Los estudiantes solo pueden acceder a documentos de asignaturas en las que están inscritos
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    
+    # Verificar que el archivo existe
+    if not document.file_path or not os.path.exists(document.file_path):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en el servidor")
+    
+    # Obtener el nombre del archivo original para la descarga
+    original_filename = f"{document.title}.pdf"
+    
+    return FileResponse(
+        path=document.file_path,
+        filename=original_filename,
+        media_type='application/pdf'
+    )
 
 # Endpoints para gestión de resúmenes
 @documents_routes.post("/{document_id}/summary", response_model=APIResponse)

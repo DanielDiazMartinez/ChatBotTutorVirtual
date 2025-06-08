@@ -141,6 +141,12 @@ def delete_document(db: Session, document_id: int, user_id: int = None, is_admin
     
     return {"id": document_id}
 
+def get_document_by_id(db: Session, document_id: int):
+    """
+    Obtiene un documento específico por su ID.
+    """
+    return db.query(Document).filter(Document.id == document_id).first()
+
 def get_documents_by_topic_id(db: Session, topic_id: int, current_user):
     """
     Obtiene todos los documentos asociados a un tema específico.

@@ -2,6 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges, inject, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { DocumentTopic, DocumentUI, DocumentAdapter } from '../../interfaces/document.interface';
 import { ChatService } from '../../../../core/services/chat.service';
+import { DocumentService } from '../../../../core/services/document.service';
 
 @Component({
   selector: 'app-documents-modal',
@@ -219,6 +220,7 @@ export class DocumentsModalComponent implements OnChanges, OnInit {
   @Input() currentSubjectId: string | undefined;
   
   private chatService = inject(ChatService);
+  private documentService = inject(DocumentService);
   
   // Documentos filtrados según la asignatura actual
   filteredTopics: DocumentTopic[] = [];
@@ -319,13 +321,17 @@ export class DocumentsModalComponent implements OnChanges, OnInit {
     ];
   }
 
-  downloadDocument(doc: DocumentUI): void {
-    // Si el documento tiene una URL, abrirla
-    if (doc.url) {
-      console.log('Descargando documento:', doc.title);
-      window.open(doc.url, '_blank');
+  async downloadDocument(doc: DocumentUI): Promise<void> {
+    // Use the DocumentService to download the document by ID
+    if (doc.id) {
+      try {
+        await this.documentService.downloadDocument(Number(doc.id));
+        console.log('Document download initiated for:', doc.title);
+      } catch (error) {
+        console.error('Error downloading document:', error);
+      }
     } else {
-      console.log('El documento no tiene URL para descargar:', doc.title);
+      console.log('Document ID not available for download:', doc.title);
     }
   }
 }

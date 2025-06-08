@@ -146,4 +146,14 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     const subject = this.subjects.find(s => s.id == subjectId);
     return subject ? subject.name : '—';
   }
+
+  async downloadDocument(documentId: number): Promise<void> {
+    try {
+      await this.documentService.downloadDocument(documentId);
+      console.log('Document download initiated');
+    } catch (error) {
+      this.error = 'Error al descargar el documento. Por favor, intente nuevamente.';
+      console.error('Error downloading document:', error);
+    }
+  }
 }
