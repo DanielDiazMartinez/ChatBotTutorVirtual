@@ -12,7 +12,8 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{getTotalStudents()}}</div>
+          <div class="stat-value" *ngIf="!isLoadingSubjects">{{getTotalStudents()}}</div>
+          <div class="stat-value loading" *ngIf="isLoadingSubjects">...</div>
           <div class="stat-label">Estudiantes Totales</div>
         </div>
       </div>
@@ -24,7 +25,8 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{getTotalDocuments()}}</div>
+          <div class="stat-value" *ngIf="!isLoadingSubjects">{{getTotalDocuments()}}</div>
+          <div class="stat-value loading" *ngIf="isLoadingSubjects">...</div>
           <div class="stat-label">Documentos Compartidos</div>
         </div>
       </div>
@@ -37,7 +39,7 @@
         <h2>Mis Asignaturas</h2>
         <a [routerLink]="['/teacher/subjects']" class="see-all-link">Ver todas</a>
       </div>
-      <div class="subjects-list">
+      <div class="subjects-list" *ngIf="!isLoadingSubjects">
         <div *ngFor="let subject of subjects" class="subject-item">
           <div class="subject-name" [routerLink]="['/teacher/subjects', subject.id]" [queryParams]="{name: subject.name}">{{subject.name}}</div>
           <div class="subject-stats">
@@ -50,18 +52,13 @@
               <div class="stat-label">Documentos</div>
             </div>
           </div>
-          <div class="subject-students" *ngIf="subject.topStudents && subject.topStudents.length > 0">
-            <div class="students-label">Estudiantes destacados:</div>
-            <div class="students-list">
-              <span *ngFor="let student of subject.topStudents" 
-                    class="student-name" 
-                    [routerLink]="['/teacher/student-profile']" 
-                    [queryParams]="{name: student.name}">
-                {{ student.name }}
-              </span>
-            </div>
-          </div>
         </div>
+        <div *ngIf="subjects.length === 0" class="no-subjects">
+          No hay asignaturas asignadas
+        </div>
+      </div>
+      <div class="loading-subjects" *ngIf="isLoadingSubjects">
+        <p>Cargando asignaturas...</p>
       </div>
     </div>
 

@@ -67,7 +67,8 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         "teachers": teachers,
         "students": students,
         "teacher_count": teacher_count,
-        "student_count": student_count
+        "student_count": student_count,
+        "document_count": db.query(Document).filter(Document.subject_id == subject_id).count()
     }
     
 def get_all_subjects(db: Session) -> list[dict]:
@@ -100,7 +101,8 @@ def get_all_subjects(db: Session) -> list[dict]:
                 for user in subject.users if user.role == "student"
             ],
             "teacher_count": len([user for user in subject.users if user.role == "teacher"]) if subject.users else 0,
-            "student_count": len([user for user in subject.users if user.role == "student"]) if subject.users else 0
+            "student_count": len([user for user in subject.users if user.role == "student"]) if subject.users else 0,
+            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
         }
         for subject in subjects
     ]

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.models import User
+from app.models.models import User, Document
 from app.models.schemas import UserCreate, UserUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
@@ -152,7 +152,8 @@ def get_subjects_by_user_id(user_id: int, db: Session):
             "code": subject.code,
             "description": subject.description,
             "summary": subject.summary,
-            "created_at": subject.created_at
+            "created_at": subject.created_at,
+            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
         }
         
         for subject in subjects

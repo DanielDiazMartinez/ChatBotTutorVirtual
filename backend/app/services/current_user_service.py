@@ -38,7 +38,8 @@ def get_current_user_subjects(user_id: int, db: Session):
             "code": subject.code,
             "description": subject.description,
             "summary": subject.summary,
-            "created_at": subject.created_at
+            "created_at": subject.created_at,
+            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
         }
         for subject in subjects
     ]
