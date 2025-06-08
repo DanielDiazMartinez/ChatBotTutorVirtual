@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ChatService } from '../../../../core/services/chat.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,10 +10,14 @@ import { RouterModule } from '@angular/router';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   // Datos simulados para el tablero
   teacherName: string = 'Profesor Martínez';
   currentDate: Date = new Date();
+  
+  // Datos reales de mensajes
+  recentQuestions: any[] = [];
+  isLoadingMessages: boolean = false;
   
   subjects = [
     { 
@@ -55,12 +60,29 @@ export class DashboardComponent {
     }
   ];
   
-  recentQuestions = [
-    { id: '1', text: '¿Cómo se calcula la derivada de una función compuesta?', date: new Date('2025-05-13'), student: 'Ana García', subject: 'Matemáticas' },
-    { id: '2', text: '¿Qué es la fuerza electromotriz?', date: new Date('2025-05-12'), student: 'Carlos Ruiz', subject: 'Física' },
-    { id: '3', text: '¿Cuáles son las fases de la mitosis?', date: new Date('2025-05-11'), student: 'Elena Martín', subject: 'Biología' },
-    { id: '4', text: '¿Podría explicar el concepto de momento de una fuerza?', date: new Date('2025-05-11'), student: 'David López', subject: 'Física' }
-  ];
+  constructor(private chatService: ChatService) {}
+
+  ngOnInit(): void {
+    this.loadRecentMessages();
+  }
+
+  private loadRecentMessages(): void {
+    this.isLoadingMessages = true;
+    this.chatService.getRecentMessages(10).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.recentQuestions = response.data;
+          console.log('Mensajes recientes cargados:', this.recentQuestions);
+        }
+        this.isLoadingMessages = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar mensajes recientes:', error);
+        this.recentQuestions = [];
+        this.isLoadingMessages = false;
+      }
+    });
+  }
   
   getTotalStudents(): number {
     return this.subjects.reduce((sum, subject) => sum + subject.students, 0);

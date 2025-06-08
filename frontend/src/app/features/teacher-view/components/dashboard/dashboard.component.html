@@ -69,21 +69,25 @@
 
     <div class="dashboard-card questions-card">
       <div class="card-header">
-        <h2>Preguntas Recientes</h2>
-        <a [routerLink]="['/teacher/questions']" class="see-all-link">Ver todas</a>
+        <h2>Mensajes Recientes de Estudiantes</h2>
       </div>
-      <div class="questions-list">
+      <div class="questions-list" *ngIf="!isLoadingMessages">
         <div *ngFor="let question of recentQuestions" class="question-item">
           <div class="question-text">{{question.text}}</div>
           <div class="question-meta">
-            <div class="student-link" [routerLink]="['/teacher/student-profile']" [queryParams]="{name: question.student}">{{question.student}}</div>
+            <div class="student-link" [routerLink]="['/teacher/student-profile']" [queryParams]="{name: question.userName}">{{question.userName}}</div>
             <div class="question-details">
               <span class="question-subject">{{question.subject}}</span>
-              <span class="question-date">{{question.date | date:'dd/MM/yyyy'}}</span>
+              <span class="question-date">{{question.created_at | date:'dd/MM/yyyy HH:mm'}}</span>
             </div>
           </div>
-          <button class="answer-btn">Responder</button>
         </div>
+        <div *ngIf="recentQuestions.length === 0" class="no-messages">
+          No hay mensajes recientes disponibles
+        </div>
+      </div>
+      <div class="loading-messages" *ngIf="isLoadingMessages">
+        <p>Cargando mensajes recientes...</p>
       </div>
     </div>
   </div>

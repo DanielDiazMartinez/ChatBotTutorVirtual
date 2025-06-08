@@ -152,33 +152,4 @@ export class ChatService {
   getAvailableTopicsForAI(): Observable<any> {
     return this.api.get<any>(`ai/available-topics`);
   }
-
-  // Backward compatibility methods - delegate to new message methods
-  getUserQuestions(subjectId?: number, topicId?: number, userId?: number, limit?: number): Observable<ApiResponse<any[]>> {
-    return this.getUserMessages(subjectId, topicId, userId, limit);
-  }
-
-  getQuestionsStatistics(subjectId?: number, topicId?: number): Observable<ApiResponse<any>> {
-    return this.getMessagesStatistics(subjectId, topicId);
-  }
-
-  getQuestionById(questionId: number): Observable<ApiResponse<any>> {
-    return this.getMessageById(questionId);
-  }
-
-  getRecentQuestions(limit: number = 10, subjectId?: number): Observable<ApiResponse<any[]>> {
-    return this.getRecentMessages(limit, subjectId);
-  }
-
-  analyzeQuestionTopic(questionId: number): Observable<any> {
-    return this.analyzeMessageTopic(questionId);
-  }
-
-  autoAssignTopicToQuestion(questionId: number): Observable<any> {
-    return this.autoAssignTopicToMessage(questionId);
-  }
-
-  bulkAssignTopicsToQuestions(questionIds: number[]): Observable<any> {
-    return this.bulkAssignTopicsToMessages(questionIds);
-  }
 }

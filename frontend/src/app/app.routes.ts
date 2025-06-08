@@ -44,10 +44,7 @@ export const routes: Routes = [
         path: 'dashboard',
         loadChildren: () => import('./features/teacher-view/components/dashboard/dashboard.module').then(m => m.DashboardModule)
       },
-      {
-        path: 'questions',
-        loadChildren: () => import('./features/teacher-view/components/questions/questions.module').then(m => m.QuestionsModule)
-      },
+
       {
         path: 'documents',
         loadChildren: () => import('./features/teacher-view/components/documents/documents.module').then(m => m.DocumentsModule)
