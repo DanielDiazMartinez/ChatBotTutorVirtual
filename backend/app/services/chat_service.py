@@ -63,19 +63,9 @@ def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List
             Conversation.user_id == user_id
         )
     elif role == "teacher":
-        # Los profesores pueden ver sus propias conversaciones y las de sus asignaturas
-        teacher = db.query(User).filter(
-            and_(User.id == user_id, User.role == "teacher")
-        ).first()
-        if not teacher:
-            raise HTTPException(status_code=404, detail="Profesor no encontrado")
-            
-        subject_ids = [subject.id for subject in teacher.subjects]
+        # Los profesores solo pueden ver sus propias conversaciones
         query = query.filter(
-            or_(
-                Conversation.user_id == user_id,
-                Conversation.subject_id.in_(subject_ids)
-            )
+            Conversation.user_id == user_id
         )
     elif role == "admin":
         # Los administradores pueden ver todas las conversaciones

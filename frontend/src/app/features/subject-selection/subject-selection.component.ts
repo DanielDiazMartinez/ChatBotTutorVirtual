@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SubjectCardComponent } from './components/subject-card/subject-card.component';
 import { SubjectService } from '../../services/subject.service';
 import { Subject } from './interfaces/subject.interface';
@@ -19,15 +19,21 @@ export class SubjectSelectionComponent implements OnInit {
   selectedSubject: Subject | null = null;
   isLoading = true;
   error: string | null = null;
+  returnTo: string | null = null;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private subjectService: SubjectService,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.subjectService.setSelectedSubjects([]);
+    // Obtener el parámetro returnTo si existe
+    this.route.queryParams.subscribe(params => {
+      this.returnTo = params['returnTo'] || null;
+    });
     this.loadSubjectsForCurrentUser();
   }
 
@@ -83,6 +89,9 @@ export class SubjectSelectionComponent implements OnInit {
     } else {
       this.selectedSubject = subject;
       this.subjectService.setSelectedSubjects([subject.id]);
+      
+      // Si viene de un profesor, mantiene en el mismo flujo de chat
+      // Si viene de un estudiante, navega al chat normal
       this.router.navigate(['/chat']);
     }
   }

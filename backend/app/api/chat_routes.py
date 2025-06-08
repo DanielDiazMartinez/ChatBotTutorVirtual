@@ -325,7 +325,7 @@ async def get_conversation_message_history(
         # Los profesores pueden ver las conversaciones de las asignaturas que imparten
         if not (conversation.user_id == current_user.id or 
                 (conversation.subject_id and conversation.subject_id in 
-                 [s.id for s in current_user.teaching_subjects])):
+                 [s.id for s in current_user.subjects])):
             raise HTTPException(status_code=403, detail="No tienes permiso para ver esta conversación")
     
     messages = get_conversation_messages(db, conversation_id)

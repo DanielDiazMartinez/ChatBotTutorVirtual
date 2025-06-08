@@ -9,6 +9,7 @@ import { SubjectService } from '../../services/subject.service';
 import { Subject } from '../subject-selection/interfaces/subject.interface';
 import { ChatService } from '../../core/services/chat.service';
 import { Conversation, Message } from '../../core/models/chat.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-student-view',
@@ -25,7 +26,7 @@ export class StudentViewComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   
-  // Datos del usuario estudiante
+  // Datos del usuario (puede ser estudiante o profesor)
   studentProfile: UserProfile = {
     name: 'Ana García',
     role: 'student',
@@ -42,11 +43,30 @@ export class StudentViewComponent implements OnInit {
   constructor(
     private subjectService: SubjectService,
     private chatService: ChatService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
   
   ngOnInit(): void {
+    this.loadUserProfile();
     this.loadSubjects();
+  }
+
+  private loadUserProfile(): void {
+    this.authService.getCurrentUserFromBackend().subscribe({
+      next: (user: any) => {
+        if (user && user.data) {
+          this.studentProfile = {
+            name: user.data.name || user.data.username,
+            role: user.data.role,
+            avatar: user.data.role === 'teacher' ? 'assets/images/teacher-avatar.svg' : 'assets/images/student-avatar.svg'
+          };
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar el perfil del usuario:', error);
+      }
+    });
   }
 
   private loadSubjects(): void {
