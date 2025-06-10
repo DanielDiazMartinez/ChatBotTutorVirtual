@@ -19,6 +19,7 @@ export interface UserProfile {
 export class HeaderComponent implements OnInit {
   @Input() showDocumentsButton = false;
   @Input() isDocumentsModalVisible = false;
+  @Input() showNavigationOptions = true; // Nueva propiedad para controlar si mostrar opciones
   @Input() currentUser: UserProfile = {
     name: 'Usuario',
     role: 'student'

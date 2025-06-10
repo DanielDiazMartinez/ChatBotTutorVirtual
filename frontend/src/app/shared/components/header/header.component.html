@@ -3,7 +3,7 @@
     <div class="header-left">
       <h1 class="logo" (click)="goToDashboard()">Tutor.IA</h1>
       
-      <nav class="main-navigation" *ngIf="currentUser.role === 'teacher'">
+      <nav class="main-navigation" *ngIf="showNavigationOptions && currentUser.role === 'teacher'">
         <ul>
           <li>
             <a [routerLink]="['/teacher/dashboard']" routerLinkActive="active">Dashboard</a>
@@ -17,7 +17,7 @@
         </ul>
       </nav>
 
-      <nav class="main-navigation" *ngIf="currentUser.role === 'admin'">
+      <nav class="main-navigation" *ngIf="showNavigationOptions && currentUser.role === 'admin'">
         <ul>
           <li>
             <a [routerLink]="['/admin/dashboard']" routerLinkActive="active">Dashboard</a>
