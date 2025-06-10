@@ -104,12 +104,51 @@ def get_documents(
     _: dict = Depends(require_role(["teacher", "student", "admin"]))
 ):
     """
-    Obtiene los documentos.
+    Obtiene un documento por su ID.
     """
-    documents = list_documents(db, document_id)
+    document = get_document_by_id(db, document_id)
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    # Validar acceso al documento según el rol del usuario
+    if current_user.role == "admin":
+        # Los administradores tienen acceso completo
+        pass
+    elif current_user.role == "teacher":
+        # Los profesores pueden acceder a documentos de asignaturas a las que están asignados
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            # Si el documento no tiene asignatura, solo puede acceder el creador
+            if document.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    elif current_user.role == "student":
+        # Los estudiantes pueden acceder a documentos de asignaturas en las que están matriculados
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    
+    # Convertir el documento a formato de respuesta
+    document_data = {
+        "id": document.id,
+        "title": document.title,
+        "description": document.description,
+        "file_path": document.file_path,
+        "user_id": document.user_id,
+        "subject_id": document.subject_id,
+        "topic_id": document.topic_id,
+        "created_at": document.created_at
+    }
+    
     return {
-        "data": documents,
-        "message": "Documentos obtenidos correctamente",
+        "data": document_data,
+        "message": "Documento obtenido correctamente",
         "status": 200
     }
 
@@ -146,12 +185,22 @@ def download_document(
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     
+    # Validar acceso al documento según el rol del usuario
     if current_user.role == "admin":
+        # Los administradores tienen acceso completo
         pass
     elif current_user.role == "teacher":
-        if document.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        # Los profesores pueden acceder a documentos de asignaturas a las que están asignados
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            # Si el documento no tiene asignatura, solo puede acceder el creador
+            if document.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
     elif current_user.role == "student":
+        # Los estudiantes pueden acceder a documentos de asignaturas en las que están matriculados
         if document.subject_id:
             user_subjects = [subject.id for subject in current_user.subjects]
             if document.subject_id not in user_subjects:
@@ -185,13 +234,22 @@ def preview_document(
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     
-    # Verificar permisos
+    # Validar acceso al documento según el rol del usuario
     if current_user.role == "admin":
+        # Los administradores tienen acceso completo
         pass
     elif current_user.role == "teacher":
-        if document.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        # Los profesores pueden acceder a documentos de asignaturas a las que están asignados
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            # Si el documento no tiene asignatura, solo puede acceder el creador
+            if document.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
     elif current_user.role == "student":
+        # Los estudiantes pueden acceder a documentos de asignaturas en las que están matriculados
         if document.subject_id:
             user_subjects = [subject.id for subject in current_user.subjects]
             if document.subject_id not in user_subjects:

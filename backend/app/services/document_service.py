@@ -83,13 +83,43 @@ def list_documents(db: Session, document_id: int):
 
 def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False):
     """
-    Lista todos los documentos.
-    Si el usuario no es administrador y se proporciona user_id, sólo devuelve sus documentos.
+    Lista todos los documentos según el rol del usuario:
+    - Administradores: Ven todos los documentos
+    - Profesores: Ven documentos de las asignaturas a las que están asignados
+    - Estudiantes: Ven documentos de las asignaturas en las que están matriculados
     """
+    from app.models.models import User, user_subject
+    
     query = db.query(Document)
     
     if user_id is not None and not is_admin:
-        query = query.filter(Document.user_id == user_id)
+        # Obtener el usuario actual para verificar su rol
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return []
+        
+        if user.role == "teacher":
+            # Los profesores ven documentos de las asignaturas a las que están asignados
+            user_subjects = db.query(user_subject.c.subject_id).filter(
+                user_subject.c.user_id == user_id
+            ).subquery()
+            
+            query = query.filter(Document.subject_id.in_(
+                db.query(user_subjects.c.subject_id)
+            ))
+            
+        elif user.role == "student":
+            # Los estudiantes ven documentos de las asignaturas en las que están matriculados
+            user_subjects = db.query(user_subject.c.subject_id).filter(
+                user_subject.c.user_id == user_id
+            ).subquery()
+            
+            query = query.filter(Document.subject_id.in_(
+                db.query(user_subjects.c.subject_id)
+            ))
+        else:
+            # Para otros roles que no sean admin, mostrar solo sus documentos
+            query = query.filter(Document.user_id == user_id)
     
     documents = query.all()
     return [

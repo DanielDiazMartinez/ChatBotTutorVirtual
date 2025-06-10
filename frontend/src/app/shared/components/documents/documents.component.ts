@@ -8,6 +8,8 @@ import { Subject } from '../../../core/services/subject.service';
 import { ChatService } from '../../../core/services/chat.service';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models/user.model';
+import { AuthService } from '../../../services/auth.service';
+import { SubjectService as TeacherSubjectService } from '../../../services/subject.service';
 import { UploadDocumentModalComponent } from '../upload-document-modal/upload-document-modal.component';
 
 @Component({
@@ -34,7 +36,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     private documentService: DocumentService,
     private subjectService: SubjectService,
     private chatService: ChatService,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService,
+    private teacherSubjectService: TeacherSubjectService
   ) {}
 
   ngOnInit() {
@@ -79,7 +83,11 @@ export class DocumentsComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        this.error = 'Error al cargar los documentos. Por favor, intente nuevamente.';
+        if (error.status === 403) {
+          this.error = 'No tienes permisos para acceder a estos documentos.';
+        } else {
+          this.error = 'Error al cargar los documentos. Por favor, intente nuevamente.';
+        }
         this.isLoading = false;
         console.error('Error loading documents:', error);
       }
@@ -87,16 +95,47 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   }
 
   loadSubjects() {
-    this.subjectService.getSubjects().subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.subjects = response.data;
+    if (this.isAdminView) {
+      // En vista de administrador, cargar todas las asignaturas
+      this.subjectService.getSubjects().subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.subjects = response.data;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading subjects:', error);
         }
-      },
-      error: (error) => {
-        console.error('Error loading subjects:', error);
-      }
-    });
+      });
+    } else {
+      // En vista de profesor, cargar solo las asignaturas del profesor actual
+      this.authService.getCurrentUserFromBackend().subscribe({
+        next: (user: any) => {
+          const userId = user.data.id;
+          this.teacherSubjectService.getSubjectsByUserId(userId.toString()).subscribe({
+            next: (response) => {
+              if (response.data) {
+                // Mapear los datos para que coincidan con la interfaz Subject esperada
+                this.subjects = response.data.map(subject => ({
+                  id: subject.id,
+                  name: subject.name,
+                  code: '', // La interfaz del teacher service no tiene code
+                  description: subject.description || '',
+                  teacherCount: 0,
+                  studentCount: 0
+                }));
+              }
+            },
+            error: (error) => {
+              console.error('Error loading teacher subjects:', error);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error al obtener usuario actual:', error);
+        }
+      });
+    }
   }
 
   loadUsers() {
@@ -182,8 +221,12 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     try {
       await this.documentService.downloadDocument(documentId);
       console.log('Document download initiated');
-    } catch (error) {
-      this.error = 'Error al descargar el documento. Por favor, intente nuevamente.';
+    } catch (error: any) {
+      if (error.message && error.message.includes('403')) {
+        this.error = 'No tienes permisos para descargar este documento.';
+      } else {
+        this.error = 'Error al descargar el documento. Por favor, intente nuevamente.';
+      }
       console.error('Error downloading document:', error);
     }
   }
@@ -193,8 +236,12 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       const previewUrl = await this.documentService.previewDocument(documentId);
       // Abrir el PDF en una nueva ventana/tab para previsualización
       window.open(previewUrl, '_blank');
-    } catch (error) {
-      this.error = 'Error al previsualizar el documento. Por favor, intente nuevamente.';
+    } catch (error: any) {
+      if (error.message && error.message.includes('403')) {
+        this.error = 'No tienes permisos para previsualizar este documento.';
+      } else {
+        this.error = 'Error al previsualizar el documento. Por favor, intente nuevamente.';
+      }
       console.error('Error previewing document:', error);
     }
   }
