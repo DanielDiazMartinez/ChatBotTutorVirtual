@@ -156,4 +156,15 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       console.error('Error downloading document:', error);
     }
   }
+
+  async previewDocument(documentId: number): Promise<void> {
+    try {
+      const previewUrl = await this.documentService.previewDocument(documentId);
+      // Abrir el PDF en una nueva ventana/tab para previsualización
+      window.open(previewUrl, '_blank');
+    } catch (error) {
+      this.error = 'Error al previsualizar el documento. Por favor, intente nuevamente.';
+      console.error('Error previewing document:', error);
+    }
+  }
 }

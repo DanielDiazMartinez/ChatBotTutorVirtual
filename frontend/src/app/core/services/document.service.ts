@@ -81,6 +81,34 @@ export class DocumentService {
     }
   }
 
+  async previewDocument(documentId: number): Promise<string> {
+    const url = `${this.api['apiUrl']}/documents/${documentId}/preview`;
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error previewing file: ${response.status} ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      return window.URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      throw error;
+    }
+  }
+
   // Métodos para gestión de resúmenes de asignaturas
   generateSubjectSummary(subjectId: number): Observable<ApiResponse<{summary: string}>> {
     return this.api.post<{summary: string}>(`documents/subjects/${subjectId}/summary`, {});

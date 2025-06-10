@@ -15,15 +15,13 @@ import { forkJoin } from 'rxjs';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  // Datos del profesor
+
   teacherName: string = 'Profesor';
   currentDate: Date = new Date();
   
-  // Datos reales de mensajes
   recentQuestions: any[] = [];
   isLoadingMessages: boolean = false;
   
-  // Datos reales de asignaturas
   subjects: any[] = [];
   isLoadingSubjects: boolean = false;
   

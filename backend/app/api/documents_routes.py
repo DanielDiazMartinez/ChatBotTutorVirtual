@@ -170,6 +170,44 @@ def download_document(
         media_type='application/pdf'
     )
 
+@documents_routes.get("/{document_id}/preview")
+def preview_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(require_role(["teacher", "student", "admin"]))
+):
+    """
+    Previsualiza un documento PDF por su ID.
+    """
+    document = get_document_by_id(db, document_id)
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    # Verificar permisos
+    if current_user.role == "admin":
+        pass
+    elif current_user.role == "teacher":
+        if document.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    elif current_user.role == "student":
+        if document.subject_id:
+            user_subjects = [subject.id for subject in current_user.subjects]
+            if document.subject_id not in user_subjects:
+                raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+        else:
+            raise HTTPException(status_code=403, detail="No tienes permisos para acceder a este documento")
+    
+    if not document.file_path or not os.path.exists(document.file_path):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en el servidor")
+    
+    return FileResponse(
+        path=document.file_path,
+        media_type='application/pdf',
+        headers={"Content-Disposition": "inline"}
+    )
+
 # Endpoints para gestión de resúmenes
 @documents_routes.post("/{document_id}/summary", response_model=APIResponse)
 async def generate_document_summary_endpoint(

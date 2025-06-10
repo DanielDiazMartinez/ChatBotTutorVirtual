@@ -33,11 +33,18 @@ import { DocumentService } from '../../../../core/services/document.service';
                     <span class="document-title">{{doc.title}}</span>
                     <span class="document-date">{{doc.uploadDate | date:'mediumDate'}}</span>
                   </div>
-                  <button class="download-btn" (click)="downloadDocument(doc)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
-                    </svg>
-                  </button>
+                  <div class="document-actions">
+                    <button class="preview-btn" (click)="previewDocument(doc)" title="Previsualizar documento">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                    <button class="download-btn" (click)="downloadDocument(doc)" title="Descargar documento">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,28 +179,49 @@ import { DocumentService } from '../../../../core/services/document.service';
             }
           }
 
+          .document-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+          }
+
+          .preview-btn,
           .download-btn {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             border: none;
-            background-color: rgba(143, 188, 148, 0.1);
-            color: #3f6464;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            margin-left: 0.5rem;
-            flex-shrink: 0;
 
             &:hover {
-              background-color: #c5e99b;
               transform: translateY(-2px);
             }
 
             &:active {
               transform: translateY(0);
+            }
+          }
+
+          .preview-btn {
+            background-color: rgba(63, 100, 100, 0.1);
+            color: #3f6464;
+
+            &:hover {
+              background-color: rgba(63, 100, 100, 0.2);
+            }
+          }
+
+          .download-btn {
+            background-color: rgba(143, 188, 148, 0.1);
+            color: #3f6464;
+
+            &:hover {
+              background-color: #c5e99b;
             }
           }
         }
@@ -332,6 +360,21 @@ export class DocumentsModalComponent implements OnChanges, OnInit {
       }
     } else {
       console.log('Document ID not available for download:', doc.title);
+    }
+  }
+
+  async previewDocument(doc: DocumentUI): Promise<void> {
+    // Use the DocumentService to preview the document by ID
+    if (doc.id) {
+      try {
+        const previewUrl = await this.documentService.previewDocument(Number(doc.id));
+        window.open(previewUrl, '_blank');
+        console.log('Document preview initiated for:', doc.title);
+      } catch (error) {
+        console.error('Error previewing document:', error);
+      }
+    } else {
+      console.log('Document ID not available for preview:', doc.title);
     }
   }
 }
