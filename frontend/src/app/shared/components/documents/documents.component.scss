@@ -129,6 +129,22 @@
       box-shadow: 0 0 0 2px rgba(143, 188, 148, 0.2);
     }
   }
+  
+  .user-filter {
+    padding: 0.65rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #d0e6e0;
+    background-color: #e6f2ef;
+    font-size: 0.95rem;
+    color: #3f6464;
+    min-width: 180px;
+    
+    &:focus {
+      outline: none;
+      border-color: #8FBC94;
+      box-shadow: 0 0 0 2px rgba(143, 188, 148, 0.2);
+    }
+  }
 }
 
 .upload-btn {
@@ -171,21 +187,25 @@
     font-size: 0.9rem;
     
     &.title {
-      min-width: 300px;
-      width: 40%;
+      width: 35%;
     }
     
     &.subject {
-      width: 30%;
+      width: 25%;
     }
     
-    &.date {
+    &.user {
       width: 20%;
     }
     
+    &.date {
+      width: 15%;
+    }
+    
     &.actions {
+      width: 5%;
+      text-align: right;
       margin-left: auto;
-      width: 10%;
     }
   }
 }
@@ -195,9 +215,10 @@
   background-color: white;
   border-radius: 8px;
   border: 1px solid #eaeaea;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   transition: all 0.2s ease;
   position: relative;
+  align-items: center;
   
   &:hover {
     background-color: #f9f9f9;
@@ -242,8 +263,7 @@
   font-weight: 500;
   color: #3f6464;
   font-size: 1.05rem;
-  min-width: 300px;
-  width: 40%;
+  width: 35%;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -252,10 +272,28 @@
   text-overflow: ellipsis;
 
   .document-icon {
-    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
-    margin-right: 0.25rem;
+    justify-content: center;
+    border-radius: 6px;
+    flex-shrink: 0;
+    
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    &.pdf {
+      background-color: #f8e4e4;
+      color: #e53935;
+    }
+    
+    &.image {
+      background-color: #f3e5f5;
+      color: #8e24aa;
+    }
   }
 
   .extension {
@@ -271,7 +309,7 @@
   justify-content: flex-start;
   margin-left: 0;
   margin-right: 0;
-  width: 30%;
+  width: 25%;
 
   .badge {
     background-color: #e6f2ef;
@@ -290,12 +328,23 @@
   }
 }
 
+.document-user {
+  font-size: 0.85rem;
+  color: #3f6464;
+  width: 20%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
 .document-date {
   font-size: 0.85rem;
   color: #888;
   min-width: 120px;
   max-width: 200px;
-  width: 20%;
+  width: 15%;
   white-space: nowrap;
 }
 
@@ -342,10 +391,11 @@
   }
 }
 
-.document-actions {
+.document-card .document-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
+  width: 5%;
   margin-left: auto;
 
   .action-btn {

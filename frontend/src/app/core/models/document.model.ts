@@ -3,6 +3,7 @@ export interface Document {
   title: string;
   subject: string;
   subject_id: number;
+  user_id: number; // Usuario que subió el documento
   type: 'pdf' | 'image';
   size: string;
   uploadDate: Date;

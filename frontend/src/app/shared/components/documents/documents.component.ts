@@ -6,6 +6,8 @@ import { Document } from '../../../core/models/document.model';
 import { SubjectService } from '../../../core/services/subject.service';
 import { Subject } from '../../../core/services/subject.service';
 import { ChatService } from '../../../core/services/chat.service';
+import { UserService } from '../../../core/services/user.service';
+import { User } from '../../../core/models/user.model';
 import { UploadDocumentModalComponent } from '../upload-document-modal/upload-document-modal.component';
 
 @Component({
@@ -20,20 +22,26 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   
   searchQuery: string = '';
   selectedSubject: string = 'Todas';
+  selectedUser: string = 'Todos'; // Nuevo filtro de usuario
   documents: Document[] = [];
   isLoading = false;
   error: string | null = null;
 
   subjects: Subject[] = [];
+  users: User[] = []; // Lista de usuarios para el filtro
 
   constructor(
     private documentService: DocumentService,
     private subjectService: SubjectService,
-    private chatService: ChatService
+    private chatService: ChatService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
     this.loadSubjects();
+    if (this.isAdminView) {
+      this.loadUsers(); // Cargar usuarios solo en vista de administrador
+    }
     this.loadDocuments();
     
     // Escuchar evento de documento subido para recargar la lista
@@ -64,7 +72,8 @@ export class DocumentsComponent implements OnInit, OnDestroy {
             uploadDate: doc.created_at ? new Date(doc.created_at) : new Date(),
             subject: this.getSubjectNameById(doc.subject_id),
             size: '1.2 MB', // Por defecto si no viene del API
-            status: 'Procesado' // Por defecto si no viene del API
+            status: 'Procesado', // Por defecto si no viene del API
+            user_id: doc.user_id // Asegurar que tenemos el user_id
           }));
         }
         this.isLoading = false;
@@ -86,6 +95,19 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading subjects:', error);
+      }
+    });
+  }
+
+  loadUsers() {
+    this.userService.getAllUsers().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.users = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
       }
     });
   }
@@ -133,18 +155,27 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       // Filtro por asignatura
       const matchesSubject = this.selectedSubject === 'Todas' || this.getSubjectNameById(doc.subject_id) === this.selectedSubject;
       
-      // Filtro por búsqueda (título o asignatura)
+      // Filtro por usuario (solo en vista de administrador)
+      const matchesUser = !this.isAdminView || this.selectedUser === 'Todos' || this.getUserNameById(doc.user_id) === this.selectedUser;
+      
+      // Filtro por búsqueda (título, asignatura o usuario en vista admin)
       const matchesSearch = this.searchQuery === '' || 
         doc.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        doc.subject.toLowerCase().includes(this.searchQuery.toLowerCase());
+        doc.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (this.isAdminView && this.getUserNameById(doc.user_id).toLowerCase().includes(this.searchQuery.toLowerCase()));
       
-      return matchesSubject && matchesSearch;
+      return matchesSubject && matchesUser && matchesSearch;
     });
   }
 
   getSubjectNameById(subjectId: number | string): string {
     const subject = this.subjects.find(s => s.id == subjectId);
     return subject ? subject.name : '—';
+  }
+
+  getUserNameById(userId: number | string): string {
+    const user = this.users.find(u => u.id == userId);
+    return user ? user.full_name : '—';
   }
 
   async downloadDocument(documentId: number): Promise<void> {

@@ -4,7 +4,7 @@
     <div class="header-actions">
       <div class="filter-group">
         <label for="role-filter">Filtrar por rol:</label>
-        <select [(ngModel)]="roleFilter">
+        <select [(ngModel)]="roleFilter" (ngModelChange)="applyFilters()">
           <option value="">Todos los roles</option>
           <option value="admin">Administradores</option>
           <option value="teacher">Profesores</option>
@@ -12,7 +12,7 @@
       </select>
       </div>
       <div class="search-box">
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar usuario..." class="search-input">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" placeholder="Buscar usuario..." class="search-input">
         <span class="search-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>

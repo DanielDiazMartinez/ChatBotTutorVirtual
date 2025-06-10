@@ -23,6 +23,15 @@
         </select>
       </div>
       
+      <!-- Filtro de usuario solo para administradores -->
+      <div class="filter-container" *ngIf="isAdminView">
+        <label for="user-filter">Usuario:</label>
+        <select id="user-filter" [(ngModel)]="selectedUser" class="user-filter">
+          <option value="Todos">Todos</option>
+          <option *ngFor="let user of users" [value]="user.full_name">{{user.full_name}}</option>
+        </select>
+      </div>
+      
       <button class="upload-btn" (click)="openUploadModal()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" fill="currentColor"/>
@@ -50,6 +59,7 @@
     <div class="document-header">
       <div class="header-item title">Nombre</div>
       <div class="header-item subject">Asignatura</div>
+      <div class="header-item user" *ngIf="isAdminView">Usuario</div>
       <div class="header-item date">Fecha</div>
       <div class="header-item actions">Acciones</div>
     </div>
@@ -64,6 +74,7 @@
         {{doc.title}}
       </div>
       <div class="document-subject"><span class="badge">{{ getSubjectNameById(doc.subject_id) }}</span></div>
+      <div class="document-user" *ngIf="isAdminView">{{ getUserNameById(doc.user_id) }}</div>
       <div class="document-date">{{doc.uploadDate | date: 'dd/MM/yyyy'}}</div>
       <div class="document-actions">
         <button class="action-btn view-btn" (click)="previewDocument(doc.id)" title="Ver documento">
