@@ -159,14 +159,49 @@
           class="topic-card" 
           *ngFor="let topic of topics"
           [class.active]="selectedTopicId === topic.id"
-          (click)="selectTopic(topic.id)"
         >
-          <div class="topic-info">
-            <h3 class="topic-name">{{ topic.name }}</h3>
-            <p class="topic-description">{{ topic.description }}</p>
+          <!-- Vista normal del tema -->
+          <div *ngIf="editingTopicId !== topic.id" class="topic-content" (click)="selectTopic(topic.id)">
+            <div class="topic-info">
+              <h3 class="topic-name">{{ topic.name }}</h3>
+              <p class="topic-description">{{ topic.description }}</p>
+            </div>
+            <div class="topic-stats">
+              <span class="document-count">{{ topic.documentCount }} documentos</span>
+            </div>
           </div>
-          <div class="topic-stats">
-            <span class="document-count">{{ topic.documentCount }} documentos</span>
+          
+          <!-- Vista de edición del tema -->
+          <div *ngIf="editingTopicId === topic.id" class="topic-edit-form">
+            <div class="form-group">
+              <label for="editTopicName">Nombre</label>
+              <input type="text" id="editTopicName" [(ngModel)]="editTopicName" placeholder="Nombre del tema">
+            </div>
+            <div class="form-group">
+              <label for="editTopicDescription">Descripción</label>
+              <textarea id="editTopicDescription" [(ngModel)]="editTopicDescription" placeholder="Descripción del tema" rows="2"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="cancel-btn" (click)="cancelEditTopic()">Cancelar</button>
+              <button class="save-btn" (click)="saveEditTopic()">Guardar</button>
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="topic-actions" *ngIf="editingTopicId !== topic.id">
+            <button class="action-btn edit-btn" (click)="startEditTopic(topic)" title="Editar tema">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+            <button class="action-btn delete-btn" (click)="deleteTopic(topic)" title="Eliminar tema">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </button>
           </div>
         </div>
         

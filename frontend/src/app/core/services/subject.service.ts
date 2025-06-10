@@ -131,6 +131,16 @@ export class SubjectService {
     return this.api.post<any>('topics', topic);
   }
 
+  // Método para editar un tema
+  updateTopic(topicId: number, topic: { name: string; description: string }): Observable<ApiResponse<any>> {
+    return this.api.put<any>(`topics/${topicId}`, topic);
+  }
+
+  // Método para eliminar un tema
+  deleteTopic(topicId: number): Observable<ApiResponse<any>> {
+    return this.api.delete<any>(`topics/${topicId}`);
+  }
+
   // Métodos para análisis de estudiantes
   generateStudentAnalysis(
     subjectId: number, 

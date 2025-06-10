@@ -261,6 +261,11 @@ export class SubjectsComponent implements OnInit {
   showNewTopicForm: boolean = false;
   showUploadForm: boolean = false;
   
+  // Variables para edición de temas
+  editingTopicId: string | null = null;
+  editTopicName: string = '';
+  editTopicDescription: string = '';
+  
   // ID del tema seleccionado para subir documentos
   selectedTopicForUpload: string | null = null;
   
@@ -302,6 +307,66 @@ export class SubjectsComponent implements OnInit {
       });
     }
   }
+
+  // Métodos para editar tema
+  startEditTopic(topic: Topic): void {
+    this.editingTopicId = topic.id;
+    this.editTopicName = topic.name;
+    this.editTopicDescription = topic.description;
+  }
+
+  cancelEditTopic(): void {
+    this.editingTopicId = null;
+    this.editTopicName = '';
+    this.editTopicDescription = '';
+  }
+
+  saveEditTopic(): void {
+    if (this.editingTopicId && this.editTopicName.trim()) {
+      const topicData = {
+        name: this.editTopicName,
+        description: this.editTopicDescription || ''
+      };
+
+      this.coreSubjectService.updateTopic(parseInt(this.editingTopicId), topicData).subscribe({
+        next: (response) => {
+          console.log('Tema editado exitosamente:', response);
+          
+          // Recargar la lista de temas
+          this.loadSubjectTopics(this.subject.id);
+          
+          // Cerrar el formulario de edición
+          this.cancelEditTopic();
+        },
+        error: (error) => {
+          console.error('Error al editar el tema:', error);
+        }
+      });
+    }
+  }
+
+  // Método para eliminar tema
+  deleteTopic(topic: Topic): void {
+    if (confirm(`¿Está seguro de que desea eliminar el tema "${topic.name}"? Esta acción no se puede deshacer.`)) {
+      this.coreSubjectService.deleteTopic(parseInt(topic.id)).subscribe({
+        next: (response) => {
+          console.log('Tema eliminado exitosamente:', response);
+          
+          // Si el tema eliminado era el seleccionado, limpiar selección
+          if (this.selectedTopicId === topic.id) {
+            this.selectedTopicId = null;
+            this.documents = [];
+          }
+          
+          // Recargar la lista de temas
+          this.loadSubjectTopics(this.subject.id);
+        },
+        error: (error) => {
+          console.error('Error al eliminar el tema:', error);
+        }
+      });
+    }
+  }
   
   toggleUploadForm(): void {
     this.showUploadForm = !this.showUploadForm;
@@ -317,8 +382,8 @@ export class SubjectsComponent implements OnInit {
 
   // Método para abrir el modal de subir documentos
   openUploadModal(): void {
-    if (this.uploadModal) {
-      this.uploadModal.open(this.selectedTopicForUpload || undefined);
+    if (this.uploadModal && this.subject?.id) {
+      this.uploadModal.open(this.selectedTopicForUpload || undefined, this.subject.id);
     }
   }
   

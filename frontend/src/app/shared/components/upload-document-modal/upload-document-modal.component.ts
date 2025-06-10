@@ -25,6 +25,7 @@ export class UploadDocumentModalComponent implements OnInit {
   selectedFile: File | null = null;
   fileMaxSize = 10; // MB
   currentTopicId: string | null = null;
+  hideSubjectSelector = false;
 
   ngOnInit(): void {
     this.initForm();
@@ -80,10 +81,19 @@ export class UploadDocumentModalComponent implements OnInit {
     }
   }
 
-  open(topicId?: string): void {
+  open(topicId?: string, subjectId?: string): void {
     this.isVisible = true;
     this.currentTopicId = topicId || null;
+    this.hideSubjectSelector = !!subjectId;
     this.resetForm();
+    
+    // Si se proporciona subjectId, preseleccionarlo y deshabilitar el selector
+    if (subjectId) {
+      this.uploadForm.patchValue({ subjectId: subjectId });
+      this.uploadForm.get('subjectId')?.disable();
+    } else {
+      this.uploadForm.get('subjectId')?.enable();
+    }
   }
 
   close(): void {
@@ -93,9 +103,11 @@ export class UploadDocumentModalComponent implements OnInit {
 
   resetForm(): void {
     this.uploadForm.reset();
+    this.uploadForm.get('subjectId')?.enable(); // Habilitar el selector por defecto
     this.selectedFile = null;
     this.uploadError = null;
     this.currentTopicId = null;
+    this.hideSubjectSelector = false;
   }
 
   submit(): void {
@@ -108,12 +120,14 @@ export class UploadDocumentModalComponent implements OnInit {
     this.uploadError = null;
 
     const formData = this.uploadForm.value;
+    // Obtener el subjectId correcto, incluso si el campo está deshabilitado
+    const subjectId = this.uploadForm.get('subjectId')?.value || this.uploadForm.getRawValue().subjectId;
     
     this.documentService.uploadDocument(
       formData.title,
       formData.description,
       this.selectedFile,
-      formData.subjectId,
+      subjectId,
       this.currentTopicId || undefined
     ).subscribe({
       next: () => {
