@@ -40,8 +40,8 @@
         <a [routerLink]="['/teacher/subjects']" class="see-all-link">Ver todas</a>
       </div>
       <div class="subjects-list" *ngIf="!isLoadingSubjects">
-        <div *ngFor="let subject of subjects" class="subject-item">
-          <div class="subject-name" [routerLink]="['/teacher/subjects', subject.id]" [queryParams]="{name: subject.name}">{{subject.name}}</div>
+        <div *ngFor="let subject of subjects" class="subject-item" [routerLink]="['/teacher/subjects', subject.id]" [queryParams]="{name: subject.name}">
+          <div class="subject-name">{{subject.name}}</div>
           <div class="subject-stats">
             <div class="subject-stat">
               <div class="stat-number">{{subject.students}}</div>
