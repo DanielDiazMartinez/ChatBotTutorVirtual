@@ -152,4 +152,9 @@ export class ChatService {
   getAvailableTopicsForAI(): Observable<any> {
     return this.api.get<any>(`ai/available-topics`);
   }
+
+  // Método para calentar los modelos del backend
+  warmupModels(): Observable<ApiResponse<any>> {
+    return this.api.get<any>('warmup');
+  }
 }

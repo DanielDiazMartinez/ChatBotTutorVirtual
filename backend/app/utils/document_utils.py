@@ -7,23 +7,17 @@ from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core import Document
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-sentence_transformer_model_instance = None
+from app.services.embedding_service import load_sentence_transformer_model_singleton as load_embedding_model
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def load_sentence_transformer_model_singleton(model_name: str = 'multi-qa-mpnet-base-dot-v1'):
-    global sentence_transformer_model_instance
-    if sentence_transformer_model_instance is None:
-        try:
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            logger.info(f"Cargando modelo SentenceTransformer: {model_name} en dispositivo: {device} para codificación de chunks.")
-            sentence_transformer_model_instance = SentenceTransformer(model_name, device=device)
-            logger.info("Modelo SentenceTransformer cargado exitosamente para codificación.")
-        except Exception as e:
-            logger.error(f"Error al cargar el modelo SentenceTransformer {model_name}: {e}", exc_info=True)
-            raise
-    return sentence_transformer_model_instance
+    """
+    Usa el modelo singleton del servicio de embedding para mantener consistencia.
+    Esta función se mantiene para compatibilidad con el código existente.
+    """
+    return load_embedding_model(model_name)
 
 def extract_text_from_pdf(pdf_file) -> str:
     try:

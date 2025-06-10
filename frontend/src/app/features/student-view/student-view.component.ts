@@ -50,6 +50,7 @@ export class StudentViewComponent implements OnInit {
   ngOnInit(): void {
     this.loadUserProfile();
     this.loadSubjects();
+    this.warmupModels(); // Calentar modelos al cargar la vista
   }
 
   private loadUserProfile(): void {
@@ -189,6 +190,18 @@ export class StudentViewComponent implements OnInit {
         console.error('Error al enviar mensaje:', error);
         // Opcional: Mostrar un mensaje de error en la UI
         // O marcar el mensaje como no enviado
+      }
+    });
+  }
+
+  private warmupModels(): void {
+    // Calentar los modelos del backend de forma silenciosa
+    this.chatService.warmupModels().subscribe({
+      next: (response) => {
+        console.log('Modelos calentados exitosamente:', response);
+      },
+      error: (error) => {
+        console.warn('Error al calentar modelos (no crítico):', error);
       }
     });
   }
