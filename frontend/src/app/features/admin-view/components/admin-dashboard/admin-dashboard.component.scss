@@ -78,17 +78,21 @@
   .stats-breakdown {
     display: flex;
     gap: 0.75rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .stats-badge,
   .stats-badge.estudiantes,
-  .stats-badge.profesores {
+  .stats-badge.profesores,
+  .stats-badge.administradores {
     background: transparent !important;
     background-color: transparent !important;
     color: #666 !important;
     box-shadow: none !important;
     border: none !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
   }
 
   .stats-badge.estudiantes {
@@ -97,6 +101,11 @@
   }
 
   .stats-badge.profesores {
+    background: transparent;
+    color: #666;
+  }
+
+  .stats-badge.administradores {
     background: transparent;
     color: #666;
   }
