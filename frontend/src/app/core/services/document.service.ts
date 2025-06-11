@@ -25,7 +25,7 @@ export class DocumentService {
     formData.append('pdf_file', file);
     formData.append('subject_id', subjectId);
     
-    if (topicId) {
+    if (topicId && topicId.trim() !== '') {
       formData.append('topic_id', topicId);
     }
     

@@ -24,8 +24,8 @@ interface Topic {
 interface Document {
   id: string;
   name: string;
+  description?: string;
   type: string;
-  size: string;
   uploadDate: Date;
   topicId: string;
 }
@@ -226,8 +226,8 @@ export class SubjectsComponent implements OnInit {
           this.documents = response.data.map((doc: any) => ({
             id: doc.id.toString(),
             name: doc.title,
-            type: 'PDF',
-            size: 'N/A', // El backend no devuelve el tamaño
+            description: doc.description || '',
+            type: 'pdf',
             uploadDate: new Date(doc.created_at || Date.now()),
             topicId: doc.topic_id?.toString() || ''
           }));
@@ -516,5 +516,46 @@ export class SubjectsComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  // Métodos para gestión de documentos
+  async downloadDocument(documentId: string): Promise<void> {
+    try {
+      await this.documentService.downloadDocument(Number(documentId));
+      console.log('Document download initiated');
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario si fuera necesario
+    }
+  }
+
+  async previewDocument(documentId: string): Promise<void> {
+    try {
+      const previewUrl = await this.documentService.previewDocument(Number(documentId));
+      // Abrir el PDF en una nueva ventana/tab para previsualización
+      window.open(previewUrl, '_blank');
+      console.log('Document preview initiated');
+    } catch (error: any) {
+      console.error('Error previewing document:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario si fuera necesario
+    }
+  }
+
+  deleteDocument(documentId: string): void {
+    if (confirm('¿Está seguro de que desea eliminar este documento? Esta acción no se puede deshacer.')) {
+      this.documentService.deleteDocument(Number(documentId)).subscribe({
+        next: () => {
+          console.log('Document deleted successfully');
+          // Recargar la lista de documentos del tema actual
+          if (this.selectedTopicId) {
+            this.loadDocumentsByTopic(Number(this.selectedTopicId));
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting document:', error);
+          // Aquí podrías mostrar un mensaje de error al usuario si fuera necesario
+        }
+      });
+    }
   }
 }

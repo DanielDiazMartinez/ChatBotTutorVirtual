@@ -104,9 +104,7 @@
         </div>
         
         <ng-container *ngIf="!isLoadingStudents">
-          <div class="student-card" *ngFor="let student of getFilteredStudents()" 
-            [routerLink]="['/teacher/student-profile']" 
-            [queryParams]="{name: student.name}">
+          <div class="student-card" *ngFor="let student of getFilteredStudents()">
             <div class="student-avatar">
               {{ student.name.charAt(0) }}
             </div>
@@ -260,17 +258,30 @@
           </div>
           <div class="document-details">
             <div class="document-title">{{ doc.name }}</div>
+            <div class="document-description" *ngIf="doc.description">{{ doc.description }}</div>
             <div class="document-meta">
-              <span>{{ doc.size }}</span>
               <span>{{ doc.uploadDate | date:'dd/MM/yyyy' }}</span>
             </div>
           </div>
           <div class="document-actions">
-            <button class="action-btn download-btn">
+            <button class="action-btn preview-btn" (click)="previewDocument(doc.id)" title="Previsualizar documento">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+            <button class="action-btn download-btn" (click)="downloadDocument(doc.id)" title="Descargar documento">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </button>
+            <button class="action-btn delete-btn" (click)="deleteDocument(doc.id)" title="Eliminar documento">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
               </svg>
             </button>
           </div>
@@ -278,7 +289,7 @@
         
         <div class="no-documents" *ngIf="documents.length === 0 && !isLoadingDocuments">
           <p>No hay documentos disponibles para este tema</p>
-          <button class="upload-btn" (click)="uploadDocument(selectedTopicId)">
+          <button class="upload-btn" (click)="selectedTopicId && uploadDocument(selectedTopicId)">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>

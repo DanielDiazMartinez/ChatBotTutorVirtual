@@ -30,6 +30,7 @@
           <select 
             id="subjectId" 
             formControlName="subjectId"
+            (change)="onSubjectChange($event)"
             [class.invalid]="uploadForm.get('subjectId')?.invalid && uploadForm.get('subjectId')?.touched"
           >
             <option value="" disabled selected>Seleccione una asignatura</option>
@@ -38,6 +39,17 @@
           <div class="error-message" *ngIf="uploadForm.get('subjectId')?.invalid && uploadForm.get('subjectId')?.touched">
             Debe seleccionar una asignatura
           </div>
+        </div>
+
+        <div class="form-group" *ngIf="!hideTopicSelector">
+          <label for="topicId">Tema</label>
+          <select 
+            id="topicId" 
+            formControlName="topicId"
+          >
+            <option value="">Sin tema específico</option>
+            <option *ngFor="let topic of topics" [value]="topic.id">{{ topic.name }}</option>
+          </select>
         </div>
         
         <div class="form-group">

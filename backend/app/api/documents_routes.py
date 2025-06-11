@@ -346,6 +346,7 @@ def get_documents_by_topic(
     Obtiene todos los documentos asociados a un tema específico.
     """
     try:
+        print(f"[DEBUG] get_documents_by_topic - topic_id: {topic_id}")
         documents = get_documents_by_topic_id(db, topic_id, current_user)
         return {
             "data": documents,
@@ -353,5 +354,6 @@ def get_documents_by_topic(
             "status": 200
         }
     except Exception as e:
+        print(f"[DEBUG] Error en get_documents_by_topic: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -429,6 +429,13 @@
       margin-bottom: 0.25rem;
     }
     
+    .document-description {
+      font-size: 0.8rem;
+      color: $text-color-light;
+      margin-bottom: 0.25rem;
+      font-style: italic;
+    }
+    
     .document-meta {
       display: flex;
       justify-content: space-between;
@@ -440,6 +447,8 @@
   .document-actions {
     opacity: 0;
     transition: opacity 0.2s;
+    display: flex;
+    gap: 0.5rem;
     
     .action-btn {
       width: 28px;
@@ -457,10 +466,24 @@
         transform: translateY(-2px);
       }
       
+      &.preview-btn {
+        color: #3f6464;
+        &:hover {
+          background-color: #e6f2ef;
+        }
+      }
+      
       &.download-btn {
         color: #1565c0;
         &:hover {
           background-color: #e3f2fd;
+        }
+      }
+      
+      &.delete-btn {
+        color: #c62828;
+        &:hover {
+          background-color: #ffebee;
         }
       }
     }

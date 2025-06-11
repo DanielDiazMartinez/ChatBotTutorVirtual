@@ -218,8 +218,7 @@ def get_documents_by_topic_id(db: Session, topic_id: int, current_user):
             "user_id": doc.user_id,
             "subject_id": doc.subject_id,
             "topic_id": doc.topic_id,
-            "created_at": doc.created_at.isoformat() if doc.created_at else None,
-            "updated_at": doc.updated_at.isoformat() if doc.updated_at else None
+            "created_at": doc.created_at.isoformat() if doc.created_at else None
         }
         for doc in documents
     ]
