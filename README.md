@@ -149,12 +149,12 @@ El sistema incluye una funcionalidad de logging avanzada para registrar los cont
 
 Para analizar los logs, ejecuta:
 ```bash
-python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_google_ai_logs.py
+python backend/app/utils/analyze_google_ai_logs.py
 ```
 
 Para ver opciones adicionales:
 ```bash
-python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_google_ai_logs.py --help
+python backend/app/utils/analyze_google_ai_logs.py --help
 ```
 
 ### Sistema de Chat Multimodal
