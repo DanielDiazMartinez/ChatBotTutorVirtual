@@ -196,6 +196,9 @@
   border: 1px solid #e0e0e0;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -270,6 +273,8 @@
     margin: 0 0 1.5rem 0;
     font-size: 0.95rem;
     line-height: 1.5;
+    flex: 1;
+    min-height: 3rem;
   }
   
   .subject-stats {
@@ -278,6 +283,7 @@
     justify-content: space-between;
     border-top: 1px solid #f0f0f0;
     padding-top: 1rem;
+    margin-top: auto;
     
     .stat-item {
       display: flex;

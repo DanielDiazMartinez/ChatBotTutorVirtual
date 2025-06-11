@@ -12,23 +12,29 @@ ChatBotTutorVirtual es una plataforma educativa integral que permite a los profe
 - **Framework principal**: FastAPI (Python)
 - **ORM**: SQLAlchemy
 - **Migraciones**: Alembic
-- **Autenticación**: JWT
-- **Procesamiento LLM**: Google AI API
-- **Vectorización**: pgVector
-- **Logging**: Sistema de registro para contextos de Google AI
+- **Autenticación**: JWT con interceptores automáticos
+- **Procesamiento LLM**: Google AI API con análisis multimodal
+- **Vectorización**: pgVector con embeddings de 1024 dimensiones
+- **Logging**: Sistema avanzado para análisis de contextos y uso
+- **Análisis de datos**: Servicios de IA para análisis estudiantil
 
 ### Base de datos
 - **Motor principal**: PostgreSQL
-- **Búsqueda vectorial**: pgvector (índices vectoriales para búsqueda semántica)
+- **Búsqueda vectorial**: pgvector (índices vectoriales optimizados)
+- **Estructura**: 8+ modelos con relaciones complejas
 
 ### Frontend
-- **Framework**: Angular 17+ (standalone components)
-- **Estilos**: SCSS personalizado
-- **Componentes UI**: Material Design
+- **Framework**: Angular 17+ (standalone components, signals)
+- **Estilos**: SCSS personalizado con variables globales
+- **Componentes UI**: Material Design adaptado
+- **Estado**: Servicios reactivos con RxJS
+- **Modales**: Sistema de modales reutilizables
+- **Chat**: Interfaz moderna con soporte multimedia
 
 ### Infraestructura
 - **Contenedores**: Docker y Docker Compose
-- **Almacenamiento**: Volúmenes Docker para persistencia
+- **Almacenamiento**: Volúmenes Docker para persistencia de archivos
+- **Archivos**: Sistema de gestión de imágenes y documentos
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -55,12 +61,14 @@ ChatBotTutorVirtual/
 
 El sistema está estructurado alrededor de estos modelos principales:
 
-- **User**: Base para todos los tipos de usuarios con autenticación
-- **Subject**: Asignaturas con relaciones a profesores y estudiantes
-- **Document**: Materiales de estudio con metadatos
-- **DocumentChunk**: Fragmentos de documentos vectorizados
-- **Conversation**: Hilos de chat entre estudiantes y el sistema
-- **Message**: Mensajes individuales con su contexto
+- **User**: Base para todos los tipos de usuarios con autenticación JWT
+- **Subject**: Asignaturas con relaciones profesor-estudiante y resúmenes
+- **Topic**: Temas organizados por asignatura para estructurar contenidos
+- **Document**: Materiales de estudio con metadatos y resúmenes automáticos
+- **DocumentChunk**: Fragmentos de documentos vectorizados para búsqueda semántica
+- **Conversation**: Hilos de chat entre estudiantes y el sistema con contexto
+- **Message**: Mensajes individuales con soporte para texto e imágenes
+- **Image**: Gestión de archivos de imagen adjuntos en conversaciones
 
 ## 🚀 Cómo Ejecutar el Proyecto
 
@@ -96,13 +104,31 @@ El sistema está estructurado alrededor de estos modelos principales:
 
 ## 🔍 Funcionalidades Destacadas
 
-- **Gestión de asignaturas** con relaciones profesor-estudiante
-- **Carga y procesamiento** de documentos PDF, DOCX, etc.
-- **Vectorización automática** de contenidos para búsqueda semántica
-- **Autenticación y autorización** basada en roles (admin, profesor, estudiante)
-- **Procesamiento de lenguaje natural** para responder consultas complejas
-- **Historial de conversaciones** persistente con contexto de preguntas anteriores
-- **Interfaz administrativa** para profesores y gestores del sistema
+### 🎓 Gestión Académica
+- **Gestión completa de asignaturas** con relaciones profesor-estudiante
+- **Sistema de temas (topics)** para organizar contenidos por asignatura
+- **Carga y procesamiento** de documentos PDF con vectorización automática
+- **Análisis de participación estudiantil** con IA para identificar deficiencias
+- **Resúmenes automáticos** de asignaturas y documentos
+
+### 🤖 Sistema de Chat Inteligente
+- **Chat multimodal** con soporte para texto e imágenes
+- **Prompts predefinidos** para generar exámenes, resúmenes y ejercicios
+- **Búsqueda semántica vectorial** para respuestas contextualizadas
+- **Historial de conversaciones** persistente y organizado
+- **Modal de visualización** de imágenes adjuntas
+
+### 👥 Gestión de Usuarios y Roles
+- **Autenticación JWT** con interceptor para manejo automático de tokens
+- **Sistema de roles** (admin, profesor, estudiante) con permisos específicos
+- **Panel de administración** para gestión de usuarios y asignaturas
+- **Dashboard para profesores** con estadísticas y métricas
+
+### 📊 Análisis y Reportes
+- **Análisis de estudiantes con IA** para detectar patrones de aprendizaje
+- **Estadísticas de participación** por asignatura y período
+- **Monitor de calidad de contexto** para optimizar respuestas del chatbot
+- **Sistema de logs avanzado** para análisis de uso del sistema
 
 ## 💡 Implementación Técnica
 
@@ -131,6 +157,33 @@ Para ver opciones adicionales:
 python /home/dani/Proyectos/ChatBotTutorVirtual/backend/app/utils/analyze_google_ai_logs.py --help
 ```
 
+### Sistema de Chat Multimodal
+
+**Funcionalidades avanzadas del chat:**
+
+1. **Soporte para imágenes**: Los usuarios pueden adjuntar imágenes que se procesan y analizan por el LLM
+2. **Prompts predefinidos**: Menú de templates para generar contenido específico (exámenes, resúmenes, ejercicios)
+3. **Modal de visualización**: Sistema para ver imágenes adjuntas en tamaño completo
+4. **Interceptor de autenticación**: Manejo automático de tokens JWT con renovación transparente
+
+### Análisis de Estudiantes con IA
+
+**Sistema de análisis avanzado:**
+
+1. **Detección de patrones**: Identifica deficiencias comunes en el aprendizaje
+2. **Análisis contextual**: Relaciona preguntas con documentos y temas específicos
+3. **Reportes personalizados**: Genera recomendaciones específicas por asignatura
+4. **Estadísticas de participación**: Métricas detalladas de actividad estudiantil
+
+### Gestión de Temas y Documentos
+
+**Organización estructurada:**
+
+1. **Jerarquía por temas**: Los documentos se organizan bajo temas específicos
+2. **Resúmenes automáticos**: Generación de resúmenes para asignaturas y documentos
+3. **Modal de subida**: Interfaz moderna para cargar documentos con validación
+4. **Búsqueda semántica**: Vectorización avanzada para recuperación de contexto
+
 ### Búsqueda Vectorial
 
 El sistema utiliza embeddings vectoriales para:
@@ -142,21 +195,94 @@ El sistema utiliza embeddings vectoriales para:
 
 ### Flujo de una Consulta
 
-1. El estudiante realiza una pregunta en el chat
+1. El estudiante realiza una pregunta en el chat (con texto y/o imagen)
 2. La pregunta se vectoriza y se buscan fragmentos relevantes en la base de datos
 3. Los fragmentos recuperados proporcionan contexto a un LLM
 4. El modelo genera una respuesta precisa basada en los documentos de la asignatura
-5. La interacción se guarda en el historial de conversaciones
+5. La interacción se guarda en el historial de conversaciones con metadatos completos
+
+## 🚀 Nuevas Funcionalidades Destacadas
+
+### 🖼️ **Chat Multimodal con Imágenes**
+- Soporte completo para adjuntar y procesar imágenes en conversaciones
+- Modal de visualización de imágenes en pantalla completa
+- Procesamiento de imágenes por Google AI para análisis contextual
+- Sistema de almacenamiento seguro con control de acceso por roles
+
+### 📝 **Prompts Predefinidos Inteligentes**
+- Menú desplegable con templates para casos de uso común:
+  - Generación de exámenes completos (opción múltiple, verdadero/falso, desarrollo)
+  - Creación de resúmenes estructurados
+  - Ejercicios de práctica con soluciones
+  - Mapas conceptuales en formato texto
+  - Casos de estudio específicos
+- Interfaz moderna con iconos y previsualizaciones
+
+### 🔒 **Sistema de Autenticación Avanzado**
+- Interceptor HTTP automático para manejo de tokens JWT
+- Renovación transparente de sesiones expiradas
+- Redirección automática al login cuando es necesario
+- Manejo de errores de autenticación con feedback al usuario
+
+### 📊 **Análisis de Estudiantes con IA**
+- **Detección automática de deficiencias** en el aprendizaje por asignatura
+- **Análisis de patrones** de preguntas y participación estudiantil
+- **Reportes personalizados** con recomendaciones específicas
+- **Estadísticas detalladas**: tasa de participación, estudiantes más activos
+- **Configuración flexible**: períodos de análisis y criterios de participación
+
+### 🏷️ **Sistema de Temas (Topics)**
+- Organización jerárquica de documentos por temas dentro de cada asignatura
+- CRUD completo para gestión de temas por profesores
+- Vinculación automática de documentos a temas específicos
+- Estadísticas de documentos por tema
+
+### 📋 **Gestión Avanzada de Documentos**
+- **Modal moderno de subida** con drag & drop
+- **Validación automática** de tipos y tamaños de archivo
+- **Organización por temas** y asignaturas
+- **Resúmenes automáticos** generados por IA
+- **Control de acceso** basado en roles de usuario
+
+### 💬 **Mejoras en el Sistema de Chat**
+- **Barra lateral de conversaciones** con historial completo
+- **Filtrado por asignatura** para organizar conversaciones
+- **Indicadores visuales** para imágenes adjuntas
+- **Scroll automático** optimizado para mejor UX
+- **Estados de carga** y feedback visual mejorado
+
+### 📈 **Dashboard para Profesores**
+- **Estadísticas en tiempo real** de estudiantes y documentos
+- **Mensajes recientes** de todas las asignaturas
+- **Navegación rápida** a gestión de asignaturas
+- **Métricas de participación** estudiantil
+
+### 🛠️ **Herramientas de Monitoreo**
+- **Monitor de calidad de contexto** para optimizar respuestas del chatbot
+- **Análisis de logs** con estadísticas detalladas de uso
+- **Recomendaciones automáticas** para mejorar el rendimiento del sistema
+
+### 🎨 **Mejoras en la Interfaz**
+- **Componentes standalone** de Angular 17+ para mejor performance
+- **Sistema de modales** reutilizable y accesible
+- **Estilos SCSS** organizados con variables globales
+- **Responsive design** optimizado para dispositivos móviles
+- **Feedback visual** mejorado en todas las interacciones
 
 ## 👨‍💻 Desarrollo y Contribuciones
 
-Este proyecto forma parte de mi portfolio profesional, demostrando habilidades en:
+Este proyecto forma parte de mi portfolio profesional, demostrando habilidades avanzadas en:
 
-- Desarrollo fullstack con Python (FastAPI) y Angular
-- Diseño e implementación de bases de datos relacionales
-- Integración de modelos de IA y procesamiento de lenguaje natural
-- Arquitectura de sistemas distribuidos con Docker
-- Testing y documentación de APIs
+- **Desarrollo fullstack moderno** con Python (FastAPI) y Angular 17+
+- **Arquitectura de microservicios** con separación clara de responsabilidades
+- **Integración de IA multimodal** para procesamiento de texto e imágenes
+- **Diseño de bases de datos** relacionales complejas con optimizaciones vectoriales
+- **Implementación de autenticación** y autorización robusta con JWT
+- **Testing e integración continua** con cobertura completa
+- **Documentación técnica** y API comprehensiva
+- **UI/UX design** con interfaces modernas y accesibles
+- **Gestión de estado** compleja en aplicaciones SPA
+- **Optimización de rendimiento** tanto en frontend como backend
 
 ## 📝 Licencia
 

@@ -1,4 +1,5 @@
 import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
@@ -16,6 +17,7 @@ interface AuthResponse {
 })
 export class AuthService {
   private api = inject(ApiService);
+  private router = inject(Router);
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'current_user';
   
@@ -48,6 +50,17 @@ export class AuthService {
       localStorage.removeItem(this.USER_KEY);
     }
     this.currentUserSubject.next(null);
+    this.router.navigate(['/login']);
+  }
+
+  // Método para manejar logout por token expirado
+  logoutDueToExpiredToken(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+    }
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/login']);
   }
 
   isLoggedIn(): boolean {
