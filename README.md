@@ -1,10 +1,10 @@
-# ChatBotTutorVirtual 🤖
+# TutorIA 🤖
 
 Un sistema avanzado de tutoría virtual basado en Inteligencia Artificial que conecta profesores y estudiantes a través de un chatbot inteligente.
 
 ## 📋 Descripción del Proyecto
 
-ChatBotTutorVirtual es una plataforma educativa integral que permite a los profesores gestionar asignaturas y cargar materiales de estudio, mientras que los estudiantes pueden interactuar con un chatbot especializado que responde preguntas basadas en esos contenidos. El sistema utiliza procesamiento de lenguaje natural y búsqueda semántica vectorial para proporcionar respuestas precisas y contextualizadas.
+TutorIA es una plataforma educativa integral que permite a los profesores gestionar asignaturas y cargar materiales de estudio, mientras que los estudiantes pueden interactuar con un chatbot especializado que responde preguntas basadas en esos contenidos. El sistema utiliza procesamiento de lenguaje natural y búsqueda semántica vectorial para proporcionar respuestas precisas y contextualizadas.
 
 ## 🛠️ Stack Tecnológico
 
@@ -39,7 +39,7 @@ ChatBotTutorVirtual es una plataforma educativa integral que permite a los profe
 ## 🏗️ Arquitectura del Proyecto
 
 ```
-ChatBotTutorVirtual/
+TutorIA/
 ├── backend/                # API y lógica de servidor
 │   ├── app/
 │   │   ├── api/            # Endpoints REST
@@ -81,8 +81,8 @@ El sistema está estructurado alrededor de estos modelos principales:
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/tu-usuario/ChatBotTutorVirtual.git
-   cd ChatBotTutorVirtual
+   git clone https://github.com/tu-usuario/Tutor.IA.git
+   cd TutorIA
    ```
 
 2. **Configurar variables de entorno**
@@ -274,7 +274,7 @@ El sistema utiliza embeddings vectoriales para:
 Este proyecto forma parte de mi portfolio profesional, demostrando habilidades avanzadas en:
 
 - **Desarrollo fullstack moderno** con Python (FastAPI) y Angular 17+
-- **Arquitectura de microservicios** con separación clara de responsabilidades
+- **Arquitectura de monolitica en capas** con separación clara de responsabilidades
 - **Integración de IA multimodal** para procesamiento de texto e imágenes
 - **Diseño de bases de datos** relacionales complejas con optimizaciones vectoriales
 - **Implementación de autenticación** y autorización robusta con JWT
