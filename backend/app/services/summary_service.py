@@ -6,20 +6,18 @@ import time
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.models import Document, DocumentChunk, Subject
+from app.crud import crud_summary
 from app.services.api_service import generate_google_ai_simple
 
 async def generate_document_summary(
-    document: Document, 
+    document, 
     db: Session, 
     max_summary_length: int = 1000
 ) -> str:
     """Genera un resumen completo del documento"""
     try:
-        # Obtener todos los chunks del documento (ya divididos semánticamente)
-        chunks = db.query(DocumentChunk).filter(
-            DocumentChunk.document_id == document.id
-        ).order_by(DocumentChunk.chunk_number).all()
+        # Obtener todos los chunks del documento usando CRUD
+        chunks = crud_summary.get_document_chunks_by_document_id(db, document.id)
         
         if not chunks:
             return "No se encontraron fragmentos del documento para resumir."
@@ -44,7 +42,7 @@ async def generate_document_summary(
 
 async def generate_document_summary_by_id(db: Session, document_id: int) -> str:
     """Genera un resumen completo del documento por ID"""
-    document = db.query(Document).filter(Document.id == document_id).first()
+    document = crud_summary.get_document_by_id(db, document_id)
     if not document:
         raise ValueError(f"Documento {document_id} no encontrado")
     
@@ -54,7 +52,7 @@ async def generate_document_summary_by_id(db: Session, document_id: int) -> str:
 async def update_document_summary(document_id: int, db: Session) -> bool:
     """Actualiza el resumen de un documento específico"""
     try:
-        document = db.query(Document).filter(Document.id == document_id).first()
+        document = crud_summary.get_document_by_id(db, document_id)
         if not document:
             print(f"Documento {document_id} no encontrado")
             return False
@@ -62,31 +60,29 @@ async def update_document_summary(document_id: int, db: Session) -> bool:
         # Generar el resumen
         summary = await generate_document_summary(document, db)
         
-        # Actualizar el documento
-        document.summary = summary
-        db.commit()
+        # Actualizar el documento usando CRUD
+        success = crud_summary.update_document_summary(db, document_id, summary)
         
-        print(f"Resumen actualizado para documento {document.title}")
-        return True
+        if success:
+            print(f"Resumen actualizado para documento {document.title}")
+        
+        return success
         
     except Exception as e:
         print(f"Error actualizando resumen del documento {document_id}: {e}")
-        db.rollback()
         return False
 
 
 async def generate_subject_summary(subject_id: int, db: Session) -> str:
     """Genera un resumen general de la asignatura basado en todos sus documentos"""
     try:
-        # Obtener la asignatura
-        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        # Obtener la asignatura usando CRUD
+        subject = crud_summary.get_subject_by_id(db, subject_id)
         if not subject:
             return "Asignatura no encontrada."
         
-        # Siempre generar un nuevo resumen, independientemente de si ya existe uno
-        documents = db.query(Document).filter(
-            Document.subject_id == subject_id,
-        ).all()
+        # Obtener documentos usando CRUD
+        documents = crud_summary.get_documents_by_subject_id(db, subject_id)
         
         if not documents:
             return "No hay documentos disponibles para esta asignatura."
@@ -112,9 +108,8 @@ async def generate_subject_summary(subject_id: int, db: Session) -> str:
         response = generate_google_ai_simple(prompt)
         generated_summary = response.strip()
         
-        # Guardar el resumen en la base de datos
-        subject.summary = generated_summary
-        db.commit()
+        # Guardar el resumen usando CRUD
+        crud_summary.update_subject_summary(db, subject_id, generated_summary)
         
         return generated_summary
         
@@ -126,7 +121,7 @@ async def generate_subject_summary(subject_id: int, db: Session) -> str:
 def update_subject_summary(subject_id: int, db: Session, new_summary: str = None) -> bool:
     """Actualiza el resumen de una asignatura específica"""
     try:
-        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        subject = crud_summary.get_subject_by_id(db, subject_id)
         if not subject:
             print(f"Asignatura {subject_id} no encontrada")
             return False
@@ -137,14 +132,14 @@ def update_subject_summary(subject_id: int, db: Session, new_summary: str = None
         else:
             summary = generate_subject_summary(db, subject_id)
         
-        # Actualizar la asignatura
-        subject.summary = summary
-        db.commit()
+        # Actualizar la asignatura usando CRUD
+        success = crud_summary.update_subject_summary(db, subject_id, summary)
         
-        print(f"Resumen actualizado para asignatura {subject.name}")
-        return True
+        if success:
+            print(f"Resumen actualizado para asignatura {subject.name}")
+        
+        return success
         
     except Exception as e:
         print(f"Error actualizando resumen de la asignatura {subject_id}: {e}")
-        db.rollback()
         return False

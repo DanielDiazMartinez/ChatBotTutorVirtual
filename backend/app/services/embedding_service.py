@@ -5,7 +5,8 @@ import logging
 from llama_index.core.node_parser import SentenceSplitter  # Importamos SentenceSplitter
 from llama_index.core import Document
 from sqlalchemy.orm import Session
-from ..models.models import DocumentChunk
+from app.crud import crud_document_chunk
+from app.models.models import DocumentChunk
 import nltk  # Importamos nltk
 import numpy as np
 
@@ -138,22 +139,22 @@ def create_document_chunks(db: Session, document_id: int, text: str) -> List[Doc
         logger.warning(f"No se pudieron crear chunks para el documento {document_id}")
         return []
 
-  
+    # Generar embeddings para todos los chunks
     embeddings = model.encode(chunks)  
     print(f"Chunks: {embeddings}")
-    db_chunks = []
+    
+    # Preparar datos para la capa CRUD
+    chunks_data = []
     for i, (chunk_text, embedding) in enumerate(zip(chunks, embeddings)):
-        chunk = DocumentChunk(
-            document_id=document_id,
-            content=chunk_text,
-            embedding=embedding.tolist(),
-            chunk_number=i,
-        )
-        db_chunks.append(chunk)
+        chunk_data = {
+            'document_id': document_id,
+            'content': chunk_text,
+            'embedding': embedding.tolist(),
+            'chunk_number': i
+        }
+        chunks_data.append(chunk_data)
 
-    # Guardar en la base de datos
-    db.add_all(db_chunks)
-    db.flush()
-    db.commit()
+    # Guardar en la base de datos usando CRUD
+    db_chunks = crud_document_chunk.create_document_chunks(db, chunks_data)
     logger.info(f"Guardados {len(db_chunks)} chunks para el documento {document_id}")
     return db_chunks

@@ -1,28 +1,26 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from ..models.models import Subject, User, user_subject, Document
 from ..models.schemas import SubjectCreate
+from app.crud import crud_subject
 
 def create_subject(db: Session, subject: SubjectCreate) -> dict:
     """Crea una nueva asignatura"""
     
-    # Primero verificamos si ya existe una asignatura con ese código
-    existing_subject = db.query(Subject).filter(Subject.code == subject.code).first()
+    # Verificar si ya existe una asignatura con ese código usando CRUD
+    existing_subject = crud_subject.get_subject_by_code(db, subject.code)
     if existing_subject:
         return {
             "error": "Ya existe una asignatura con ese código",
             "status": 400
         }
         
-    # Si no existe, creamos la nueva asignatura
-    db_subject = Subject(
+    # Crear la nueva asignatura usando CRUD
+    db_subject = crud_subject.create_subject(
+        db=db,
         name=subject.name,
         code=subject.code,
         description=subject.description
     )
-    db.add(db_subject)
-    db.commit()
-    db.refresh(db_subject)
+    
     return {
         "id": db_subject.id,
         "name": db_subject.name,
@@ -34,7 +32,7 @@ def create_subject(db: Session, subject: SubjectCreate) -> dict:
 
 def get_subject_by_id(db: Session, subject_id: int) -> dict:
     """Obtiene una asignatura por su ID"""
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    db_subject = crud_subject.get_subject_by_id(db, subject_id)
     if not db_subject:
         return None
     
@@ -68,12 +66,12 @@ def get_subject_by_id(db: Session, subject_id: int) -> dict:
         "students": students,
         "teacher_count": teacher_count,
         "student_count": student_count,
-        "document_count": db.query(Document).filter(Document.subject_id == subject_id).count()
+        "document_count": crud_subject.count_documents_by_subject_id(db, subject_id)
     }
     
 def get_all_subjects(db: Session) -> list[dict]:
     """Obtiene todas las asignaturas"""
-    subjects = db.query(Subject).all()
+    subjects = crud_subject.get_all_subjects(db)
     return [
         {
             "id": subject.id,
@@ -102,26 +100,25 @@ def get_all_subjects(db: Session) -> list[dict]:
             ],
             "teacher_count": len([user for user in subject.users if user.role == "teacher"]) if subject.users else 0,
             "student_count": len([user for user in subject.users if user.role == "student"]) if subject.users else 0,
-            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
+            "document_count": crud_subject.count_documents_by_subject_id(db, subject.id)
         }
         for subject in subjects
     ]
 
 def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict:
     """Actualiza una asignatura existente"""
-    # Aquí obtenemos el objeto directamente ya que get_subject_by_id ahora devuelve un dict
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    # Usar CRUD para actualizar la asignatura
+    db_subject = crud_subject.update_subject(
+        db=db,
+        subject_id=subject_id,
+        name=subject.name,
+        code=subject.code,
+        description=subject.description
+    )
     if not db_subject:
         return None
     
-    db_subject.name = subject.name
-    db_subject.code = subject.code
-    db_subject.description = subject.description
-    
-    db.commit()
-    db.refresh(db_subject)
-    
-    # Preparamos la respuesta
+    # Preparar la respuesta con información de usuarios
     users = [
         {
             "id": user.id,
@@ -155,20 +152,14 @@ def update_subject(db: Session, subject_id: int, subject: SubjectCreate) -> dict
 
 def delete_subject(db: Session, subject_id: int) -> bool:
     """Elimina una asignatura"""
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
-    if not db_subject:
-        return False
-    
-    db.delete(db_subject)
-    db.commit()
-    return True
+    return crud_subject.delete_subject(db, subject_id)
 
 def add_user_to_subject(db: Session, subject_id: int, user_id: int) -> bool:
     """Agrega un usuario a una asignatura"""
     print(f"Intentando agregar: subject_id={subject_id}, user_id={user_id}")
 
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
-    db_user = db.query(User).filter(User.id == user_id).first()
+    db_subject = crud_subject.get_subject_by_id(db, subject_id)
+    db_user = crud_subject.get_user_by_id(db, user_id)
     
     print(f"Subject encontrado: {db_subject is not None}")
     print(f"User encontrado: {db_user is not None}")
@@ -183,26 +174,21 @@ def add_user_to_subject(db: Session, subject_id: int, user_id: int) -> bool:
         return False
     
     try:
-        if db_user not in db_subject.users:
-            db_subject.users.append(db_user)
+        success = crud_subject.add_user_to_subject(db, db_subject, db_user)
+        if success:
             print(f"Usuario ({db_user.role}) agregado correctamente")
         else:
             print(f"El usuario ya está en la asignatura")
-            return False
-        
-        db.commit()
-        print("Commit realizado con éxito")
-        return True
+        return success
     except Exception as e:
         print(f"Error al agregar usuario: {str(e)}")
-        db.rollback()
         return False
 
 def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[int]) -> dict:
     """
     Agrega múltiples usuarios a una asignatura
     """
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    db_subject = crud_subject.get_subject_by_id(db, subject_id)
     if not db_subject:
         return {"success": False, "error": "Asignatura no encontrada", "added": [], "failed": user_ids}
     
@@ -214,7 +200,7 @@ def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[i
     
     for user_id in user_ids:
         try:
-            db_user = db.query(User).filter(User.id == user_id).first()
+            db_user = crud_subject.get_user_by_id(db, user_id)
             
             if not db_user:
                 results["failed"].append({"id": user_id, "reason": "Usuario no encontrado"})
@@ -224,8 +210,7 @@ def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[i
                 results["failed"].append({"id": user_id, "reason": "Los administradores no pueden ser añadidos a asignaturas"})
                 continue
                 
-            if db_user not in db_subject.users:
-                db_subject.users.append(db_user)
+            if crud_subject.add_user_to_subject(db, db_subject, db_user):
                 results["added"].append({"id": user_id, "role": db_user.role})
             else:
                 results["failed"].append({"id": user_id, "reason": f"El {db_user.role} ya está asignado a esta asignatura"})
@@ -234,15 +219,7 @@ def add_multiple_users_to_subject(db: Session, subject_id: int, user_ids: list[i
             results["failed"].append({"id": user_id, "reason": str(e)})
     
     if results["added"]:
-        try:
-            db.commit()
-            results["success"] = True
-        except Exception as e:
-            db.rollback()
-            results["success"] = False
-            results["error"] = str(e)
-            results["failed"].extend(results["added"])
-            results["added"] = []
+        results["success"] = True
     else:
         results["error"] = "No se pudo agregar ningún usuario"
             
@@ -252,7 +229,7 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
     """
     Elimina múltiples usuarios de una asignatura
     """
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    db_subject = crud_subject.get_subject_by_id(db, subject_id)
     if not db_subject:
         return {"success": False, "error": "Asignatura no encontrada", "removed": [], "failed": user_ids}
     
@@ -264,14 +241,13 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
     
     for user_id in user_ids:
         try:
-            db_user = db.query(User).filter(User.id == user_id).first()
+            db_user = crud_subject.get_user_by_id(db, user_id)
             
             if not db_user:
                 results["failed"].append({"id": user_id, "reason": "Usuario no encontrado"})
                 continue
                 
-            if db_user in db_subject.users:
-                db_subject.users.remove(db_user)
+            if crud_subject.remove_user_from_subject(db, db_subject, db_user):
                 results["removed"].append({"id": user_id, "role": db_user.role})
             else:
                 results["failed"].append({"id": user_id, "reason": "Usuario no asociado a la asignatura"})
@@ -280,15 +256,7 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
             results["failed"].append({"id": user_id, "reason": str(e)})
     
     if results["removed"]:
-        try:
-            db.commit()
-            results["success"] = True
-        except Exception as e:
-            db.rollback()
-            results["success"] = False
-            results["error"] = str(e)
-            results["failed"].extend(results["removed"])
-            results["removed"] = []
+        results["success"] = True
     else:
         results["error"] = "No se pudo eliminar ningún usuario"
             
@@ -296,16 +264,16 @@ def remove_multiple_users_from_subject(db: Session, subject_id: int, user_ids: l
 
 def get_subject_documents(db: Session, subject_id: int):
     """Obtiene todos los documentos asociados a una asignatura"""
-    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    subject = crud_subject.get_subject_by_id(db, subject_id)
     if not subject:
         return None
         
-    documents = db.query(Document).filter(Document.subject_id == subject_id).all()
+    documents = crud_subject.get_documents_by_subject_id(db, subject_id)
     return documents
 
 def get_subject_users(db: Session, subject_id: int) -> dict:
     """Obtiene todos los usuarios asociados a una asignatura"""
-    db_subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    db_subject = crud_subject.get_subject_by_id(db, subject_id)
     if not db_subject:
         return None
     

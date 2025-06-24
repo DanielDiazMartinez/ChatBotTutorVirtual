@@ -4,10 +4,9 @@ Este servicio maneja toda la lógica relacionada con los mensajes de usuarios.
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc, func, distinct
 import logging
 
-from ..models.models import Message, Conversation, User, Subject, Topic
+from app.crud import crud_message
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -35,39 +34,10 @@ def get_user_messages_with_filters(
         Lista de diccionarios con la información de los mensajes
     """
     try:
-        # Crear la query base para mensajes de usuarios (no bot) con texto
-        query = db.query(Message).filter(
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
+        # Obtener mensajes usando CRUD
+        messages = crud_message.get_user_messages_filtered(
+            db, subject_id, topic_id, user_id, limit
         )
-        
-        # Hacer joins con las tablas relacionadas
-        query = query.join(Conversation, Message.conversation_id == Conversation.id)
-        query = query.join(User, Conversation.user_id == User.id)
-        query = query.outerjoin(Subject, Conversation.subject_id == Subject.id)
-        
-        # Aplicar filtros si se proporcionan
-        if subject_id:
-            query = query.filter(Conversation.subject_id == subject_id)
-            
-        if user_id:
-            query = query.filter(Conversation.user_id == user_id)
-        
-        # Para el filtro de tema, necesitamos hacer un join adicional
-        if topic_id:
-            query = query.join(Topic, Subject.id == Topic.subject_id)
-            query = query.filter(Topic.id == topic_id)
-        
-        # Ordenar por fecha de creación descendente
-        query = query.order_by(desc(Message.created_at))
-        
-        # Aplicar límite si se especifica
-        if limit:
-            query = query.limit(limit)
-        
-        # Ejecutar la query
-        messages = query.all()
         
         # Transformar los resultados al formato esperado
         messages_data = []
@@ -81,13 +51,10 @@ def get_user_messages_with_filters(
             if subject:
                 if topic_id:
                     # Si se especificó un topic_id, buscar ese tema específico
-                    topic = db.query(Topic).filter(
-                        Topic.id == topic_id,
-                        Topic.subject_id == subject.id
-                    ).first()
+                    topic = crud_message.get_topic_by_id_and_subject(db, topic_id, subject.id)
                 else:
                     # Si no se especificó topic_id, obtener el primer tema de la asignatura
-                    topic = db.query(Topic).filter(Topic.subject_id == subject.id).first()
+                    topic = crud_message.get_topic_by_subject_id(db, subject.id)
             
             message_data = {
                 "id": str(message.id),
@@ -126,59 +93,16 @@ def get_messages_statistics(
         Diccionario con estadísticas de los mensajes
     """
     try:
-        # Query base para mensajes de usuarios
-        query = db.query(Message).filter(
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
-        )
+        # Contar total de mensajes usando CRUD
+        total_messages = crud_message.count_user_messages_filtered(db, subject_id, topic_id)
         
-        # Joins necesarios
-        query = query.join(Conversation, Message.conversation_id == Conversation.id)
-        query = query.outerjoin(Subject, Conversation.subject_id == Subject.id)
-        
-        # Aplicar filtros
-        if subject_id:
-            query = query.filter(Conversation.subject_id == subject_id)
-            
-        if topic_id:
-            query = query.join(Topic, Subject.id == Topic.subject_id)
-            query = query.filter(Topic.id == topic_id)
-        
-        # Contar total de mensajes
-        total_messages = query.count()
-        
-        # Contar usuarios únicos - crear una nueva query para evitar problemas
-        unique_users_query = db.query(Message).filter(
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
-        ).join(Conversation, Message.conversation_id == Conversation.id)
-        
-        # Aplicar los mismos filtros que en la query principal
-        if subject_id:
-            unique_users_query = unique_users_query.filter(Conversation.subject_id == subject_id)
-            
-        if topic_id:
-            unique_users_query = unique_users_query.join(Subject, Conversation.subject_id == Subject.id)
-            unique_users_query = unique_users_query.join(Topic, Subject.id == Topic.subject_id)
-            unique_users_query = unique_users_query.filter(Topic.id == topic_id)
-        
-        unique_users = unique_users_query.distinct(Conversation.user_id).count()
+        # Contar usuarios únicos usando CRUD
+        unique_users = crud_message.count_unique_users_filtered(db, subject_id, topic_id)
         
         # Contar mensajes por asignatura (si no se está filtrando por asignatura)
         messages_by_subject = {}
         if not subject_id:
-            subject_counts = db.query(Subject.name, func.count(Message.id)).join(
-                Conversation, Subject.id == Conversation.subject_id
-            ).join(
-                Message, Conversation.id == Message.conversation_id
-            ).filter(
-                Message.is_bot == False,
-                Message.text.isnot(None),
-                Message.text != ""
-            ).group_by(Subject.name).all()
-            
+            subject_counts = crud_message.get_messages_by_subject_counts(db)
             messages_by_subject = {name: count for name, count in subject_counts}
         
         statistics = {
@@ -207,11 +131,8 @@ def get_message_by_id(db: Session, message_id: int) -> Optional[Dict[str, Any]]:
         Diccionario con la información del mensaje o None si no existe
     """
     try:
-        message = db.query(Message).filter(
-            Message.id == message_id,
-            Message.is_bot == False,
-            Message.text.isnot(None)
-        ).first()
+        # Obtener mensaje usando CRUD
+        message = crud_message.get_message_by_id(db, message_id)
         
         if not message:
             return None
@@ -221,10 +142,9 @@ def get_message_by_id(db: Session, message_id: int) -> Optional[Dict[str, Any]]:
         subject = conversation.subject
         
         # Obtener el primer tema de la asignatura como referencia
-        # En una implementación más avanzada, podrías tener una relación directa
         topic = None
         if subject:
-            topic = db.query(Topic).filter(Topic.subject_id == subject.id).first()
+            topic = crud_message.get_topic_by_subject_id(db, subject.id)
         
         # Crear un objeto similar a lo que espera el servicio de IA
         message_data = type('Message', (), {
@@ -256,11 +176,8 @@ def get_detailed_message_by_id(db: Session, message_id: int) -> Optional[Dict[st
         Diccionario con la información detallada del mensaje o None si no existe
     """
     try:
-        message = db.query(Message).filter(
-            Message.id == message_id,
-            Message.is_bot == False,
-            Message.text.isnot(None)
-        ).first()
+        # Obtener mensaje usando CRUD
+        message = crud_message.get_message_by_id(db, message_id)
         
         if not message:
             return None
@@ -272,7 +189,7 @@ def get_detailed_message_by_id(db: Session, message_id: int) -> Optional[Dict[st
         # Obtener el tema si existe
         topic = None
         if subject:
-            topic = db.query(Topic).filter(Topic.subject_id == subject.id).first()
+            topic = crud_message.get_topic_by_subject_id(db, subject.id)
         
         message_data = {
             "id": str(message.id),

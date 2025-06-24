@@ -2,32 +2,28 @@ import os
 import uuid
 from datetime import datetime
 from sqlalchemy.orm import Session
-from app.models.models import Document
 from app.models.schemas import DocumentCreate
 from fastapi import HTTPException, UploadFile
 import logging
 
-logger = logging.getLogger(__name__)
+from app.crud import crud_document, crud_user, crud_topic, crud_subject
 from app.core.config import settings
-
 from app.services.embedding_service import create_document_chunks
 from app.services.summary_service import update_document_summary
 from ..utils.document_utils import extract_text_from_pdf
 
+logger = logging.getLogger(__name__)
 
 
-def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
+def save_document(db: Session, pdf_file: UploadFile, document: DocumentCreate):
     """
     Guarda el documento en PostgreSQL.
     """
-   
     if not pdf_file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
 
     os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
-
     subfolder_path = os.path.join(settings.UPLOAD_FOLDER, str(document.user_id))
-
     os.makedirs(subfolder_path, exist_ok=True)
     
     # Generamos un nombre único para el archivo
@@ -41,24 +37,10 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     with open(file_path, "wb") as buffer:
         buffer.write(pdf_file.file.read())
     
-    
-    topic_id = None if document.topic_id == 0 else document.topic_id
-    
-    new_document = Document(
-        title=document.title,
-        file_path=file_path,
-        description=document.description,
-        user_id=document.user_id,
-        subject_id=document.subject_id,  # Campo obligatorio
-        topic_id=topic_id  # Campo opcional
-    )
-    
-    db.add(new_document)
-    db.commit()
-    db.refresh(new_document)
+    # Crear documento en la BD usando CRUD
+    new_document = crud_document.create_document(db, document, file_path)
     
     content = extract_text_from_pdf(pdf_file)
-
     if not content:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF.")
     
@@ -72,14 +54,13 @@ def save_document(db: Session,pdf_file: UploadFile,document: DocumentCreate):
     except Exception as e:
         logger.warning(f"Error al generar resumen para documento {new_document.id}: {e}")
         
-        
     return new_document
 
 def list_documents(db: Session, document_id: int):
     """
     Obtiene los documentos de un profesor.
     """
-    return db.query(Document).filter(Document.id == document_id).all()
+    return crud_document.get_document_by_id(db, document_id)
 
 def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False):
     """
@@ -88,40 +69,28 @@ def list_all_documents(db: Session, user_id: int = None, is_admin: bool = False)
     - Profesores: Ven documentos de las asignaturas a las que están asignados
     - Estudiantes: Ven documentos de las asignaturas en las que están matriculados
     """
-    from app.models.models import User, user_subject
-    
-    query = db.query(Document)
-    
-    if user_id is not None and not is_admin:
+    if is_admin:
+        documents = crud_document.get_all_documents(db)
+    elif user_id is not None:
         # Obtener el usuario actual para verificar su rol
-        user = db.query(User).filter(User.id == user_id).first()
+        user = crud_user.get_user_by_id(db, user_id)
         if not user:
             return []
         
         if user.role == "teacher":
             # Los profesores ven documentos de las asignaturas a las que están asignados
-            user_subjects = db.query(user_subject.c.subject_id).filter(
-                user_subject.c.user_id == user_id
-            ).subquery()
-            
-            query = query.filter(Document.subject_id.in_(
-                db.query(user_subjects.c.subject_id)
-            ))
-            
+            subject_ids = crud_document.get_user_subject_ids(db, user_id)
+            documents = crud_document.get_documents_by_subject_ids(db, subject_ids)
         elif user.role == "student":
             # Los estudiantes ven documentos de las asignaturas en las que están matriculados
-            user_subjects = db.query(user_subject.c.subject_id).filter(
-                user_subject.c.user_id == user_id
-            ).subquery()
-            
-            query = query.filter(Document.subject_id.in_(
-                db.query(user_subjects.c.subject_id)
-            ))
+            subject_ids = crud_document.get_user_subject_ids(db, user_id)
+            documents = crud_document.get_documents_by_subject_ids(db, subject_ids)
         else:
             # Para otros roles que no sean admin, mostrar solo sus documentos
-            query = query.filter(Document.user_id == user_id)
+            documents = crud_document.get_documents_by_user(db, user_id)
+    else:
+        documents = crud_document.get_all_documents(db)
     
-    documents = query.all()
     return [
         {
             "id": doc.id,
@@ -140,7 +109,7 @@ def document_exists(db: Session, document_id: int) -> bool:
     """
     Verifica si existe un documento con el ID especificado.
     """
-    return db.query(db.query(Document).filter(Document.id == document_id).exists()).scalar()
+    return crud_document.document_exists(db, document_id)
 
 def delete_document(db: Session, document_id: int, user_id: int = None, is_admin: bool = False):
     """
@@ -148,7 +117,7 @@ def delete_document(db: Session, document_id: int, user_id: int = None, is_admin
     Si se proporciona user_id y no es admin, se verifica que sea el propietario del documento.
     """
     # Buscar el documento
-    document = db.query(Document).filter(Document.id == document_id).first()
+    document = crud_document.get_document_by_id(db, document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado.")
     
@@ -165,9 +134,8 @@ def delete_document(db: Session, document_id: int, user_id: int = None, is_admin
             # Continuar con la eliminación de la BD aunque falle la eliminación del archivo
             logger.error(f"Error al eliminar el archivo: {e}")
     
-    # Eliminar el documento de la base de datos (los chunks se eliminarán automáticamente por cascade)
-    db.delete(document)
-    db.commit()
+    # Eliminar el documento de la base de datos usando CRUD
+    crud_document.delete_document_db(db, document)
     
     return {"id": document_id}
 
@@ -175,7 +143,7 @@ def get_document_by_id(db: Session, document_id: int):
     """
     Obtiene un documento específico por su ID.
     """
-    return db.query(Document).filter(Document.id == document_id).first()
+    return crud_document.get_document_by_id(db, document_id)
 
 def get_documents_by_topic_id(db: Session, topic_id: int, current_user):
     """
@@ -183,31 +151,29 @@ def get_documents_by_topic_id(db: Session, topic_id: int, current_user):
     Los administradores pueden ver todos los documentos.
     Los profesores y estudiantes solo pueden ver documentos de asignaturas a las que tienen acceso.
     """
-    from app.models.models import Topic, Subject
-    
     # Verificar que el tema existe
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    topic = crud_topic.get_topic_by_id(db, topic_id)
     if not topic:
         raise HTTPException(status_code=404, detail="Tema no encontrado")
     
     # Verificar acceso a la asignatura del tema
-    subject = db.query(Subject).filter(Subject.id == topic.subject_id).first()
+    subject = crud_subject.get_subject_by_id(db, topic.subject_id)
     if not subject:
         raise HTTPException(status_code=404, detail="Asignatura no encontrada")
     
     # Los administradores tienen acceso completo
     if current_user.role == "admin":
-        documents = db.query(Document).filter(Document.topic_id == topic_id).all()
+        documents = crud_document.get_documents_by_topic_id(db, topic_id)
     else:
         # Para profesores y estudiantes, verificar acceso a la asignatura
-        is_assigned = any(user.id == current_user.id for user in subject.users)
+        is_assigned = crud_subject.is_user_assigned_to_subject(db, current_user.id, topic.subject_id)
         if not is_assigned:
             raise HTTPException(
                 status_code=403, 
                 detail="No tienes permisos para acceder a los documentos de este tema"
             )
         
-        documents = db.query(Document).filter(Document.topic_id == topic_id).all()
+        documents = crud_document.get_documents_by_topic_id(db, topic_id)
     
     return [
         {

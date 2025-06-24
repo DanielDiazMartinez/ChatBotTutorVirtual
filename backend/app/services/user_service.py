@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.models import User, Document
+from app.crud import crud_user
 from app.models.schemas import UserCreate, UserUpdate
 from fastapi import HTTPException 
 from app.core.security import get_password_hash
@@ -9,17 +9,21 @@ def create_user(user: UserCreate, db: Session):
     """
     Crea un nuevo usuario en la base de datos.
     """
-    existing_user = db.query(User).filter(User.email == user.email).first()
+    existing_user = crud_user.get_user_by_email(db, user.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_data = user.model_dump()
-    user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
+    hashed_password = get_password_hash(user_data.pop("password"))
     
-    user_db = User(**user_data)
-    db.add(user_db)
-    db.commit()
-    db.refresh(user_db)
+    user_db = crud_user.create_user(
+        db=db,
+        email=user_data["email"],
+        full_name=user_data["full_name"],
+        role=user_data["role"],
+        hashed_password=hashed_password
+    )
+    
     return {
         "id": user_db.id,
         "email": user_db.email,
@@ -32,26 +36,27 @@ def get_user_by_id(user_id: int, role: str | None, db: Session):
     """
     Obtiene un usuario por su ID y opcionalmente por su rol.
     """
-    query = db.query(User).filter(User.id == user_id)
     if role:
-        query = query.filter(User.role == role)
-    user_db = query.first()
+        user_db = crud_user.get_user_by_id_and_role(db, user_id, role)
+    else:
+        user_db = crud_user.get_user_by_id(db, user_id)
+        
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     return {
-    "id": user_db.id,
-    "email": user_db.email,
-    "full_name": user_db.full_name,
-    "role": user_db.role,
-    "created_at": user_db.created_at
-}
+        "id": user_db.id,
+        "email": user_db.email,
+        "full_name": user_db.full_name,
+        "role": user_db.role,
+        "created_at": user_db.created_at
+    }
     
 
-def get_users_by_role(role: str, db: Session) -> List[User]:
+def get_users_by_role(role: str, db: Session) -> List[dict]:
     """
     Obtiene todos los usuarios de un rol específico.
     """
-    users = db.query(User).filter(User.role == role).all()
+    users = crud_user.get_users_by_role(db, role)
 
     return [
         {
@@ -68,7 +73,7 @@ def get_all_users(db: Session) -> List[dict]:
     """
     Obtiene todos los usuarios de la base de datos y los convierte en diccionarios.
     """
-    users = db.query(User).all()
+    users = crud_user.get_all_users(db)
     if not users:
         raise HTTPException(status_code=404, detail="No hay usuarios registrados.")
     return [
@@ -86,7 +91,7 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session):
     """
     Actualiza un usuario existente.
     """
-    user_db = db.query(User).filter(User.id == user_id).first()
+    user_db = crud_user.get_user_by_id(db, user_id)
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
@@ -94,12 +99,9 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session):
     
     if "password" in update_data:
         update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
-        
-    for field, value in update_data.items():
-        setattr(user_db, field, value)
     
-    db.commit()
-    db.refresh(user_db)
+    user_db = crud_user.update_user(db, user_id, update_data)
+    
     return {
         "id": user_db.id,
         "email": user_db.email,
@@ -112,13 +114,10 @@ def delete_user(user_id: int, db: Session):
     """
     Elimina un usuario por su ID.
     """
-    user = db.query(User).filter(User.id == user_id).first()
+    user = crud_user.delete_user(db, user_id)
     
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    
-    db.delete(user)
-    db.commit()
 
     return {
         "id": user.id,
@@ -132,17 +131,16 @@ def get_user_by_email(email: str, db: Session):
     """
     Obtiene un usuario por su email.
     """
-    return db.query(User).filter(User.email == email).first()
+    return crud_user.get_user_by_email(db, email)
 
 def get_subjects_by_user_id(user_id: int, db: Session):
     """
     Obtiene las asignaturas asociadas a un usuario por su ID.
     """
-    # Obtenemos el objeto User directamente de la base de datos
-    user_db = db.query(User).filter(User.id == user_id).first()
-    if not user_db:
+    # Obtenemos las asignaturas del usuario usando CRUD
+    subjects = crud_user.get_subjects_by_user_id(db, user_id)
+    if subjects is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    subjects = user_db.subjects
     if not subjects:
         raise HTTPException(status_code=404, detail="No hay materias asociadas al usuario.")
     return [
@@ -153,7 +151,7 @@ def get_subjects_by_user_id(user_id: int, db: Session):
             "description": subject.description,
             "summary": subject.summary,
             "created_at": subject.created_at,
-            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
+            "document_count": crud_user.count_documents_by_subject_id(db, subject.id)
         }
         
         for subject in subjects
@@ -163,7 +161,7 @@ def get_current_user(current_user_id: int, db: Session) -> Dict[str, Any]:
     """
     Obtiene la información del usuario actualmente autenticado.
     """
-    user = db.query(User).filter(User.id == current_user_id).first()
+    user = crud_user.get_user_by_id(db, current_user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     return {

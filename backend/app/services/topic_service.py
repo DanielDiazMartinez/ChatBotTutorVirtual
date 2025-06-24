@@ -2,25 +2,24 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from typing import List, Optional
 
-from ..models.models import Topic, Subject
+from app.crud import crud_topic
 from ..models.schemas import TopicCreate, TopicUpdate
 
 def create_topic(db: Session, topic: TopicCreate) -> dict:
     """
     Crea un nuevo tema.
     """
-    subject = db.query(Subject).filter(Subject.id == topic.subject_id).first()
+    subject = crud_topic.get_subject_by_id(db, topic.subject_id)
     if not subject:
         raise HTTPException(status_code=404, detail="Asignatura no encontrada")
 
-    db_topic = Topic(
+    db_topic = crud_topic.create_topic(
+        db=db,
         name=topic.name,
         description=topic.description,
         subject_id=topic.subject_id
     )
-    db.add(db_topic)
-    db.commit()
-    db.refresh(db_topic)
+    
     return {
         "id": db_topic.id,
         "name": db_topic.name,
@@ -33,10 +32,9 @@ def get_topic_by_id(db: Session, topic_id: int) -> Optional[dict]:
     """
     Obtiene un tema por su ID.
     """
-    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    db_topic = crud_topic.get_topic_by_id(db, topic_id)
     if not db_topic:
         return None
-    
     
     return {
         "id": db_topic.id,
@@ -50,7 +48,7 @@ def get_topics_by_subject(db: Session, subject_id: int) -> List[dict]:
     """
     Obtiene todos los temas de una asignatura específica.
     """
-    topics = db.query(Topic).filter(Topic.subject_id == subject_id).all()
+    topics = crud_topic.get_topics_by_subject_id(db, subject_id)
     return [
         {
             "id": topic.id,
@@ -66,7 +64,7 @@ def get_all_topics(db: Session) -> List[dict]:
     """
     Obtiene todos los temas.
     """
-    topics = db.query(Topic).all()
+    topics = crud_topic.get_all_topics(db)
     return [
         {
             "id": topic.id,
@@ -82,21 +80,21 @@ def update_topic(db: Session, topic_id: int, topic_update: TopicUpdate) -> Optio
     """
     Actualiza un tema existente.
     """
-    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    db_topic = crud_topic.get_topic_by_id(db, topic_id)
     if not db_topic:
         return None
 
     if topic_update.subject_id is not None:
-        subject = db.query(Subject).filter(Subject.id == topic_update.subject_id).first()
+        subject = crud_topic.get_subject_by_id(db, topic_update.subject_id)
         if not subject:
             raise HTTPException(status_code=404, detail="Asignatura no encontrada")
 
     update_data = topic_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_topic, field, value)
-
-    db.commit()
-    db.refresh(db_topic)
+    
+    db_topic = crud_topic.update_topic(db, topic_id, update_data)
+    if not db_topic:
+        return None
+    
     return {
         "id": db_topic.id,
         "name": db_topic.name,
@@ -109,10 +107,4 @@ def delete_topic(db: Session, topic_id: int) -> bool:
     """
     Elimina un tema.
     """
-    db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not db_topic:
-        return False
-    
-    db.delete(db_topic)
-    db.commit()
-    return True
+    return crud_topic.delete_topic(db, topic_id)

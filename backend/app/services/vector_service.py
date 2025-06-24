@@ -4,25 +4,18 @@ Este servicio maneja las operaciones con vectores y búsqueda semántica.
 Solo puede depender de servicios de la capa base (embedding_service, document_service).
 """
 from fastapi import HTTPException
-from sqlalchemy import  select, literal_column
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Optional
 import logging
 
-from ..models.models import (
-    Document, 
-    DocumentChunk,
-    Conversation, 
-    Message, 
-    User
-)
+from app.crud import crud_vector
 from app.services.embedding_service import get_embedding_for_query
 
 def search_similar_chunks(db: Session,
                           query_embedding: List[float],
                           subject_id: Optional[int] = None,
                           limit: int = 10,
-                          similarity_metric: str = "cosine") -> List[Tuple[DocumentChunk, float]]:
+                          similarity_metric: str = "cosine") -> List[Tuple]:
     """
     Busca chunks similares a un embedding de consulta usando pgvector
     
@@ -36,7 +29,6 @@ def search_similar_chunks(db: Session,
     Returns:
         Lista de tuplas (chunk, score) ordenadas por similitud
     """
-    import logging
     logger = logging.getLogger(__name__)
     
     # Log para depuración
@@ -48,92 +40,54 @@ def search_similar_chunks(db: Session,
         
     # Log de dimensiones del embedding
     logger.info(f"Dimensión del embedding de consulta: {len(query_embedding)}")
-        
-    embedding_str = f"CAST(ARRAY[{', '.join(map(str, query_embedding))}] AS vector)"
-
-    try:
-        if similarity_metric == "cosine":
-            # Usamos directamente la sintaxis SQL de pgvector para la distancia coseno
-            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <=> {embedding_str})")
-            convert_score = lambda x: 1.0 - x
-        elif similarity_metric == "l2":
-            # Usamos directamente la sintaxis SQL de pgvector para la distancia euclidiana
-            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <-> {embedding_str})")
-            convert_score = lambda x: 1.0 / (1.0 + x)
-        else:
-            # Inner product negativo (más alto = más similar)
-            distance_expression = literal_column(f"({DocumentChunk.embedding.key} <#> {embedding_str})")
-            convert_score = lambda x: -x
-        
-        logger.info(f"Expresión de distancia creada correctamente: {distance_expression}")
-    except Exception as e:
-        logger.error(f"Error al crear la expresión de distancia: {str(e)}")
-        raise
-
-    # Construir la consulta base
-    query = select(
-        DocumentChunk,
-        distance_expression.label("distance")
-    )
     
-    
-    # Si se proporciona subject_id, filtrar por los documentos de esa asignatura
+    # Si se proporciona subject_id, hacer logs de diagnóstico
     if subject_id:
-        query = query.join(Document, DocumentChunk.document_id == Document.id)
-        query = query.filter(Document.subject_id == subject_id)
-        
         # Log para verificar documentos de asignatura
-        doc_count = db.query(Document).filter(Document.subject_id == subject_id).count()
+        doc_count = crud_vector.count_documents_by_subject_id(db, subject_id)
         logger.info(f"Documentos encontrados para subject_id={subject_id}: {doc_count}")
         
         # Verificar si los documentos tienen chunks
-        for doc in db.query(Document).filter(Document.subject_id == subject_id).all():
-            chunk_count = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).count()
+        documents = crud_vector.get_documents_by_subject_id(db, subject_id)
+        for doc in documents:
+            chunk_count = crud_vector.count_chunks_by_document_id(db, doc.id)
             logger.info(f"Documento id={doc.id}, título='{doc.title}' tiene {chunk_count} chunks")
             
             # Verificar si los chunks tienen embeddings válidos
             if chunk_count > 0:
-                sample_chunk = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).first()
+                sample_chunk = crud_vector.get_sample_chunk_by_document_id(db, doc.id)
                 if sample_chunk and sample_chunk.embedding:
                     embedding_dim = len(sample_chunk.embedding)
                     logger.info(f"Un chunk del documento {doc.id} tiene un embedding de dimensión {embedding_dim}")
                 else:
                     logger.warning(f"Los chunks del documento {doc.id} no tienen embeddings válidos")
-        
-        if limit > 1:
-            # Obtener primero los documentos de la asignatura
-            documents = db.query(Document.id).filter(Document.subject_id == subject_id).all()
-            doc_ids = [doc[0] for doc in documents]
-            
-            if len(doc_ids) > 1:
-                # Si hay varios documentos, podemos intentar obtener diversidad
-                # Sin embargo, mantenemos la query original porque es más simple y general
-                pass
     
-    # Ordenar por distancia y limitar resultados
-    query = query.order_by("distance").limit(limit)
-
-    results = db.execute(query).all()
+    # Usar función CRUD para buscar chunks similares
+    results = crud_vector.search_similar_chunks_db(
+        db=db,
+        query_embedding=query_embedding,
+        subject_id=subject_id,
+        limit=limit,
+        similarity_metric=similarity_metric
+    )
     
     # Log del número de resultados encontrados
     logger.info(f"Resultados encontrados: {len(results)}")
     
-    # Si no hay resultados, hacer log del query SQL para depuración
+    # Si no hay resultados, hacer log para depuración
     if len(results) == 0:
-        logger.warning(f"No se encontraron chunks similares. Query SQL: {query}")
+        logger.warning("No se encontraron chunks similares")
         
         # Verificar si hay chunks en la base de datos
-        chunk_count = db.query(DocumentChunk).count()
+        chunk_count = crud_vector.count_total_chunks(db)
         logger.info(f"Total de chunks en la base de datos: {chunk_count}")
         
         # Si hay subject_id, verificar que hay chunks relacionados
         if subject_id:
-            related_chunks = db.query(DocumentChunk).\
-                join(Document, DocumentChunk.document_id == Document.id).\
-                filter(Document.subject_id == subject_id).count()
+            related_chunks = crud_vector.count_chunks_by_subject_id(db, subject_id)
             logger.info(f"Chunks relacionados con subject_id={subject_id}: {related_chunks}")
 
-    return [(row.DocumentChunk, convert_score(row.distance)) for row in results]
+    return results
 
 
 
@@ -142,31 +96,27 @@ def add_user_message(
     conversation_id: int,
     message_text: str = None,
     image_id: int = None
-) -> Message:
+):
     """
     Añade un mensaje del usuario a una conversación existente.
     Se puede proporcionar texto, imagen o ambos.
     """
-    # Verificar que la conversación existe
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    # Verificar que la conversación existe usando CRUD
+    conversation = crud_vector.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
     # Crear embedding para el mensaje si hay texto
     question_embedding = get_embedding_for_query(message_text) if message_text else None
     
-    # Crear el mensaje del usuario
-    user_msg = Message(
-        text=message_text,
-        is_bot=False,
+    # Crear el mensaje del usuario usando CRUD
+    user_msg = crud_vector.create_user_message(
+        db=db,
         conversation_id=conversation_id,
-        embedding=question_embedding,
-        image_id=image_id
+        message_text=message_text,
+        image_id=image_id,
+        embedding=question_embedding
     )
-    
-    db.add(user_msg)
-    db.flush()
-    db.refresh(user_msg)
     
     return user_msg
 
@@ -174,29 +124,25 @@ def add_bot_message(
     db: Session,
     conversation_id: int,
     message_text: str
-) -> Message:
+):
     """
     Añade un mensaje del bot a una conversación existente.
     """
-    # Verificar que la conversación existe
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    # Verificar que la conversación existe usando CRUD
+    conversation = crud_vector.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
     # Crear embedding para el mensaje
     bot_embedding = get_embedding_for_query(message_text)
     
-    # Crear el mensaje del bot
-    bot_msg = Message(
-        text=message_text,
-        is_bot=True,
+    # Crear el mensaje del bot usando CRUD
+    bot_msg = crud_vector.create_bot_message(
+        db=db,
         conversation_id=conversation_id,
+        message_text=message_text,
         embedding=bot_embedding
     )
-    
-    db.add(bot_msg)
-    db.commit()
-    db.refresh(bot_msg)
     
     return bot_msg
 
@@ -256,14 +202,15 @@ def get_conversation_context(
         logger.info(f"Procesando {len(similar_chunks)} chunks para generar contexto")
         
         for i, (chunk, score) in enumerate(similar_chunks):
-            # Obtenemos el título del documento
-            document_title = db.query(Document.title).filter(Document.id == chunk.document_id).first()
-            title_str = document_title[0] if document_title else "Documento desconocido"
+            # Obtener el título del documento usando CRUD
+            title_str = crud_vector.get_document_title_by_id(db, chunk.document_id)
+            if not title_str:
+                title_str = "Documento desconocido"
             
             # Log de la puntuación de similitud
             logger.info(f"Chunk {i+1}: score={score:.4f}, documento='{title_str}', longitud={len(chunk.content)}")
             
-            # Formateamos el chunk con información del documento
+            # Formatear el chunk con información del documento
             context_parts.append(f"[Del documento '{title_str}']: {chunk.content}")
         
         context = "\n\n".join(context_parts)
@@ -286,9 +233,8 @@ def get_conversation_history(
     Returns:
         Historial de conversación formateado
     """
-    message_history = db.query(Message).filter(
-        Message.conversation_id == conversation_id
-    ).order_by(Message.created_at.desc()).limit(limit).all()
+    # Obtener mensajes usando CRUD
+    message_history = crud_vector.get_messages_by_conversation_id(db, conversation_id, limit)
     
     message_history.reverse()
     

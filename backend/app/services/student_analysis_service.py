@@ -5,12 +5,11 @@ sobre las carencias y áreas de mejora detectadas.
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func, distinct
 import logging
 import re
 from datetime import datetime, timedelta
 
-from ..models.models import Message, Conversation, User, Subject, Topic, Document
+from app.crud import crud_student_analysis
 from ..services.api_service import generate_google_ai_simple
 from ..services.subject_service import get_subject_documents
 from ..services.topic_service import get_topics_by_subject
@@ -146,8 +145,8 @@ def get_subject_context_info(db: Session, subject_id: int) -> Dict[str, Any]:
         Diccionario con información contextual de la asignatura
     """
     try:
-        # Obtener información de la asignatura
-        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        # Obtener información de la asignatura usando CRUD
+        subject = crud_student_analysis.get_subject_by_id(db, subject_id)
         if not subject:
             return {}
         
@@ -207,34 +206,13 @@ def get_student_messages_by_subject(
         Lista de diccionarios con información de los mensajes de estudiantes
     """
     try:
-        # Query base para mensajes de estudiantes (no bot) con texto
-        query = db.query(Message).filter(
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
+        # Usar función CRUD para obtener mensajes
+        messages = crud_student_analysis.get_student_messages_by_subject(
+            db=db,
+            subject_id=subject_id,
+            days_limit=days_limit,
+            limit=limit
         )
-        
-        # Joins necesarios
-        query = query.join(Conversation, Message.conversation_id == Conversation.id)
-        query = query.join(User, Conversation.user_id == User.id)
-        
-        # Filtrar por asignatura y rol de estudiante
-        query = query.filter(
-            Conversation.subject_id == subject_id,
-            User.role == "student"
-        )
-        
-        # Filtrar por fecha si se especifica
-        if days_limit:
-            date_threshold = datetime.utcnow() - timedelta(days=days_limit)
-            query = query.filter(Message.created_at >= date_threshold)
-        
-        # Ordenar por fecha descendente y aplicar límite
-        query = query.order_by(Message.created_at.desc())
-        if limit:
-            query = query.limit(limit)
-        
-        messages = query.all()
         
         # Formatear los resultados
         messages_data = []
@@ -278,38 +256,20 @@ def get_subject_analysis_statistics(
         Diccionario con estadísticas de participación
     """
     try:
-        # Query base
-        query = db.query(Message).filter(
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
+        # Usar funciones CRUD para obtener estadísticas
+        total_messages = crud_student_analysis.count_student_messages_by_subject(
+            db, subject_id, days_limit
         )
-        
-        query = query.join(Conversation, Message.conversation_id == Conversation.id)
-        query = query.join(User, Conversation.user_id == User.id)
-        query = query.filter(
-            Conversation.subject_id == subject_id,
-            User.role == "student"
-        )
-        
-        # Filtrar por fecha si se especifica
-        if days_limit:
-            date_threshold = datetime.utcnow() - timedelta(days=days_limit)
-            query = query.filter(Message.created_at >= date_threshold)
-        
-        # Obtener estadísticas
-        total_messages = query.count()
         
         # Número de estudiantes únicos que han participado
-        unique_students = query.with_entities(distinct(User.id)).count()
+        unique_students = crud_student_analysis.count_unique_students_by_subject(
+            db, subject_id, days_limit
+        )
         
         # Total de estudiantes en la asignatura
-        total_students_in_subject = db.query(User).join(
-            User.subjects
-        ).filter(
-            Subject.id == subject_id,
-            User.role == "student"
-        ).count()
+        total_students_in_subject = crud_student_analysis.count_total_students_in_subject(
+            db, subject_id
+        )
         
         # Calcular tasa de participación
         participation_rate = (unique_students / total_students_in_subject * 100) if total_students_in_subject > 0 else 0
@@ -350,8 +310,8 @@ async def generate_student_analysis_summary(
         Diccionario con análisis completo y estadísticas
     """
     try:
-        # Obtener la información de la asignatura
-        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        # Obtener la información de la asignatura usando CRUD
+        subject = crud_student_analysis.get_subject_by_id(db, subject_id)
         if not subject:
             return None
         
@@ -585,35 +545,13 @@ def get_most_active_students(
         Lista de estudiantes ordenados por actividad
     """
     try:
-        query = db.query(
-            User.id,
-            User.full_name,
-            User.email,
-            func.count(Message.id).label('message_count')
-        ).select_from(User)
-        
-        query = query.join(Conversation, User.id == Conversation.user_id)
-        query = query.join(Message, Conversation.id == Message.conversation_id)
-        
-        query = query.filter(
-            Conversation.subject_id == subject_id,
-            User.role == "student",
-            Message.is_bot == False,
-            Message.text.isnot(None),
-            Message.text != ""
+        # Usar función CRUD para obtener estudiantes más activos
+        results = crud_student_analysis.get_most_active_students_by_subject(
+            db=db,
+            subject_id=subject_id,
+            days_limit=days_limit,
+            limit=limit
         )
-        
-        # Filtrar por fecha si se especifica
-        if days_limit:
-            date_threshold = datetime.utcnow() - timedelta(days=days_limit)
-            query = query.filter(Message.created_at >= date_threshold)
-        
-        # Agrupar y ordenar
-        query = query.group_by(User.id, User.full_name, User.email)
-        query = query.order_by(func.count(Message.id).desc())
-        query = query.limit(limit)
-        
-        results = query.all()
         
         students = []
         for result in results:

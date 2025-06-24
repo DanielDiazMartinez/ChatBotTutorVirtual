@@ -9,6 +9,7 @@ import base64
 import mimetypes
 from app.models.models import Image
 from app.core.database import get_db
+from app.crud import crud_image
 from sqlalchemy.orm import Session
 
 """Servicio para manejar operaciones con imágenes, incluyendo la preparación para Google AI"""
@@ -111,18 +112,16 @@ async def upload_image(
         await _validate_image(file)
         file_path = await _save_image(file)
         
-        image_data = Image(
-            file_path=file_path,
-            user_id=user_id,
-            subject_id=subject_id,
-            topic_id=topic_id
-        )
+        image_data = {
+            'file_path': file_path,
+            'user_id': user_id,
+            'subject_id': subject_id,
+            'topic_id': topic_id
+        }
 
-        db.add(image_data)
-        db.commit()
-        db.refresh(image_data)
-
-        return image_data
+        # Usar CRUD para crear la imagen
+        image = crud_image.create_image(db, image_data)
+        return image
 
     except Exception as e:
         db.rollback()
@@ -203,7 +202,7 @@ def get_image_by_id(image_id: int, db: Session) -> Optional[Image]:
     Returns:
         Objeto Image o None si no se encuentra
     """
-    return db.query(Image).filter(Image.id == image_id).first()
+    return crud_image.get_image_by_id(db, image_id)
 
 def get_image_by_message(message_id: int, db: Session) -> Optional[Image]:
     """
@@ -216,7 +215,7 @@ def get_image_by_message(message_id: int, db: Session) -> Optional[Image]:
     Returns:
         Objeto Image o None si no se encuentra
     """
-    return db.query(Image).filter(Image.message_id == message_id).first()
+    return crud_image.get_image_by_message(db, message_id)
 
 def prepare_image_for_google_ai(image: Image) -> Optional[tuple[str, str]]:
     """

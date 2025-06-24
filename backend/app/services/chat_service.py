@@ -4,11 +4,11 @@ Este servicio maneja la lógica de chat y puede usar todos los servicios de capa
 """
 from typing import List, Optional, Dict, Any, Tuple
 from fastapi import HTTPException
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 import logging
 
 from ..services.image_service import get_image_by_id, prepare_image_for_google_ai
+from app.crud import crud_conversation
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -29,68 +29,41 @@ def create_conversation(
     subject_id: int
 ) -> Conversation:
     """
-    Crea una nueva conversación en la base de datos.
+    Crea una nueva conversación.
     
     Args:
         db: Sesión de SQLAlchemy
         user_id: ID del usuario creador
-        user_type: Rol del usuario ('student', 'teacher', etc.)
-        subject_id: ID de la asignatura asociada (opcional)
+        subject_id: ID de la asignatura asociada
         
     Returns:
         Objeto de la conversación creada
     """
-   
-    conversation = Conversation(
-        user_id=user_id,
-        subject_id=subject_id
-    )
-    
-    db.add(conversation)
-    db.commit()
-    db.refresh(conversation)
-    
-    return conversation
+    return crud_conversation.create_conversation(db, user_id, subject_id)
 
 def get_conversations_by_user_role(db: Session, user_id: int, role: str) -> List[Conversation]:
     """
     Obtiene todas las conversaciones asociadas a un usuario según su rol.
     """
-    query = db.query(Conversation)
-    
-    if role == "student":
-        query = query.filter(
-            Conversation.user_id == user_id
-        )
-    elif role == "teacher":
-        # Los profesores solo pueden ver sus propias conversaciones
-        query = query.filter(
-            Conversation.user_id == user_id
-        )
-    elif role == "admin":
-        # Los administradores pueden ver todas las conversaciones
-        pass
-    else:
+    if role not in ["student", "teacher", "admin"]:
         raise HTTPException(status_code=400, detail="Rol de usuario inválido")
-        
-    return query.all()
+    return crud_conversation.get_conversations_by_user_role(db, user_id, role)
 
 def get_conversation_by_id(db: Session, conversation_id: int) -> Optional[Conversation]:
     """
     Obtiene una conversación específica por su ID.
     """
-    return db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    return crud_conversation.get_conversation_by_id(db, conversation_id)
 
 def delete_conversation(db: Session, conversation_id: int) -> None:
     """
     Elimina una conversación y todos sus mensajes asociados.
     """
-    conversation = get_conversation_by_id(db, conversation_id)
+    conversation = crud_conversation.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
-    db.delete(conversation)  # Esto eliminará también los mensajes por la relación cascade
-    db.commit()
+    crud_conversation.delete_conversation(db, conversation)
 
 def get_current_user_conversations(db: Session, user_id: int, role: str, subject_id: Optional[int] = None) -> List[Dict[str, Any]]:
     """
@@ -106,11 +79,9 @@ def get_current_user_conversations(db: Session, user_id: int, role: str, subject
     result = []
     for conv in conversations:
         # Obtener el último mensaje de la conversación si existe
-        last_message = db.query(Message).filter(
-            Message.conversation_id == conv.id
-        ).order_by(Message.created_at.desc()).first()
+        last_message = crud_conversation.get_last_message_for_conversation(db, conv.id)
         
-        # Construir el objeto de respuesta
+
         conv_dict = {
             "id": conv.id,
             "user_id": conv.user_id,
@@ -130,11 +101,7 @@ def get_conversation_messages(db: Session, conversation_id: int) -> List[Message
     """
     Obtiene todos los mensajes de una conversación específica, ordenados por fecha de creación.
     """
-    messages = db.query(Message).filter(
-        Message.conversation_id == conversation_id
-    ).order_by(Message.created_at.asc()).all()
-    
-    return messages
+    return crud_conversation.get_messages_by_conversation_id(db, conversation_id)
 
 
 
@@ -144,7 +111,7 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
     Se puede incluir texto, imagen o ambos en el mensaje.
     """
 
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    conversation = crud_conversation.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
 
@@ -169,7 +136,7 @@ def add_message_and_generate_response(db: Session, conversation_id: int, user_id
     try:
         if conversation.subject_id:
             # Obtener información completa de la asignatura incluyendo el resumen
-            subject = db.query(Subject).filter(Subject.id == conversation.subject_id).first()
+            subject = crud_conversation.get_subject_by_id(db, conversation.subject_id)
             if subject:
                 subject_info = {
                     "id": subject.id,

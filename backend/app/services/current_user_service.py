@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from app.models.models import User, Document
 from fastapi import HTTPException
 from typing import List, Dict, Any
+
+from app.crud import crud_user, crud_subject, crud_document
 
 def get_current_user_subjects(user_id: int, db: Session):
     """
@@ -14,15 +15,14 @@ def get_current_user_subjects(user_id: int, db: Session):
     Returns:
         Lista de asignaturas asociadas al usuario
     """
-    user_db = db.query(User).filter(User.id == user_id).first()
+    user_db = crud_user.get_user_by_id(db, user_id=user_id)
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     
     # Para todos los roles, obtenemos las asignaturas asociadas
     if user_db.role == 'admin':
         # Para administradores, mostramos todas las asignaturas
-        from app.models.models import Subject
-        subjects = db.query(Subject).all()
+        subjects = crud_subject.get_all_subjects(db)
     else:
         # Para profesores y estudiantes, mostramos sus asignaturas específicas
         subjects = user_db.subjects
@@ -39,7 +39,7 @@ def get_current_user_subjects(user_id: int, db: Session):
             "description": subject.description,
             "summary": subject.summary,
             "created_at": subject.created_at,
-            "document_count": db.query(Document).filter(Document.subject_id == subject.id).count()
+            "document_count": crud_document.count_documents_by_subject(db, subject_id=subject.id)
         }
         for subject in subjects
     ]
@@ -51,29 +51,28 @@ def get_current_user_documents(user_id: int, db: Session):
     Args:
         user_id: ID del usuario actual
         db: Sesión de base de datos
-        is_admin: Indica si el usuario es administrador
         
     Returns:
         Lista de documentos asociados al usuario
     """
-    user_db = db.query(User).filter(User.id == user_id).first()
+    user_db = crud_user.get_user_by_id(db, user_id=user_id)
     if not user_db:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     
     # Dependiendo del rol, filtramos los documentos
-    query = db.query(Document)
-    
-    if user_db.role == 'teacher':
+    if user_db.role == 'admin':
+        documents = crud_document.get_all_documents(db)
+    elif user_db.role == 'teacher':
         # Profesores ven sus propios documentos
-        query = query.filter(Document.user_id == user_id)
+        documents = crud_document.get_documents_by_user(db, user_id=user_id)
     elif user_db.role == 'student':
         # Estudiantes ven documentos de las asignaturas en las que están matriculados
-        from sqlalchemy import or_
         subject_ids = [subject.id for subject in user_db.subjects]
-        query = query.filter(Document.subject_id.in_(subject_ids))
-    # Administradores ven todos los documentos (no necesita filtro)
-    
-    documents = query.all()
+        if not subject_ids:
+            return []
+        documents = crud_document.get_documents_by_subject_ids(db, subject_ids=subject_ids)
+    else:
+        documents = []
     
     return [
         {
