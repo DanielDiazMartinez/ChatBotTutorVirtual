@@ -107,7 +107,7 @@ async def generate_subject_summary(subject_id: int, db: Session) -> str:
         combined = " | ".join(document_summaries)
         
         # Prompt ultra-conciso
-        prompt = f"Resume en máximo 100 palabras en texto plano, sin guiones ni puntos de párrafo: {combined[:2000]}"
+        prompt = f"Genera un resumen general de la asignatura '{subject.name}' basado en el siguiente contenido de sus documentos. El resumen debe explicar los temas principales que se cubren en esta materia. Máximo 200 palabras en texto plano, sin guiones ni puntos de párrafo: {combined[:2000]}"
         
         response = generate_google_ai_simple(prompt)
         generated_summary = response.strip()

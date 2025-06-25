@@ -33,23 +33,27 @@ def get_topic_by_id(db: Session, topic_id: int) -> Optional[dict]:
     """
     Obtiene un tema por su ID.
     """
+    from ..models.models import Document
+    
     db_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not db_topic:
         return None
-    
     
     return {
         "id": db_topic.id,
         "name": db_topic.name,
         "description": db_topic.description,
         "subject_id": db_topic.subject_id,
-        "created_at": db_topic.created_at
+        "created_at": db_topic.created_at,
+        "documentCount": db.query(Document).filter(Document.topic_id == topic_id).count()
     }
 
 def get_topics_by_subject(db: Session, subject_id: int) -> List[dict]:
     """
     Obtiene todos los temas de una asignatura específica.
     """
+    from ..models.models import Document
+    
     topics = db.query(Topic).filter(Topic.subject_id == subject_id).all()
     return [
         {
@@ -57,7 +61,8 @@ def get_topics_by_subject(db: Session, subject_id: int) -> List[dict]:
             "name": topic.name,
             "description": topic.description,
             "subject_id": topic.subject_id,
-            "created_at": topic.created_at
+            "created_at": topic.created_at,
+            "documentCount": db.query(Document).filter(Document.topic_id == topic.id).count()
         }
         for topic in topics
     ]
@@ -66,6 +71,8 @@ def get_all_topics(db: Session) -> List[dict]:
     """
     Obtiene todos los temas.
     """
+    from ..models.models import Document
+    
     topics = db.query(Topic).all()
     return [
         {
@@ -73,7 +80,8 @@ def get_all_topics(db: Session) -> List[dict]:
             "name": topic.name,
             "description": topic.description,
             "subject_id": topic.subject_id,
-            "created_at": topic.created_at
+            "created_at": topic.created_at,
+            "documentCount": db.query(Document).filter(Document.topic_id == topic.id).count()
         }
         for topic in topics
     ]
