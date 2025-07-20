@@ -76,6 +76,9 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient, te
     assert me_response.status_code == 200
     teacher_id = me_response.json()["data"]["id"]
     
+    # Obtener el profesor del token
+    teacher1 = db_session_test.query(User).filter(User.id == teacher_id).first()
+    
     # Crear otro profesor para la prueba
     teacher2 = User(
         email="teacher2@example.com",
@@ -88,18 +91,44 @@ def test_list_documents_teacher(db_session_test: Session, client: TestClient, te
     db_session_test.commit()
     db_session_test.refresh(teacher2)
     
-    # Crear documentos de prueba para cada profesor
+    # Crear asignaturas para cada profesor
+    from app.models.models import Subject
+    subject1 = Subject(
+        name="Subject for Teacher 1",
+        code="SUBJ1",
+        description="Subject assigned to teacher 1"
+    )
+    subject2 = Subject(
+        name="Subject for Teacher 2", 
+        code="SUBJ2",
+        description="Subject assigned to teacher 2"
+    )
+    
+    db_session_test.add(subject1)
+    db_session_test.add(subject2)
+    db_session_test.commit()
+    db_session_test.refresh(subject1)
+    db_session_test.refresh(subject2)
+    
+    # Asignar profesores a sus respectivas asignaturas
+    teacher1.subjects.append(subject1)
+    teacher2.subjects.append(subject2)
+    db_session_test.commit()
+    
+    # Crear documentos de prueba para cada profesor con sus respectivas asignaturas
     doc_teacher1 = Document(
         title="Document Teacher 1",
         file_path="/fake/path/doc_t1.pdf",
         description="Document for Teacher 1",
-        user_id=teacher_id
+        user_id=teacher_id,
+        subject_id=subject1.id
     )
     doc_teacher2 = Document(
         title="Document Teacher 2",
         file_path="/fake/path/doc_t2.pdf",
         description="Document for Teacher 2",
-        user_id=teacher2.id
+        user_id=teacher2.id,
+        subject_id=subject2.id
     )
     
     db_session_test.add(doc_teacher1)
