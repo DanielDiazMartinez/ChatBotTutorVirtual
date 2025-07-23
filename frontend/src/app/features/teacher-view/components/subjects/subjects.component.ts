@@ -91,10 +91,15 @@ export class SubjectsComponent implements OnInit {
       }
     });
 
-    // Listener para recargar temas cuando se suba un documento
+    // Listener para recargar temas y documentos cuando se suba un documento
     window.addEventListener('document-uploaded', () => {
       if (this.subject?.id) {
         this.loadSubjectTopics(this.subject.id);
+        
+        // Si hay un tema seleccionado, también recargar sus documentos
+        if (this.selectedTopicId) {
+          this.loadDocumentsByTopic(parseInt(this.selectedTopicId));
+        }
       }
     });
   }
@@ -549,6 +554,10 @@ export class SubjectsComponent implements OnInit {
           // Recargar la lista de documentos del tema actual
           if (this.selectedTopicId) {
             this.loadDocumentsByTopic(Number(this.selectedTopicId));
+          }
+          // Recargar la lista de temas para actualizar el contador de documentos
+          if (this.subject?.id) {
+            this.loadSubjectTopics(this.subject.id);
           }
         },
         error: (error) => {

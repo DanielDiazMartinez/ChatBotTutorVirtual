@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../../../core/services/user.service';
 import { SubjectService } from '../../../../core/services/subject.service';
+import { DocumentService } from '../../../../core/services/document.service';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -20,7 +21,8 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private subjectService: SubjectService
+    private subjectService: SubjectService,
+    private documentService: DocumentService
   ) {}
 
   ngOnInit(): void {
@@ -49,6 +51,18 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: () => {
         this.totalAsignaturas = 0;
+      }
+    });
+
+    // Cargar total de documentos
+    this.documentService.getDocuments().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.totalDocumentos = response.data.length;
+        }
+      },
+      error: () => {
+        this.totalDocumentos = 0;
       }
     });
   }
